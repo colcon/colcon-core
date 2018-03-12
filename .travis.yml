@@ -2,6 +2,9 @@ language: python
 python: "3.5"
 dist: trusty
 sudo: true
+env:
+  - TEST_SUITE=pytest
+  - TEST_SUITE=bootstrap
 before_install:
   - sudo apt update && sudo apt install -y enchant
 install:
@@ -9,8 +12,19 @@ install:
   # install_requires
   - pip install -U EmPy
   # tests_require
-  - pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov
+  - if [ "$TEST_SUITE" = "pytest" ]; then pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov; fi
+  # colcon test needs pytest-runner
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then pip install -U pytest-runner; fi
 script:
-  - pytest --cov=colcon_core --cov-branch
+  # invoke pytest
+  - if [ "$TEST_SUITE" = "pytest" ]; then pytest --cov=colcon_core --cov-branch; fi
+  # build and test package using colcon itself
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then ./bin/colcon build --build-base ../build --install-base ../install; fi
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then sed -i '/  flake8-import-order/d' setup.cfg; fi
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then ./bin/colcon test --build-base ../build --install-base ../install; fi
+  # use the installed package
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then cd ../install; fi
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then . prefix.sh; fi
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then colcon --help; fi
 notifications:
   email: false
