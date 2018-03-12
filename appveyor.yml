@@ -6,8 +6,8 @@ install:
   - "%PYTHON%\\python.exe -m pip install -U setuptools"
   # install_requires
   - "%PYTHON%\\python.exe -m pip install -U coloredlogs EmPy"
-  # tests_require
-  - "%PYTHON%\\python.exe -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov"
+  # tests_require, except pyenchant
+  - "%PYTHON%\\python.exe -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pylint pytest pytest-cov"
 build: off
 test_script:
   # invoke pytest
