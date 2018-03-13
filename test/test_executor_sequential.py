@@ -82,6 +82,12 @@ async def job6():
 
 def test_sequential_keyboard_interrupt():
     global ran_jobs
+
+    if 'APPVEYOR' in os.environ:
+        pytest.skip(
+            'Skipping keyboard interrupt test since otherwise the prompt '
+            "'Terminate batch job' blocks the build on AppVeyor")
+
     extension = SequentialExecutor()
 
     args = None
@@ -95,6 +101,8 @@ def test_sequential_keyboard_interrupt():
         os.kill(
             os.getpid(),
             signal.SIGINT if sys.platform != 'win32' else signal.CTRL_C_EVENT)
+        if sys.platform == 'win32':
+            os.kill(signal.CTRL_C_EVENT)
 
     thread = Thread(target=delayed_sigint)
     try:
