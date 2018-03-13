@@ -58,9 +58,9 @@ def test_create_event_reactor():
     event_reactor.TIMER_INTERVAL = 0.25
 
     # add a few dummy events
-    queue.put(('first', None))
-
     with patch('colcon_core.event_reactor.logger.error') as error:
+        queue.put(('first', None))
+
         event_reactor.start()
         queue.put(('second', None))
         queue.put(('third', None))
