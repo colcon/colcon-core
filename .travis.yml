@@ -15,6 +15,8 @@ install:
   - if [ "$TEST_SUITE" = "pytest" ]; then pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov; fi
   # colcon test needs pytest-runner
   - if [ "$TEST_SUITE" = "bootstrap" ]; then pip install -U pytest-runner; fi
+  # for uploading the coverage information to codecov
+  - if [ "$TEST_SUITE" = "pytest" ]; then pip install codecov; fi
 script:
   # invoke pytest
   - if [ "$TEST_SUITE" = "pytest" ]; then pytest --cov=colcon_core --cov-branch; fi
@@ -26,5 +28,7 @@ script:
   - if [ "$TEST_SUITE" = "bootstrap" ]; then cd ../install; fi
   - if [ "$TEST_SUITE" = "bootstrap" ]; then . prefix.sh; fi
   - if [ "$TEST_SUITE" = "bootstrap" ]; then colcon --help; fi
+after_success:
+  - if [ "$TEST_SUITE" = "pytest" ]; then codecov; fi
 notifications:
   email: false
