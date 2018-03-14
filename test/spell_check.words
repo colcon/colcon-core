@@ -9,6 +9,7 @@ bool
 callables
 catched
 cfg
+ci
 cmd
 colcon
 config
