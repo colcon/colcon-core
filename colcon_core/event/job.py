@@ -62,3 +62,17 @@ class JobEnded:
         """
         self.identifier = identifier
         self.rc = rc
+
+
+class JobSkipped:
+    """An event containing the identifier of the skipped job."""
+
+    __slots__ = ('identifier', )
+
+    def __init__(self, identifier):
+        """
+        Constructor.
+
+        :param str identifier: The job identifier
+        """
+        self.identifier = identifier

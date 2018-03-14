@@ -8,6 +8,7 @@ import traceback
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.event.job import JobEnded
 from colcon_core.event.job import JobQueued
+from colcon_core.event.job import JobSkipped
 from colcon_core.event.job import JobStarted
 from colcon_core.event.output import StderrLine
 from colcon_core.event_reactor import create_event_reactor
@@ -272,6 +273,12 @@ def execute_jobs(context, jobs, *, abort_on_error=True):
             '{e}\n{exc}'.format_map(locals()))
         rc = 1
     finally:
+        # generate an event for every skipped job
+        for job in jobs.values():
+            if job.returncode is not None:
+                continue
+            event_controller.get_queue().put((JobSkipped(job.identifier), job))
+
         event_controller.join()
     return rc
 
