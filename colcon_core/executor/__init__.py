@@ -83,6 +83,7 @@ class Job:
         self._task_context.put_event_into_queue = self._put_event_into_queue
         self.task.set_context(context=self._task_context)
 
+        rc = 0
         try:
             rc = await self.task(*args, **kwargs)
         except CancelledError:
