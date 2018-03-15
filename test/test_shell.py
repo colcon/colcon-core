@@ -112,7 +112,11 @@ def test_get_command_environment():
 
 
 def test_get_environment_variables():
-    cmd = ['echo', 'NAME=value', '&&', 'echo', 'NAME2=value with spaces']
+    cmd = [
+        'echo', 'NAME=value', '&&',
+        'echo', '&&',
+        'echo', 'SOMETHING', '&&',
+        'echo', 'NAME2=value with spaces']
 
     coroutine = get_environment_variables(cmd)
     env = run_until_complete(coroutine)

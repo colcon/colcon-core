@@ -245,8 +245,13 @@ async def get_environment_variables(cmd, cwd=None):
     env = {}
     for line in output.splitlines():
         line = line.rstrip()
-        key, value = line.decode().split('=', 1)
-        env[key] = value
+        if not line:
+            continue
+        parts = line.decode().split('=', 1)
+        if len(parts) != 2:
+            # skip lines which don't contain an equal sign
+            continue
+        env[parts[0]] = parts[1]
     return env
 
 
