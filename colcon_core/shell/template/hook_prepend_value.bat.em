@@ -2,7 +2,7 @@
 @@echo off
 
 @{
-value = '$COLCON_CURRENT_PREFIX'
+value = '%COLCON_CURRENT_PREFIX%'
 if subdirectory:
     value += '/' + subdirectory
 }@
@@ -27,13 +27,13 @@ goto :eof
   :: start with the new value
   set "all_values=%value%"
   :: iterate over existing values in the variable
-  for %%v in ("%list:;=";"%") do (
+  for %%v in ("%values:;=";"%") do (
     :: ignore empty strings
     if "%%~v" NEQ "" (
       :: ignore duplicates of value
       if "%%~v" NEQ "%value%" (
         :: keep non-duplicate values
-        set "all_values=!list!;%value%"
+        set "all_values=!all_values!;%%~v"
       )
     )
   )
