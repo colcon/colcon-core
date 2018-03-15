@@ -4,6 +4,7 @@
 import logging
 import os
 
+logging.basicConfig()
 colcon_logger = logging.getLogger('colcon')
 
 try:
