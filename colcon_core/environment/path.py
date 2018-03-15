@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+import sys
 
 from colcon_core import shell
 from colcon_core.environment import EnvironmentExtensionPoint
@@ -18,9 +19,17 @@ class PathEnvironment(EnvironmentExtensionPoint):
             EnvironmentExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def create_environment_hooks(self, prefix_path, pkg_name):  # noqa: D102
-        hooks = []
+        hooks = self._create_environment_hooks(prefix_path, pkg_name, 'bin')
+        if sys.platform == 'win32':
+            hooks += self._create_environment_hooks(
+                prefix_path, pkg_name, 'Scripts', '-scripts')
+        return hooks
 
-        bin_path = prefix_path / 'bin'
+    def _create_environment_hooks(
+        self, prefix_path, pkg_name, subdirectory, suffix=''
+    ):
+        hooks = []
+        bin_path = prefix_path / subdirectory
         logger.log(1, "checking '%s'" % bin_path)
         try:
             names = os.listdir(str(bin_path))
@@ -31,8 +40,8 @@ class PathEnvironment(EnvironmentExtensionPoint):
                 if not (bin_path / name).is_file():
                     continue
                 hooks += shell.create_environment_hook(
-                    'path', prefix_path, pkg_name, 'PATH', 'bin',
-                    mode='prepend')
+                    'path' + suffix, prefix_path, pkg_name, 'PATH',
+                    subdirectory, mode='prepend')
                 break
 
         return hooks
