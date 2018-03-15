@@ -12,6 +12,7 @@ import asyncio
 from concurrent.futures import CancelledError
 from functools import partial
 import os
+import platform
 import shlex
 import subprocess
 import sys
@@ -74,8 +75,8 @@ async def run(
     # if use_pty is neither True nor False choose based on isatty of stdout
     if use_pty is None:
         use_pty = sys.stdout.isatty()
-    # Windows doesn't support the pty module
-    if use_pty and sys.platform == 'win32':
+    # the pty module is only supported on Windows
+    if use_pty and platform.system() != 'Linux':
         use_pty = False
 
     rc, _, _ = await _async_check_call(
