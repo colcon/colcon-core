@@ -5,6 +5,7 @@ from distutils.sysconfig import get_python_lib
 import os
 import re
 import shutil
+import sys
 from sys import executable
 
 from colcon_core.environment import create_environment_hooks
@@ -80,7 +81,7 @@ class PythonBuildTask(TaskExtensionPoint):
                 return rc.returncode
 
         else:
-            self._undo_install(pkg, args, python_lib)
+            self._undo_install(pkg, args, setup_py_data, python_lib)
             self._symlinks_in_build(args, setup_py_data)
 
             # invoke `setup.py develop` step in build space
@@ -118,13 +119,22 @@ class PythonBuildTask(TaskExtensionPoint):
             if rc:
                 return rc
 
-    def _undo_install(self, pkg, args, python_lib):
+    def _undo_install(self, pkg, args, setup_py_data, python_lib):
         # undo previous install if install.log is found
         install_log = os.path.join(args.build_base, 'install.log')
         if not os.path.exists(install_log):
             return
         with open(install_log, 'r') as h:
             lines = [l.rstrip() for l in h.readlines()]
+
+        packages = setup_py_data['packages']
+        for module_name in packages:
+            if module_name in sys.modules:
+                logger.warn(
+                    "Switching to 'develop' for package '{pkg.name}' while it "
+                    'is being used might result in import errors later'
+                    .format_map(locals()))
+                break
 
         # remove previously installed files
         directories = set()
@@ -135,7 +145,7 @@ class PythonBuildTask(TaskExtensionPoint):
             if not line.startswith(python_lib):
                 logger.debug(
                     'While undoing a previous installation files outside the '
-                    'install prefix ({line}) are being ignored'
+                    'Python library path are being ignored: {line}'
                     .format_map(locals()))
                 continue
             if not os.path.isdir(line):
