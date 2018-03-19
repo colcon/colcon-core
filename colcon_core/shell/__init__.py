@@ -232,7 +232,7 @@ async def get_command_environment(task_name, build_base, dependencies):
         'Could not find a shell extension for the command environment')
 
 
-async def get_environment_variables(cmd, cwd=None):
+async def get_environment_variables(cmd, *, cwd=None, shell=True):
     """
     Get the environment variables from the output of the command.
 
@@ -241,7 +241,7 @@ async def get_environment_variables(cmd, cwd=None):
     :param shell: whether to use the shell as the program to execute
     :rtype: dict
     """
-    output = await check_output(cmd, cwd=cwd, shell=True)
+    output = await check_output(cmd, cwd=cwd, shell=shell)
     env = {}
     for line in output.splitlines():
         line = line.rstrip()
@@ -252,6 +252,7 @@ async def get_environment_variables(cmd, cwd=None):
             # skip lines which don't contain an equal sign
             continue
         env[parts[0]] = parts[1]
+    assert len(env) > 0, "The environment shouldn't be empty"
     return env
 
 

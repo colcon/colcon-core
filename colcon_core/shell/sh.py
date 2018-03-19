@@ -96,7 +96,7 @@ class ShShell(ShellExtensionPoint):
                 ''.join('\n- %s' % name for name in missing.keys()))
 
         cmd = ['.', str(hook_path), '&&', 'env']
-        env = await get_environment_variables(cmd, str(build_base))
+        env = await get_environment_variables(cmd, cwd=str(build_base))
 
         # write environment variables to file for debugging
         env_path = build_base / ('colcon_command_prefix_%s.sh.env' % task_name)
