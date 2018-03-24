@@ -8,7 +8,11 @@ install:
   - "%PYTHON%\\python.exe -m pip install -U coloredlogs EmPy"
   # tests_require, except pyenchant, additionally mock
   - "%PYTHON%\\python.exe -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes mock pep8-naming pylint pytest pytest-cov"
+  # for uploading the coverage information to codecov
+  - "%PYTHON%\\python.exe -m pip install -U codecov"
 build: off
 test_script:
   # invoke pytest
-  - "%PYTHON%\\python.exe -m pytest --cov=colcon_core --cov-branch"
+  - "%PYTHON%\\python.exe -m pytest --cov=colcon_core --cov-report=xml:coverage.xml --cov-branch"
+on_success:
+  - "%PYTHON%\\python.exe -m codecov --file coverage.xml -X gcov"
