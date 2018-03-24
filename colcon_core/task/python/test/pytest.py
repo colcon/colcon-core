@@ -4,7 +4,6 @@
 import os
 import sys
 
-from _pytest.main import EXIT_NOTESTSCOLLECTED
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.task import check_call
@@ -102,5 +101,8 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         if args:
             env['PYTEST_ADDOPTS'] = ' '.join(args)
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
+
+        # use local import to avoid a dependency on pytest
+        from _pytest.main import EXIT_NOTESTSCOLLECTED
         if rc and rc.returncode != EXIT_NOTESTSCOLLECTED:
             return rc.returncode
