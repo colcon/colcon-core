@@ -44,7 +44,7 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
 
         # on Windows manually check for wildcards and expand them
         if sys.platform == 'win32':
-            self._expand_wildcards(args.paths)
+            _expand_wildcards(args.paths)
 
         logger.log(1, 'PathPackageDiscovery.discover(%s)', args.paths)
 
@@ -66,25 +66,26 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
 
         return descs
 
-    def _expand_wildcards(self, paths):
-        """
-        Expand wildcards explicitly.
 
-        This is only necessary on Windows.
+def _expand_wildcards(paths):
+    """
+    Expand wildcards explicitly.
 
-        :param list paths: The paths to update in place
-        """
-        i = 0
-        while i < len(paths):
-            path = paths[i]
-            if '*' not in path:
-                i += 1
-                continue
-            expanded_paths = [
-                p for p in glob(path)
-                if os.path.isdir(p)]
-            logger.log(
-                5, "PathPackageDiscovery.discover() expanding '%s' to %s",
-                path, expanded_paths)
-            paths[i:i + 1] = expanded_paths
-            i += len(expanded_paths)
+    This is only necessary on Windows.
+
+    :param list paths: The paths to update in place
+    """
+    i = 0
+    while i < len(paths):
+        path = paths[i]
+        if '*' not in path:
+            i += 1
+            continue
+        expanded_paths = [
+            p for p in sorted(glob(path))
+            if os.path.isdir(p)]
+        logger.log(
+            5, "PathPackageDiscovery.discover() expanding '%s' to %s",
+            path, expanded_paths)
+        paths[i:i + 1] = expanded_paths
+        i += len(expanded_paths)

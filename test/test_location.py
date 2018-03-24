@@ -112,7 +112,7 @@ def test_create_log_path():
         assert (log_path / subdirectory).exists()
 
         # skip all symlink tests on Windows for now
-        if sys.platform == 'win32':  # pragma: no cover
+        if sys.platform == 'win32':
             return
 
         # check that `latest` was created and points to the subdirectory
