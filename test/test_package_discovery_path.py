@@ -2,8 +2,11 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from colcon_core.package_descriptor import PackageDescriptor
+from colcon_core.package_discovery.path import _expand_wildcards
 from colcon_core.package_discovery.path import PathPackageDiscovery
 from colcon_core.package_identification import SkipLocationException
 from mock import Mock
@@ -58,3 +61,21 @@ def test_discover():
         assert descs == {
             PackageDescriptor(os.path.realpath('/same/path')),
             PackageDescriptor(os.path.realpath('/other/path'))}
+
+
+def test__expand_wildcards():
+    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
+        prefix_path = Path(prefix_path)
+        (prefix_path / 'one').mkdir()
+        (prefix_path / 'two').mkdir()
+        (prefix_path / 'three').touch()
+
+        paths = [
+            '/some/path',
+            str(prefix_path / '*')
+        ]
+        _expand_wildcards(paths)
+        assert len(paths) == 3
+        assert paths[0] == '/some/path'
+        assert paths[1] == str((prefix_path / 'one'))
+        assert paths[2] == str((prefix_path / 'two'))

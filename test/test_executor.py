@@ -6,6 +6,7 @@ from concurrent.futures import CancelledError
 
 from colcon_core.event.job import JobEnded
 from colcon_core.event.job import JobQueued
+from colcon_core.event.job import JobSkipped
 from colcon_core.event.job import JobStarted
 from colcon_core.event.output import StderrLine
 from colcon_core.executor import add_executor_arguments
@@ -202,7 +203,7 @@ def test_execute_jobs():
             with pytest.raises(AssertionError):
                 execute_jobs(context, jobs)
 
-            # execute method not implemented
+            # execute method not implemented and sending skipped job event
             context.args.executor = 'extension2'
             with patch('colcon_core.executor.logger.error') as error:
                 rc = execute_jobs(context, jobs)
@@ -211,9 +212,21 @@ def test_execute_jobs():
             assert len(error.call_args[0]) == 1
             assert error.call_args[0][0].startswith(
                 "Exception in executor extension 'extension2': \n")
+            assert event_reactor.get_queue().put.call_count == 2
+            assert isinstance(
+                event_reactor.get_queue().put.call_args_list[0][0][0][0],
+                JobQueued)
+            assert isinstance(
+                event_reactor.get_queue().put.call_args_list[1][0][0][0],
+                JobSkipped)
 
             # successful execution
+            event_reactor.get_queue().put.reset_mock()
+            jobs['one'].returncode = 0
             extensions = get_executor_extensions()
             extensions[110]['extension2'].execute = Mock(return_value=0)
             rc = execute_jobs(context, jobs)
             assert rc is 0
+            assert event_reactor.get_queue().put.call_count == 1
+            assert isinstance(
+                event_reactor.get_queue().put.call_args[0][0][0], JobQueued)

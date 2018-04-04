@@ -23,6 +23,14 @@ def test_extension():
     finally:
         shell.use_all_shell_extensions = use_all_shell_extensions
 
+    if sys.platform != 'win32':
+        shell.use_all_shell_extensions = False
+        try:
+            with pytest.raises(SkipExtensionException):
+                BatShell()
+        finally:
+            shell.use_all_shell_extensions = use_all_shell_extensions
+
 
 def _test_extension(prefix_path):
     extension = BatShell()
