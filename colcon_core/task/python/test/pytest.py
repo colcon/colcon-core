@@ -55,7 +55,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                 *(Path(context.args.build_base).parts)) / 'pytest.xml'),
             '--junit-prefix=' + context.pkg.name,
             '-o cache_dir=' + str(PurePosixPath(
-                *(Path(context.args.build_base).parts)) / '.cache'),
+                *(Path(context.args.build_base).parts)) / '.pytest_cache'),
         ]
         env = dict(env)
 
