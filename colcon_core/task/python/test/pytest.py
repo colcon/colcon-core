@@ -2,6 +2,8 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from pathlib import Path
+from pathlib import PurePosixPath
 import sys
 
 from colcon_core.plugin_system import satisfies_version
@@ -46,22 +48,25 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             'setup.py', 'pytest',
             'egg_info', '--egg-base', context.args.build_base,
         ]
+        # avoid using backslashes in the PYTEST_ADDOPTS env var on Windows
         args = [
             '--tb=short',
-            '--junit-xml=' + os.path.join(
-                context.args.build_base, 'pytest.xml'),
+            '--junit-xml=' + str(PurePosixPath(
+                *(Path(context.args.build_base).parts)) / 'pytest.xml'),
             '--junit-prefix=' + context.pkg.name,
-            '-o cache_dir=' + os.path.join(context.args.build_base, '.cache'),
+            '-o cache_dir=' + str(PurePosixPath(
+                *(Path(context.args.build_base).parts)) / '.cache'),
         ]
         env = dict(env)
 
         if has_test_dependency(setup_py_data, 'pytest-cov'):
             args += [
-                '--cov=' + context.args.path,
-                '--cov-report=html:' + os.path.join(
-                    context.args.build_base, 'coverage.html'),
-                '--cov-report=xml:' + os.path.join(
-                    context.args.build_base, 'coverage.xml'),
+                '--cov=' + str(PurePosixPath(
+                    *(Path(context.args.path).parts))),
+                '--cov-report=html:' + str(PurePosixPath(
+                    *(Path(context.args.build_base).parts)) / 'coverage.html'),
+                '--cov-report=xml:' + str(PurePosixPath(
+                    *(Path(context.args.build_base).parts)) / 'coverage.xml'),
                 '--cov-branch',
             ]
             env['COVERAGE_FILE'] = os.path.join(
