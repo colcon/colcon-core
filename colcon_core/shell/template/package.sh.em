@@ -70,9 +70,7 @@ colcon_package_source_shell_script() {
     fi
     . $@@
   else
-    if [ -n "$COLCON_TRACE" ]; then
-      echo "not found: \"$_colcon_package_source_shell_script\""
-    fi
+    echo "not found: \"$_colcon_package_source_shell_script\"" 1>&2
   fi
 
   unset _colcon_package_source_shell_script
