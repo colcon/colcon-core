@@ -90,7 +90,7 @@ class TaskExtensionPoint:
         task_method = getattr(self, self.TASK_NAME)
         return await task_method(*args, **kwargs)
 
-    def print(self, msg, *, file=None):  # noqa: A001
+    def print(self, msg, *, file=None):  # noqa: A003
         """
         Post a message event into the event queue.
 
