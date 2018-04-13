@@ -5,9 +5,9 @@
 @{
 pkg_prefix = '%%~dp0'
 if not merge_install:
-    pkg_prefix += pkg_name + '/'
+    pkg_prefix += pkg_name + '\\'
 }@
-call:call_file "@(pkg_prefix)share/@(pkg_name)/package.bat
+call:call_file "@(pkg_prefix)share\@(pkg_name)\package.bat
 @[end for]@
 
 goto:eof
