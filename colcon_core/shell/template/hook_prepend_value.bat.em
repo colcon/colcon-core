@@ -26,14 +26,17 @@ goto :eof
   set "values=!%listname%!"
   :: start with the new value
   set "all_values=%value%"
-  :: iterate over existing values in the variable
-  for %%v in ("%values:;=";"%") do (
-    :: ignore empty strings
-    if "%%~v" NEQ "" (
-      :: ignore duplicates of value
-      if "%%~v" NEQ "%value%" (
-        :: keep non-duplicate values
-        set "all_values=!all_values!;%%~v"
+  :: skip loop if values is empty
+  if "%values%" NEQ "" (
+    :: iterate over existing values in the variable
+    for %%v in ("%values:;=";"%") do (
+      :: ignore empty strings
+      if "%%~v" NEQ "" (
+        :: ignore duplicates of value
+        if "%%~v" NEQ "%value%" (
+          :: keep non-duplicate values
+          set "all_values=!all_values!;%%~v"
+        )
       )
     )
   )
