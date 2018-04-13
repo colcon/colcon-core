@@ -20,6 +20,6 @@ goto:eof
     if "%COLCON_TRACE%" NEQ "" echo call "%~1"
     call "%~1%"
   ) else (
-    if "%COLCON_TRACE%" NEQ "" echo not found: "%~1"
+    echo not found: "%~1" 1>&2
   )
 goto:eof
