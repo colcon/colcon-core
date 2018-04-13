@@ -43,7 +43,7 @@ class PackageDiscoveryExtensionPoint:
 
     def add_arguments(self, *, parser, with_default):
         """
-        Add command line arguments specific to the executor.
+        Add command line arguments specific to the package discovery.
 
         The method is intended to be overridden in a subclass.
 

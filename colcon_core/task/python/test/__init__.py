@@ -100,7 +100,7 @@ class PythonTestingStepExtensionPoint:
 
     def add_arguments(self, *, parser):
         """
-        Add command line arguments specific to the executor.
+        Add command line arguments specific to the Python testing step.
 
         The method is intended to be overridden in a subclass.
 

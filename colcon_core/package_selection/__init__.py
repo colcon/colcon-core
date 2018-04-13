@@ -32,7 +32,7 @@ class PackageSelectionExtensionPoint:
 
     def add_arguments(self, *, parser):
         """
-        Add command line arguments specific to the task.
+        Add command line arguments specific to the package selection.
 
         The method is intended to be overridden in a subclass.
 
