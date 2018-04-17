@@ -152,7 +152,8 @@ class TestVerb(VerbExtensionPoint):
         parser.add_argument(
             '--abort-on-error',
             action='store_true',
-            help='Abort after the first package with any failures')
+            help='Abort after the first package with any errors (failing '
+                 'tests are not considered errors in this context)')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 

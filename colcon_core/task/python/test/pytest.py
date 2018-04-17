@@ -109,5 +109,8 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
 
         # use local import to avoid a dependency on pytest
         from _pytest.main import EXIT_NOTESTSCOLLECTED
-        if rc and rc.returncode != EXIT_NOTESTSCOLLECTED:
+        from _pytest.main import EXIT_TESTSFAILED
+        if rc and rc.returncode not in (
+            EXIT_NOTESTSCOLLECTED, EXIT_TESTSFAILED
+        ):
             return rc.returncode
