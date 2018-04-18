@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 from argparse import Namespace
+import os
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_selection import _add_package_selection_arguments
@@ -97,7 +98,10 @@ def test_get_packages():
     ):
         with pytest.raises(RuntimeError) as e:
             get_packages(args)
-        assert str(e).endswith('Duplicate package names not supported')
+        assert 'Duplicate package names not supported:' in str(e.value)
+        assert '- one:' in str(e.value)
+        assert '- {sep}some{sep}path'.format(sep=os.sep) in str(e.value)
+        assert '- {sep}other{sep}path'.format(sep=os.sep) in str(e.value)
 
 
 def test__check_package_selection_parameters():
