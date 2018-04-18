@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import defaultdict
 import traceback
 
 from colcon_core.logging import colcon_logger
@@ -147,9 +148,18 @@ def get_packages(
         recursive_categories=recursive_categories)
     select_package_decorators(args, decorators)
 
+    # check for duplicate package names
     pkgs = [m.descriptor for m in decorators if m.selected]
     if len({d.name for d in pkgs}) < len(pkgs):
-        raise RuntimeError('Duplicate package names not supported')
+        pkg_paths = defaultdict(list)
+        for d in pkgs:
+            pkg_paths[d.name].append('  - {d.path}'.format_map(locals()))
+        raise RuntimeError(
+            'Duplicate package names not supported:\n' +
+            '\n'.join(
+                ('- ' + name + ':\n' + '\n'.join(sorted(pkg_paths[name])))
+                for name in sorted(pkg_paths.keys())
+                if len(pkg_paths[name]) > 1))
 
     return decorators
 
