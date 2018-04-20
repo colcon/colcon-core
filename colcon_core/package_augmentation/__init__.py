@@ -141,7 +141,7 @@ def update_descriptor(
                 desc.dependencies[dep_type].add(d)
     # transfer type specific dependencies
     for dep_type in dep_types:
-        key = '{dep_type}_dependencies'.format_map(locals())
+        key = '{dep_type}-dependencies'.format_map(locals())
         if key in data:
             for d in data[key]:
                 desc.dependencies[dep_type].add(d)
@@ -157,7 +157,7 @@ def update_descriptor(
         additional_argument_names -= {
             'name', 'type', 'dependencies', 'hooks'}
         additional_argument_names -= {
-            '{dep_type}_dependencies'.format_map(locals())
+            '{dep_type}-dependencies'.format_map(locals())
             for dep_type in dep_types}
     for key in (additional_argument_names or []):
         if key in data:
