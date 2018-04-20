@@ -144,4 +144,9 @@ def create_log_path():
         if latest.is_symlink():
             os.remove(str(latest))
 
+        # use relative path when possible
+        try:
+            path = path.relative_to(latest.parent)
+        except ValueError as e:
+            pass
         os.symlink(str(path), str(latest))
