@@ -107,8 +107,8 @@ def test_update_descriptor():
     assert len(desc.metadata) == 0
 
     data = {
-        'build_dependencies': {'b1', 'b2'},
-        'test_dependencies': {'t1'},
+        'build-dependencies': {'b1', 'b2'},
+        'test-dependencies': {'t1'},
     }
     update_descriptor(desc, data)
     assert len(desc.dependencies) == 2
