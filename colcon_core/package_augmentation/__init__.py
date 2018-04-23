@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import OrderedDict
 import copy
 import traceback
 
@@ -131,7 +132,8 @@ def update_descriptor(
 
     :param desc: the package descriptor
     :param data: The dictionary with additional information
-    :param additional_argument_names: A list of argument names
+    :param additional_argument_names: A dict of option names to destination
+      names or a list of argument names
     """
     dep_types = ('build', 'run', 'test')
     # transfer generic dependencies to each specific type
@@ -153,15 +155,22 @@ def update_descriptor(
 
     # transfer any other metadata
     if additional_argument_names == ['*']:
-        additional_argument_names = set(data.keys())
-        additional_argument_names -= {
-            'name', 'type', 'dependencies', 'hooks'}
-        additional_argument_names -= {
-            '{dep_type}-dependencies'.format_map(locals())
-            for dep_type in dep_types}
-    for key in (additional_argument_names or []):
-        if key in data:
-            update_metadata(desc, key, data[key])
+        additional_argument_names = []
+        # skip any of the already explicitly handled names
+        ignored_names = ['name', 'type', 'dependencies', 'hooks']
+        for dep_type in dep_types:
+            ignored_names.append(
+                '{dep_type}-dependencies'.format_map(locals()))
+        for name in data.keys():
+            if name in ignored_names:
+                continue
+            additional_argument_names.append(name)
+    if isinstance(additional_argument_names, list):
+        additional_argument_names = OrderedDict([
+            (name, name) for name in additional_argument_names])
+    for option, dest in (additional_argument_names or {}).items():
+        if option in data:
+            update_metadata(desc, dest, data[option])
 
 
 def update_metadata(desc, key, value):

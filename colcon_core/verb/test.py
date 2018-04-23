@@ -162,8 +162,10 @@ class TestVerb(VerbExtensionPoint):
         decorated_parser = DestinationCollectorDecorator(parser)
         add_task_arguments(decorated_parser, 'test')
         self.task_argument_destinations = decorated_parser.get_destinations()
-        self.task_argument_destinations += (
-            'retest_until_pass', 'retest_until_fail')
+        self.task_argument_destinations['retest-until-pass'] = \
+            'retest_until_pass'
+        self.task_argument_destinations['retest-until-fail'] = \
+            'retest_until_fail'
 
     def main(self, *, context):  # noqa: D102
         check_and_mark_build_tool(context.args.build_base)
@@ -203,8 +205,8 @@ class TestVerb(VerbExtensionPoint):
                 recursive_dependencies[dep_name] = dep_path
 
             package_args = TestPackageArguments(
-                pkg, args,
-                additional_destinations=self.task_argument_destinations)
+                pkg, args, additional_destinations=self
+                .task_argument_destinations.values())
             ordered_package_args = ', '.join([
                 ('%s: %s' % (repr(k), repr(package_args.__dict__[k])))
                 for k in sorted(package_args.__dict__.keys())
