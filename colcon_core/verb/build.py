@@ -212,8 +212,8 @@ class BuildVerb(VerbExtensionPoint):
                 recursive_dependencies[dep_name] = dep_path
 
             package_args = BuildPackageArguments(
-                pkg, args,
-                additional_destinations=self.task_argument_destinations)
+                pkg, args, additional_destinations=self
+                .task_argument_destinations.values())
             ordered_package_args = ', '.join([
                 ('%s: %s' % (repr(k), repr(package_args.__dict__[k])))
                 for k in sorted(package_args.__dict__.keys())
