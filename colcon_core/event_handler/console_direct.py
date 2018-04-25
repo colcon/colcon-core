@@ -43,3 +43,4 @@ class ConsoleDirectEventHandler(EventHandlerExtensionPoint):
                 sys.stderr.buffer.write(data.line)
             else:
                 sys.stderr.write(data.line)
+            sys.stderr.flush()
