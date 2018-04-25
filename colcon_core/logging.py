@@ -64,3 +64,56 @@ def get_numeric_log_level(value):
         if value < 1:
             raise ValueError('numeric log levels must be positive')
     return value
+
+
+def add_file_handler(logger, path):
+    """
+    Add a file handler to the logger which logs messages of all levels.
+
+    :param logger: The logger to add the file handler to
+    :param path: The path of the generated log file
+    :returns: The added file handler
+    :rtype: logging.FileHandler
+    """
+    class Filter(logging.Filter):
+
+        def __init__(self, ignored_name):
+            super().__init__()
+            self._ignored_name = ignored_name
+
+        def filter(self, record):  # noqa: A003
+            if (
+                record.name == self._ignored_name or
+                record.name.startswith(self._ignored_name)
+            ):
+                return 0
+            return super().filter(record)
+
+    # get stream handler formatter from root logger to reuse for file handler
+    formatter = None
+    for handler in logging.getLogger().handlers:
+        if isinstance(handler, logging.StreamHandler):
+            formatter = handler.formatter
+            # filter colcon specific log messages from default stream handler
+            handler.addFilter(Filter(colcon_logger.name))
+
+    # add a stream handler replacing the one filtered on the root logger
+    handler = logging.StreamHandler()
+    if formatter:
+        # use same formatter as for stream handler
+        handler.setFormatter(formatter)
+    handler.setLevel(colcon_logger.getEffectiveLevel())
+    colcon_logger.addHandler(handler)
+
+    # add a file handler writing all log levels
+    handler = logging.FileHandler(str(path))
+    if formatter:
+        # use same formatter as for stream handler
+        handler.setFormatter(formatter)
+    handler.setLevel(1)
+    colcon_logger.addHandler(handler)
+
+    # change the logger to handle all levels
+    colcon_logger.setLevel(1)
+
+    return handler
