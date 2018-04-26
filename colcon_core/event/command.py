@@ -34,7 +34,11 @@ class Command:
         environment variable and the command including the arguments.
         """
         string = "Invoking command in '{self.cwd}': ".format_map(locals())
+        string += self._get_env_string()
+        string += self._get_cmd_string()
+        return string
 
+    def _get_env_string(self):
         # determine differences in environment
         env = {}
         for var_name, new_value in (self.env or {}).items():
@@ -69,13 +73,41 @@ class Command:
             env[var_name] = value
 
         # append variable assignments necessary for custom environment
+        string = ''
         if env:
             for name in sorted(env.keys()):
                 value = env[name]
                 string += '{name}={value} '.format_map(locals())
+        return string
 
-        string += ' '.join([
+    def _get_cmd_string(self):
+        return ' '.join([
             escape_shell_argument(c) if self.shell else c
             for c in self.cmd])
 
+
+class CommandEnded(Command):
+    """An event containing a finished command."""
+
+    __slots__ = ('returncode', )
+
+    def __init__(self, cmd, *, cwd, returncode, env=None, shell=False):
+        """
+        Constructor.
+
+        :param cmd: the sequence of program arguments
+        :param cwd: the working directory
+        :param returncode: the returncode of the command
+        :param env: a dictionary with environment variables
+        :param shell: whether to use the shell as the program to execute
+        """
+        super().__init__(cmd, cwd=cwd, env=env, shell=shell)
+        self.returncode = returncode
+
+    def to_string(self):
+        """Get a string describing the invoked command and its return code."""
+        string = "Invoked command in '{self.cwd}' returned " \
+            "'{self.returncode}': ".format_map(locals())
+        string += self._get_env_string()
+        string += self._get_cmd_string()
         return string

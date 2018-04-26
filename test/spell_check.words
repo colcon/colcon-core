@@ -47,6 +47,7 @@ rc
 realpath
 recrawling
 reimplement
+returncode
 rtype
 setupscript
 sigint

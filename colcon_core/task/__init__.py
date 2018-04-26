@@ -7,6 +7,7 @@ import sys
 import traceback
 
 from colcon_core.event.command import Command
+from colcon_core.event.command import CommandEnded
 from colcon_core.event.job import JobProgress
 from colcon_core.event.output import StderrLine
 from colcon_core.event.output import StdoutLine
@@ -143,9 +144,13 @@ async def check_call(
 
     context.put_event_into_queue(
         Command(cmd, cwd=cwd, env=env, shell=shell))
-    return await run(
+    rc = await run(
         cmd, stdout_callback, stderr_callback,
         cwd=cwd, env=env, shell=shell, use_pty=use_pty)
+    context.put_event_into_queue(
+        CommandEnded(
+            cmd, cwd=cwd, env=env, shell=shell, returncode=rc.returncode))
+    return rc
 
 
 def get_task_extensions(task_name, *, unique_instance=False):
