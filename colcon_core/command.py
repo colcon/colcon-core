@@ -12,9 +12,12 @@ import traceback
 from colcon_core.argument_parser import decorate_argument_parser
 from colcon_core.entry_point import load_entry_points
 from colcon_core.environment_variable import EnvironmentVariable
+from colcon_core.location import create_log_path
 from colcon_core.location import get_config_path
+from colcon_core.location import get_log_path
 from colcon_core.location import set_default_config_path
 from colcon_core.location import set_default_log_path
+from colcon_core.logging import add_file_handler
 from colcon_core.logging import colcon_logger  # noqa: F401
 from colcon_core.logging import get_numeric_log_level
 from colcon_core.logging import set_logger_level_from_env
@@ -102,6 +105,23 @@ def main(*, command_name='colcon', argv=None):
         base_path=get_config_path() / 'log',
         env_var='{command_name}_LOG_PATH'.format_map(locals()).upper(),
         subdirectory='{args.verb_name}_{now_str}'.format_map(locals()))
+
+    # add a file handler writing all levels
+    create_log_path()
+    handler = add_file_handler(
+        colcon_logger, get_log_path() / 'logger_all.log')
+    # write previous log messages to the file handler
+    log_record = colcon_logger.makeRecord(
+        colcon_logger.name, logging.DEBUG, __file__, 0,
+        'Command line arguments: {argv}'
+        .format(argv=argv if argv is not None else sys.argv),
+        None, None)
+    handler.handle(log_record)
+    log_record = colcon_logger.makeRecord(
+        colcon_logger.name, logging.DEBUG, __file__, 0,
+        'Parsed command line arguments: {args}'.format_map(locals()),
+        None, None)
+    handler.handle(log_record)
 
     # invoke verb
     return verb_main(context, colcon_logger)
