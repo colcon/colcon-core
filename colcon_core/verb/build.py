@@ -134,7 +134,7 @@ class BuildVerb(VerbExtensionPoint):
         parser.add_argument(
             '--build-base',
             default='build',
-            help='The base path for all build directorys (default: build)')
+            help='The base path for all build directories (default: build)')
         parser.add_argument(
             '--install-base',
             default='install',
