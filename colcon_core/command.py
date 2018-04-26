@@ -107,7 +107,7 @@ def main(*, command_name='colcon', argv=None):
         subdirectory='{args.verb_name}_{now_str}'.format_map(locals()))
 
     # add a file handler writing all levels
-    create_log_path()
+    create_log_path(args.verb_name)
     handler = add_file_handler(
         colcon_logger, get_log_path() / 'logger_all.log')
     # write previous log messages to the file handler
