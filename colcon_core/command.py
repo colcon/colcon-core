@@ -13,7 +13,6 @@ from colcon_core.argument_parser import decorate_argument_parser
 from colcon_core.entry_point import load_entry_points
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.location import create_log_path
-from colcon_core.location import get_config_path
 from colcon_core.location import get_log_path
 from colcon_core.location import set_default_config_path
 from colcon_core.location import set_default_log_path
@@ -102,7 +101,7 @@ def main(*, command_name='colcon', argv=None):
     now = datetime.datetime.now()
     now_str = str(now)[:-7].replace(' ', '_').replace(':', '-')
     set_default_log_path(
-        base_path=get_config_path() / 'log',
+        base_path=args.log_base,
         env_var='{command_name}_LOG_PATH'.format_map(locals()).upper(),
         subdirectory='{args.verb_name}_{now_str}'.format_map(locals()))
 
@@ -193,6 +192,10 @@ def add_log_level_argument(parser):
 
     :param parser: The argument parser
     """
+    parser.add_argument(
+        '--log-base',
+        default='log',
+        help='The base path for all log directories (default: log)')
     parser.add_argument(
         '--log-level', action=LogLevelAction,
         help='Set log level for the console output, either by numeric or '
