@@ -109,12 +109,16 @@ def set_default_log_path(*, base_path, env_var=None, subdirectory=None):
 _create_log_path_lock = Lock()
 
 
-def create_log_path():
+def create_log_path(verb_name):
     """
     Create the logging directory if it doesn't exist yet.
 
-    On non-Windows platforms a symlink named `latest` is created in the base
-    path which links to the subdirectory.
+    On non-Windows platforms two symlinks are created as siblings of the log
+    path:
+    * `latest_<verb_name>` linking to the log path
+    * `latest` linking to `latest_<verb_name>`
+
+    :param str verb_name: The verb name
     """
     path = get_log_path()
     if path.exists():
@@ -127,26 +131,33 @@ def create_log_path():
             return
         os.makedirs(str(path), exist_ok=True)
 
-        # create latest symlink
+        # create latest symlinks
         if sys.platform == 'win32':
             return
-        latest = path.parent / 'latest'
-        if latest.exists():
-            # directory exists or valid symlink
-            if not latest.is_symlink():
-                # do not change non symlink paths
-                return
-            if latest.resolve() == path.resolve():
-                # desired symlink already exists
-                return
-        # remove valid symlink to wrong destination (if)
-        # or invalid symlink (else)
-        if latest.is_symlink():
-            os.remove(str(latest))
+        _create_symlink(
+            path, path.parent / 'latest_{verb_name}'.format_map(locals()))
+        _create_symlink(
+            path.parent / 'latest_{verb_name}'.format_map(locals()),
+            path.parent / 'latest')
 
-        # use relative path when possible
-        try:
-            path = path.relative_to(latest.parent)
-        except ValueError as e:
-            pass
-        os.symlink(str(path), str(latest))
+
+def _create_symlink(src, dst):
+    if dst.exists():
+        # directory exists or valid symlink
+        if not dst.is_symlink():
+            # do not change non symlink paths
+            return
+        if dst.resolve() == src.resolve():
+            # desired symlink already exists
+            return
+    # remove valid symlink to wrong destination (if)
+    # or invalid symlink (else)
+    if dst.is_symlink():
+        os.remove(str(dst))
+
+    # use relative path when possible
+    try:
+        src = src.relative_to(dst.parent)
+    except ValueError as e:
+        pass
+    os.symlink(str(src), str(dst))

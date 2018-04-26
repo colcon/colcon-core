@@ -95,7 +95,7 @@ def test_create_log_path():
         base_path=log_path.parent, subdirectory=log_path.name)
     with patch('os.makedirs') as makedirs:
         makedirs.side_effect = AssertionError('should not be called')
-        create_log_path()
+        create_log_path('verb')
     # no latest symlink is being created either
     assert not (log_path.parent / 'latest').exists()
 
@@ -106,7 +106,7 @@ def test_create_log_path():
         # create a directory and symlink when the path doesn't exist
         set_default_log_path(base_path=log_path, subdirectory=subdirectory)
         with patch('os.makedirs', wraps=os.makedirs) as makedirs:
-            create_log_path()
+            create_log_path('verb')
             makedirs.assert_called_once_with(
                 str(log_path / subdirectory), exist_ok=True)
         assert (log_path / subdirectory).exists()
@@ -115,6 +115,11 @@ def test_create_log_path():
         if sys.platform == 'win32':
             return
 
+        # check that `latest_verb` was created and points to the subdirectory
+        assert (log_path / 'latest_verb').is_symlink()
+        assert (log_path / 'latest_verb').resolve() == \
+            (log_path / subdirectory).resolve()
+
         # check that `latest` was created and points to the subdirectory
         assert (log_path / 'latest').is_symlink()
         assert (log_path / 'latest').resolve() == \
@@ -122,7 +127,7 @@ def test_create_log_path():
 
         # create directory but correct latest symlink already exists
         (log_path / subdirectory).rmdir()
-        create_log_path()
+        create_log_path('verb')
         assert (log_path / subdirectory).exists()
         assert (log_path / 'latest').is_symlink()
         assert (log_path / 'latest').resolve() == \
@@ -131,7 +136,7 @@ def test_create_log_path():
         # create directory and update latest symlink
         subdirectory = 'other_sub'
         set_default_log_path(base_path=log_path, subdirectory=subdirectory)
-        create_log_path()
+        create_log_path('verb')
         assert (log_path / subdirectory).exists()
         assert (log_path / 'latest').is_symlink()
         assert (log_path / 'latest').resolve() == \
@@ -141,7 +146,7 @@ def test_create_log_path():
         (log_path / subdirectory).rmdir()
         (log_path / 'latest').unlink()
         (log_path / 'latest').mkdir()
-        create_log_path()
+        create_log_path('verb')
         assert (log_path / subdirectory).exists()
         assert not (log_path / 'latest').is_symlink()
 
@@ -163,6 +168,6 @@ def test_create_log_path_race():
 
         with patch('os.makedirs') as makedirs:
             makedirs.side_effect = AssertionError('should not be called')
-            create_log_path()
+            create_log_path('verb')
         # no latest symlink is being created either
         assert not (log_path / 'latest').exists()
