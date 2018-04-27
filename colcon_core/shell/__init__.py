@@ -310,3 +310,39 @@ def create_environment_hook(
             'Could not find a primary shell extension for creating an '
             'environment hook')
     return hooks
+
+
+_get_colcon_prefix_path_warnings = set()
+
+
+def get_colcon_prefix_path(*, skip):
+    """
+    Get the paths from the COLCON_PREFIX_PATH environment variable.
+
+    For not existing paths a warning is being printed and the path is being
+    skipped.
+    Even for repeated invocation a warning is only being printed once for each
+    non existing path.
+
+    :param skip: The current prefix path to be skipped and not be included in
+      the return value
+    :returns: The list of prefix paths
+    :rtype: list
+    """
+    global _get_colcon_prefix_path_warnings
+    prefix_path = []
+    colcon_prefix_path = os.environ.get('COLCON_PREFIX_PATH', '')
+    for path in colcon_prefix_path.split(os.pathsep):
+        if not path:
+            continue
+        if path == str(skip):
+            continue
+        if not os.path.exists(path):
+            if path not in _get_colcon_prefix_path_warnings:
+                logger.warn(
+                    "The path '{path}' in the environment variable "
+                    "COLCON_PREFIX_PATH doesn't exist".format_map(locals()))
+                _get_colcon_prefix_path_warnings.add(path)
+            continue
+        prefix_path.append(path)
+    return prefix_path
