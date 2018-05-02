@@ -13,6 +13,7 @@ from colcon_core.task.python.test import has_test_dependency
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
 from pkg_resources import iter_entry_points
+from pkg_resources import parse_version
 
 
 class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
@@ -54,9 +55,15 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             '--junit-xml=' + str(PurePosixPath(
                 *(Path(context.args.build_base).parts)) / 'pytest.xml'),
             '--junit-prefix=' + context.pkg.name,
-            '-o cache_dir=' + str(PurePosixPath(
-                *(Path(context.args.build_base).parts)) / '.pytest_cache'),
         ]
+        # use -o option only when available
+        # https://github.com/pytest-dev/pytest/blob/3.3.0/CHANGELOG.rst
+        from pytest import __version__ as pytest_version
+        if parse_version(pytest_version) >= parse_version('3.3.0'):
+            args += [
+                '-o cache_dir=' + str(PurePosixPath(
+                    *(Path(context.args.build_base).parts)) / '.pytest_cache'),
+            ]
         env = dict(env)
 
         if has_test_dependency(setup_py_data, 'pytest-cov'):
@@ -67,8 +74,14 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                     *(Path(context.args.build_base).parts)) / 'coverage.html'),
                 '--cov-report=xml:' + str(PurePosixPath(
                     *(Path(context.args.build_base).parts)) / 'coverage.xml'),
-                '--cov-branch',
             ]
+            # use --cov-branch option only when available
+            # https://github.com/pytest-dev/pytest-cov/blob/v2.5.0/CHANGELOG.rst
+            from pytest_cov import __version__ as pytest_cov_version
+            if parse_version(pytest_cov_version) >= parse_version('2.5.0'):
+                args += [
+                    '--cov-branch',
+                ]
             env['COVERAGE_FILE'] = os.path.join(
                 context.args.build_base, '.coverage')
 
