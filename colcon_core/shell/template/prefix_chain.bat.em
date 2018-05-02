@@ -8,7 +8,7 @@
 
 :: source chained prefixes
 @[  for prefix in reversed(colcon_prefix_path)]@
-call:_colcon_prefix_chain_bat_call_script "@(prefix)/@(prefix_script_no_ext).bat"
+call:_colcon_prefix_chain_bat_call_script "@(prefix)\@(prefix_script_no_ext).bat"
 @[  end for]@
 @[end if]@
 

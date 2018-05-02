@@ -10,7 +10,7 @@ call:_colcon_prefix_bat_prepend_unique_value COLCON_PREFIX_PATH "%%~dp0"
 
 :: source packages
 @[  for pkg_name in pkg_names]@
-call:_colcon_prefix_bat_call_script "%%~dp0@('' if merge_install else (pkg_name + '/'))share/@(pkg_name)/@(package_script_no_ext).bat"
+call:_colcon_prefix_bat_call_script "%%~dp0@('' if merge_install else (pkg_name + '\\'))share\@(pkg_name)\@(package_script_no_ext).bat"
 @[  end for]@
 @[end if]@
 
