@@ -8,6 +8,7 @@ import sys
 from colcon_core import shell
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
+from colcon_core.shell import get_colcon_prefix_path
 from colcon_core.shell import get_environment_variables
 from colcon_core.shell import logger
 from colcon_core.shell import ShellExtensionPoint
@@ -29,7 +30,7 @@ class BatShell(ShellExtensionPoint):
     def create_prefix_script(
         self, prefix_path, pkg_names, merge_install
     ):  # noqa: D102
-        prefix_env_path = prefix_path / 'prefix.bat'
+        prefix_env_path = prefix_path / 'local_setup.bat'
         logger.info("Creating prefix script '%s'" % prefix_env_path)
         expand_template(
             Path(__file__).parent / 'template' / 'prefix.bat.em',
@@ -37,6 +38,18 @@ class BatShell(ShellExtensionPoint):
             {
                 'pkg_names': pkg_names,
                 'merge_install': merge_install,
+                'package_script_no_ext': 'package',
+            })
+
+        prefix_chain_env_path = prefix_path / 'setup.bat'
+        logger.info(
+            "Creating prefix chain script '%s'" % prefix_chain_env_path)
+        expand_template(
+            Path(__file__).parent / 'template' / 'prefix_chain.bat.em',
+            prefix_chain_env_path,
+            {
+                'colcon_prefix_path': get_colcon_prefix_path(skip=prefix_path),
+                'prefix_script_no_ext': 'local_setup',
             })
 
     def create_package_script(

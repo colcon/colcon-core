@@ -1,11 +1,6 @@
 # generated from colcon_core/shell/template/package.sh.em
-@[if hooks]@
 
-# since a plain shell script can't determine its own path when being sourced
-# either use the provided COLCON_CURRENT_PREFIX
-# or fall back to the destination set at build time
-: ${COLCON_CURRENT_PREFIX:=@(prefix_path)}
-
+# This script extends the environment for this package.
 
 # function to prepend a value to a variable
 # which uses colons as separators
@@ -22,11 +17,6 @@ colcon_prepend_unique_value() {
   # backup the field separator
   _colcon_prepend_unique_value_IFS=$IFS
   IFS=":"
-  # while this file should only consider plain shell
-  # this is the easiest way to reuse the plain shell logic for zsh
-  if [ "$COLCON_SHELL" = "zsh" ]; then
-    colcon_zsh_to_array _values
-  fi
   # start with the new value
   _all_values="$_value"
   # iterate over existing values in the variable
@@ -54,39 +44,46 @@ colcon_prepend_unique_value() {
   unset _value
   unset _listname
 }
+@[if hooks]@
 
+# since a plain shell script can't determine its own path when being sourced
+# either use the provided COLCON_CURRENT_PREFIX
+# or fall back to the build time prefix (if it exists)
+_colcon_package_sh_COLCON_CURRENT_PREFIX="@(prefix_path)"
+if [ -z "$COLCON_CURRENT_PREFIX" ]; then
+  if [ ! -d "$_colcon_package_sh_COLCON_CURRENT_PREFIX" ]; then
+    echo "The build time path \"$_colcon_package_sh_COLCON_CURRENT_PREFIX\" doesn't exist. Either source a script for a different shell or set the environment variable \"COLCON_CURRENT_PREFIX\" explicitly." 1>&2
+    unset _colcon_package_sh_COLCON_CURRENT_PREFIX
+    return 1
+  fi
+  COLCON_CURRENT_PREFIX="$_colcon_package_sh_COLCON_CURRENT_PREFIX"
+fi
+unset _colcon_package_sh_COLCON_CURRENT_PREFIX
 
 # function to source another script with conditional trace output
-# first argument: the name of the script file
+# first argument: the path of the script
 # additional arguments: arguments to the script
-colcon_package_source_shell_script() {
-  # arguments
-  _colcon_package_source_shell_script="$1"
-
-  # source script with conditional trace output
-  if [ -f "$_colcon_package_source_shell_script" ]; then
+_colcon_package_sh_source_script() {
+  if [ -f "$1" ]; then
     if [ -n "$COLCON_TRACE" ]; then
-      echo ". \"$_colcon_package_source_shell_script\""
+      echo ". \"$1\""
     fi
     . $@@
   else
-    echo "not found: \"$_colcon_package_source_shell_script\"" 1>&2
+    echo "not found: \"$1\"" 1>&2
   fi
-
-  unset _colcon_package_source_shell_script
 }
 
-
-@[end if]@
-@[for hook in hooks]@
-colcon_package_source_shell_script "$COLCON_CURRENT_PREFIX/@(hook[0])"@
-@[  for hook_arg in hook[1]]@
+# source sh hooks
+@[  for hook in hooks]@
+_colcon_package_sh_source_script "$COLCON_CURRENT_PREFIX/@(hook[0])"@
+@[    for hook_arg in hook[1]]@
  @(hook_arg)@
-@[  end for]
-@[end for]@
-@[if hooks]@
+@[    end for]
+@[  end for]@
 
-unset colcon_package_source_shell_script
-unset colcon_prepend_unique_value
+unset _colcon_package_sh_source_script
 unset COLCON_CURRENT_PREFIX
 @[end if]@
+
+# do not unset colcon_prepend_unique_value since it might be used by non-primary shell hooks

@@ -3,9 +3,11 @@
 
 import os
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.shell import create_environment_hook
+from colcon_core.shell import get_colcon_prefix_path
 from colcon_core.shell import get_command_environment
 from colcon_core.shell import get_environment_variables
 from colcon_core.shell import get_shell_extensions
@@ -15,6 +17,7 @@ from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext
+from .environment_context import EnvironmentContext
 from .run_until_complete import run_until_complete
 
 
@@ -176,3 +179,38 @@ def test_create_environment_hook():
         with pytest.raises(NotImplementedError):
             create_environment_hook(
                 None, None, None, None, None, mode='invalid')
+
+
+def test_get_colcon_prefix_path():
+    # empty environment variable
+    with EnvironmentContext(COLCON_PREFIX_PATH=''):
+        prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+        assert prefix_path == []
+
+    # extra path separator
+    with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep):
+        prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+        assert prefix_path == []
+
+    with TemporaryDirectory(prefix='test_colcon_') as basepath:
+        basepath = Path(basepath)
+        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
+            [str(basepath), str(basepath)]
+        )):
+            # multiple results
+            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+            assert prefix_path == [str(basepath), str(basepath)]
+
+            # skipping results
+            prefix_path = get_colcon_prefix_path(skip=str(basepath))
+            assert prefix_path == []
+
+        # skipping non-existing results
+        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
+            [str(basepath), str(basepath / 'non-existing-sub')]
+        )):
+            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+            assert prefix_path == [str(basepath)]
+            # cached result
+            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+            assert prefix_path == [str(basepath)]
