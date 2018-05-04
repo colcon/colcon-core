@@ -6,6 +6,7 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import sys
 
+from colcon_core.event.test import TestFailure
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.task import check_call
@@ -121,8 +122,12 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest
-        from _pytest.main import EXIT_NOTESTSCOLLECTED
         from _pytest.main import EXIT_TESTSFAILED
+        if rc and rc.returncode == EXIT_TESTSFAILED:
+            context.put_event_into_queue(
+                TestFailure(context.pkg.name))
+
+        from _pytest.main import EXIT_NOTESTSCOLLECTED
         if rc and rc.returncode not in (
             EXIT_NOTESTSCOLLECTED, EXIT_TESTSFAILED
         ):

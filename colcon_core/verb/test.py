@@ -121,7 +121,13 @@ def update_object(object_, key, value, package_name, value_source):
 
 
 class TestVerb(VerbExtensionPoint):
-    """Test a set of packages."""
+    """
+    Test a set of packages.
+
+    Each test task is expected to post a
+    :py:class:`colcon_core.event.test.TestFailure` event in case of test
+    failures.
+    """
 
     def __init__(self):  # noqa: D107
         super().__init__()
