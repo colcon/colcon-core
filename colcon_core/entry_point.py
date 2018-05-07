@@ -51,6 +51,12 @@ def get_all_entry_points():
             group = entry_map[group_name]
             for entry_point_name, entry_point in group.items():
                 entry_point.group_name = group_name
+                if entry_point_name in entry_points[group_name]:
+                    previous = entry_points[group_name][entry_point_name]
+                    logger.error(
+                        "Entry point '{group_name}.{entry_point_name}' is "
+                        "declared multiple times, '{entry_point}' overwriting "
+                        "'{previous}'".format_map(locals()))
                 entry_points[group_name][entry_point_name] = \
                     (dist, entry_point)
     return entry_points
@@ -68,6 +74,12 @@ def get_entry_points(group_name):
     entry_points = {}
     for entry_point in iter_entry_points(group=group_name):
         entry_point.group_name = group_name
+        if entry_point.name in entry_points:
+            previous_entry_point = entry_points[entry_point.name]
+            logger.error(
+                "Entry point '{group_name}.{entry_point.name}' is declared "
+                "multiple times, '{entry_point}' overwriting "
+                "'{previous_entry_point}'".format_map(locals()))
         entry_points[entry_point.name] = entry_point
     return entry_points
 
