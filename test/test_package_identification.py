@@ -10,7 +10,7 @@ from colcon_core.package_identification \
 from colcon_core.package_identification import identify
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
-from colcon_core.package_identification import SkipLocationException
+from colcon_core.package_identification import IgnoreLocationException
 from mock import Mock
 from mock import patch
 import pytest
@@ -90,8 +90,8 @@ def test_identify():
         # skip location
         extensions = get_package_identification_extensions()
         extensions[90]['extension3'].identify = Mock(
-            side_effect=SkipLocationException())
-        with pytest.raises(SkipLocationException):
+            side_effect=IgnoreLocationException())
+        with pytest.raises(IgnoreLocationException):
             identify(extensions, path)
 
         # valid result from first priority group
@@ -112,7 +112,7 @@ def test_identify():
             side_effect=identify_name)
         extensions[100]['extension4'].identify = Mock(
             side_effect=identify_type)
-        with pytest.raises(SkipLocationException):
+        with pytest.raises(IgnoreLocationException):
             identify(extensions, path)
 
 
@@ -168,8 +168,8 @@ def test__identify():
         # skip location
         extensions = get_package_identification_extensions()[90]
         extensions['extension3'].identify = Mock(
-            side_effect=SkipLocationException())
-        with pytest.raises(SkipLocationException):
+            side_effect=IgnoreLocationException())
+        with pytest.raises(IgnoreLocationException):
             _identify(extensions, desc_path_only)
 
         # raise exception

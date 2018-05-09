@@ -14,7 +14,7 @@ from colcon_core.plugin_system import order_extensions_grouped_by_priority
 logger = colcon_logger.getChild(__name__)
 
 
-class SkipLocationException(Exception):
+class IgnoreLocationException(Exception):
     """
     Exception to signal that a path should be skipped.
 
@@ -58,7 +58,7 @@ class PackageIdentificationExtensionPoint:
         :param desc: The package descriptor with the directory to check
         :type desc:
           :py:class:`colcon_core.package_descriptor.PackageDescriptor`
-        :raises SkipLocationException: Skip the path as well as all recursive
+        :raises IgnoreLocationException: Skip the path as well as all recursive
           subdirectories
         """
         raise NotImplementedError()
@@ -106,7 +106,7 @@ def identify(
 
         # skip location since identification is ambiguous
         if result is False:
-            raise SkipLocationException()
+            raise IgnoreLocationException()
 
         assert isinstance(result, PackageDescriptor), result
         if result.identifies_package():
@@ -134,7 +134,7 @@ def _identify(extensions_same_prio, desc):
         try:
             retval = extension.identify(desc2)
             assert retval is None, 'identify() should return None'
-        except SkipLocationException:
+        except IgnoreLocationException:
             logger.log(1, '_identify(%s) ignored', desc.path)
             raise
         except Exception as e:

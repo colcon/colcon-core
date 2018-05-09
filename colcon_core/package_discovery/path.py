@@ -8,7 +8,7 @@ import sys
 from colcon_core.package_discovery import logger
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
 from colcon_core.package_identification import identify
-from colcon_core.package_identification import SkipLocationException
+from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.plugin_system import satisfies_version
 
 
@@ -59,7 +59,7 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
 
             try:
                 result = identify(identification_extensions, real_path)
-            except SkipLocationException:
+            except IgnoreLocationException:
                 continue
             if result:
                 descs.add(result)

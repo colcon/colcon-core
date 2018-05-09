@@ -4,7 +4,7 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from colcon_core.package_identification import SkipLocationException
+from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.package_identification.ignore import IGNORE_MARKER
 from colcon_core.package_identification.ignore \
     import IgnorePackageIdentification
@@ -20,5 +20,5 @@ def test_identify():
         assert extension.identify(metadata) is None
 
         (metadata.path / IGNORE_MARKER).write_text('')
-        with pytest.raises(SkipLocationException):
+        with pytest.raises(IgnoreLocationException):
             extension.identify(metadata)
