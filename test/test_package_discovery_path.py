@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_discovery.path import _expand_wildcards
 from colcon_core.package_discovery.path import PathPackageDiscovery
-from colcon_core.package_identification import SkipLocationException
+from colcon_core.package_identification import IgnoreLocationException
 from mock import Mock
 from mock import patch
 
@@ -39,7 +39,7 @@ def identify(_, path):
     if path == os.path.realpath('/empty/path'):
         return None
     if path == os.path.realpath('/skip/path'):
-        raise SkipLocationException()
+        raise IgnoreLocationException()
     return PackageDescriptor(path)
 
 

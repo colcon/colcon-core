@@ -3,7 +3,7 @@
 
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
-from colcon_core.package_identification import SkipLocationException
+from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.plugin_system import satisfies_version
 
 IGNORE_MARKER = 'COLCON_IGNORE'
@@ -24,4 +24,4 @@ class IgnorePackageIdentification(PackageIdentificationExtensionPoint):
     def identify(self, desc):  # noqa: D102
         colcon_ignore = desc.path / IGNORE_MARKER
         if colcon_ignore.exists():
-            raise SkipLocationException()
+            raise IgnoreLocationException()
