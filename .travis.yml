@@ -14,7 +14,7 @@ install:
   # tests_require
   - if [ "$TEST_SUITE" = "pytest" ]; then pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov; fi
   # colcon test needs pytest-cov and pytest-runner
-  - if [ "$TEST_SUITE" = "bootstrap" ]; then pip install -U pytest-cov pytest-runner; fi
+  - if [ "$TEST_SUITE" = "bootstrap" ]; then pip install -U pytest-cov pytest-rerunfailures pytest-repeat pytest-runner; fi
   # for uploading the coverage information to codecov
   - if [ "$TEST_SUITE" = "pytest" ]; then pip install codecov; fi
 script:
