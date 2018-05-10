@@ -8,9 +8,9 @@ from colcon_core.package_identification import _identify
 from colcon_core.package_identification \
     import get_package_identification_extensions
 from colcon_core.package_identification import identify
+from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
-from colcon_core.package_identification import IgnoreLocationException
 from mock import Mock
 from mock import patch
 import pytest
