@@ -131,6 +131,14 @@ def create_log_path(verb_name):
             return
         os.makedirs(str(path), exist_ok=True)
 
+        # ensure the base log path has an ignore marker file
+        # to avoid recursively crawling through log directories
+        from colcon_core.package_identification.ignore import IGNORE_MARKER
+        ignore_marker = path.parent / IGNORE_MARKER
+        if not ignore_marker.exists():
+            with ignore_marker.open('w'):
+                pass
+
         # create latest symlinks
         if sys.platform == 'win32':
             return
