@@ -100,8 +100,10 @@ class EventReactor(Thread):
         An :class:`EventReactorShutdown` event is added to the queue to notify
         all observers that the event reactor is about to shut down.
         """
+        logger.debug('joining thread')
         self._queue.put((EventReactorShutdown(), None))
         super().join(*args, **kwargs)
+        logger.debug('joined thread')
 
 
 class EventReactorShutdown:
