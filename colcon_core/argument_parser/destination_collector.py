@@ -26,7 +26,7 @@ class DestinationCollectorDecorator(ArgumentParserDecorator):
         Get destinations for all added arguments.
 
         :returns: The destination names
-        :rtype: list
+        :rtype: OrderedDict
         """
         destinations = OrderedDict()
         destinations.update(self._destinations)
