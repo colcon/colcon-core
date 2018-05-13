@@ -9,7 +9,7 @@ from colcon_core.argument_parser import ArgumentParserDecorator
 class DestinationCollectorDecorator(ArgumentParserDecorator):
     """Collect the option names and destination of arguments."""
 
-    def __init__(self, parser):
+    def __init__(self, parser, **kwargs):
         """
         Constructor.
 
@@ -19,7 +19,8 @@ class DestinationCollectorDecorator(ArgumentParserDecorator):
         # pass them as keyword arguments instead
         super().__init__(
             parser,
-            _destinations=OrderedDict())
+            _destinations=OrderedDict(),
+            **kwargs)
 
     def get_destinations(self):
         """
