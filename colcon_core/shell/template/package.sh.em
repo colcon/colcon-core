@@ -19,6 +19,10 @@ colcon_prepend_unique_value() {
   IFS=":"
   # start with the new value
   _all_values="$_value"
+  # workaround SH_WORD_SPLIT not being set in zsh
+  if typeset -f colcon_zsh_convert_to_array > /dev/null; then
+    colcon_zsh_convert_to_array _values
+  fi
   # iterate over existing values in the variable
   for _item in $_values; do
     # ignore empty strings
