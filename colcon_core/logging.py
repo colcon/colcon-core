@@ -108,6 +108,16 @@ def add_file_handler(logger, path):
     # add a file handler writing all log levels
     handler = logging.FileHandler(str(path))
     if formatter:
+        # if the format string doesn't use the time information
+        # prepend the relative time to every message
+        if not formatter.usesTime():
+            format_message = formatter.formatMessage
+
+            def format_message_with_relative_time(record):
+                nonlocal format_message
+                return '[%.3fs] ' % (record.created - logging._startTime) + \
+                    format_message(record)
+            formatter.formatMessage = format_message_with_relative_time
         # use same formatter as for stream handler
         handler.setFormatter(formatter)
     handler.setLevel(1)
