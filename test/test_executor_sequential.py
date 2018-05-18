@@ -107,7 +107,7 @@ def test_sequential_keyboard_interrupt():
     thread = Thread(target=delayed_sigint)
     try:
         thread.start()
-        with pytest.raises(KeyboardInterrupt):
-            extension.execute(args, jobs)
+        rc = extension.execute(args, jobs)
+        assert rc == signal.SIGINT
     finally:
         thread.join()

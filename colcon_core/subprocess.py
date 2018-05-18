@@ -9,6 +9,7 @@ to maintain the original order as closely as possible.
 """
 
 import asyncio
+from concurrent.futures import ALL_COMPLETED
 from concurrent.futures import CancelledError
 from functools import partial
 import os
@@ -148,9 +149,13 @@ async def _async_check_call(
             callbacks.append(_fd2callback(stderr_master_fd, stderr_callback))
     else:
         if callable(stdout_callback):
-            callbacks.append(_pipe2callback(process.stdout, stdout_callback))
+            callbacks.append(_pipe2callback(
+                process.stdout, stdout_callback,
+                process.stderr if callable(stderr_callback) else None))
         if callable(stderr_callback):
-            callbacks.append(_pipe2callback(process.stderr, stderr_callback))
+            callbacks.append(asyncio.ensure_future(_pipe2callback(
+                process.stderr, stderr_callback,
+                process.stdout if callable(stdout_callback) else None)))
 
     output = [None, None]
     if not stdout_callback and not stderr_callback:
@@ -172,11 +177,15 @@ async def _async_check_call(
                 # pseudo terminals need to be closed explicitly
                 stdout if use_pty else None, stderr if use_pty else None))
         try:
-            await asyncio.gather(*callbacks)
+            done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
         except CancelledError as e:
             # finish the communication with the subprocess
-            await process.wait()
+            done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
             raise
+        finally:
+            # read potential exceptions to avoid asyncio errors
+            for task in done:
+                _ = task.exception()  # noqa: F841
 
     return process.returncode, output[0], output[1]
 
@@ -223,7 +232,7 @@ def _blocking_fd2callback(stream, callback):
         callback(line.encode())
 
 
-async def _pipe2callback(stream, callback):
+async def _pipe2callback(stream, callback, other_stream=None):
     """Coroutine reading from pipe and invoking the callback for each line."""
     while True:
         line = await stream.readline()
@@ -231,6 +240,11 @@ async def _pipe2callback(stream, callback):
             # this is how the pipe signals the EOF
             break
         callback(line)
+
+    # HACK on Windows sometimes only one of the two streams gets closed
+    # feeding an EOF explicitly ensures that the other coroutine finishes
+    if sys.platform == 'win32' and other_stream:
+        other_stream.feed_eof()
 
 
 async def _wait_and_close_fds(process, stdout=None, stderr=None):

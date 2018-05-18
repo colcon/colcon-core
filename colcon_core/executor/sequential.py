@@ -4,6 +4,7 @@
 import asyncio
 import logging
 import signal
+import sys
 import traceback
 
 from colcon_core.executor import ExecutorExtensionPoint
@@ -45,18 +46,25 @@ class SequentialExecutor(ExecutorExtensionPoint):
                     loop.run_until_complete(future)
                 except KeyboardInterrupt:
                     logger.debug(
-                        "run_until_complete '{name}' was interrupted, "
-                        'run_until_complete again'.format_map(locals()))
+                        "run_until_complete '{name}' was interrupted"
+                        .format_map(locals()))
                     # override job rc with special SIGINT value
                     job.returncode = SIGINT_RESULT
                     # ignore further SIGINTs
                     signal.signal(signal.SIGINT, signal.SIG_IGN)
                     # wait for job which has also received a SIGINT
-                    loop.run_until_complete(future)
+                    if not future.done():
+                        logger.debug(
+                            "run_until_complete '{name}' again"
+                            .format_map(locals()))
+                        loop.run_until_complete(future)
+                        assert future.done()
+                    # read potential exception to avoid asyncio error
+                    _ = future.exception()  # noqa: F841
                     logger.debug(
                         "run_until_complete '{name}' finished"
                         .format_map(locals()))
-                    raise
+                    return signal.SIGINT
                 except Exception as e:
                     exc = traceback.format_exc()
                     logger.error(
@@ -73,5 +81,13 @@ class SequentialExecutor(ExecutorExtensionPoint):
                     if abort_on_error:
                         return rc
         finally:
-            loop.close()
+            for task in asyncio.Task.all_tasks():
+                if not task.done():
+                    logger.error("Task '{task}' not done".format_map(locals()))
+            # HACK on Windows closing the event loop seems to hang after Ctrl-C
+            # even though no futures are pending
+            if sys.platform != 'win32':
+                logger.debug('closing loop')
+                loop.close()
+                logger.debug('loop closed')
         return rc
