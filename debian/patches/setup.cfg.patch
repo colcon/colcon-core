@@ -1,0 +1,21 @@
+Description: Remove dependencies unavailable from Debian packages
+ Otherwise being listed there but not being installed would result in a
+ runtime error by pkg_resources.
+Author: Dirk Thomas <web@dirk-thomas.net>
+
+--- setup.cfg	2018-05-27 11:22:33.000000000 -0700
++++ setup.cfg.patched	2018-05-27 11:22:33.000000000 -0700
+@@ -31,8 +31,11 @@
+ 	EmPy
+ 	pytest
+ 	pytest-cov
+-	pytest-repeat
+-	pytest-rerunfailures
++	# the following dependencies are not available from Debian
++	# so listing them here but not installing them in the Debian package
++	# would result in a runtime error by pkg_resources
++	# pytest-repeat
++	# pytest-rerunfailures
+ 	setuptools
+ packages = find:
+ tests_require = 
