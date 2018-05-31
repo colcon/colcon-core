@@ -37,7 +37,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         parser.add_argument(
             '--pytest-args',
             nargs='*', metavar='*', type=str.lstrip,
-            help='Pass arguments to all pytests. '
+            help='Pass arguments to pytests. '
             'Arguments matching other options must be prefixed by a space,\n'
             'e.g. --pytest-args " --help"')
 
