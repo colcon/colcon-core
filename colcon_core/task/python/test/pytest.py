@@ -37,9 +37,9 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         parser.add_argument(
             '--pytest-args',
             nargs='*', metavar='*', type=str.lstrip,
-            help='Pass arguments to all pytests. Every arg starting with a '
-            'dash must be prefixed by a space,\n'
-            'e.g. --pytest-args " --showlocals"')
+            help='Pass arguments to all pytests. '
+            'Arguments matching other options must be prefixed by a space,\n'
+            'e.g. --pytest-args " --help"')
 
     def match(self, context, env, setup_py_data):  # noqa: D102
         return has_test_dependency(setup_py_data, 'pytest')
