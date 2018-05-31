@@ -139,8 +139,21 @@ def create_parser(environment_variables_group_name):
       the environment variable extensions
     :returns: The argument parser
     """
+    # workaround a limitation in argparse to accept arguments to options
+    # which begin with a dash but are not options themselves
+    # https://bugs.python.org/issue9334
+    class CustomArgumentParser(argparse.ArgumentParser):
+
+        def _parse_optional(self, arg_string):
+            result = super()._parse_optional(arg_string)
+            if result == (None, arg_string, None):
+                # in the case there the arg is classified as an unknown 'O'
+                # override that and classify it as an 'A'
+                return None
+            return result
+
     # top level parser
-    parser = argparse.ArgumentParser(
+    parser = CustomArgumentParser(
         formatter_class=CustomFormatter,
         epilog=get_environment_variables_epilog(
             environment_variables_group_name))
