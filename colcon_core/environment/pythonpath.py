@@ -22,9 +22,9 @@ class PythonPathEnvironment(EnvironmentExtensionPoint):
         hooks = []
 
         python_path = Path(get_python_lib(prefix=str(prefix_path)))
-        rel_python_path = python_path.relative_to(prefix_path)
         logger.log(1, "checking '%s'" % python_path)
         if python_path.exists():
+            rel_python_path = python_path.relative_to(prefix_path)
             hooks += shell.create_environment_hook(
                 'pythonpath', prefix_path, pkg_name,
                 'PYTHONPATH', str(rel_python_path), mode='prepend')
