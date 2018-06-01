@@ -4,6 +4,7 @@
 import signal
 
 from colcon_core.command import CommandContext
+from colcon_core.command import create_parser
 from colcon_core.command import main
 from colcon_core.command import verb_main
 from colcon_core.environment_variable import EnvironmentVariable
@@ -62,6 +63,23 @@ def test_main():
                 }
             ):
                 main(argv=['extension1'])
+
+
+def test_create_parser():
+    with EntryPointContext():
+        parser = create_parser('colcon_core.environment_variable')
+
+    parser.add_argument('--foo', nargs='*', type=str.lstrip)
+    args = parser.parse_args(['--foo', '--bar', '--baz'])
+    assert args.foo == ['--bar', '--baz']
+
+    parser.add_argument('--baz', action='store_true')
+    args = parser.parse_args(['--foo', '--bar', '--baz'])
+    assert args.foo == ['--bar']
+    assert args.baz is True
+
+    args = parser.parse_args(['--foo', '--bar', ' --baz'])
+    assert args.foo == ['--bar', '--baz']
 
 
 class Object(object):
