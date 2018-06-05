@@ -118,7 +118,9 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             args += context.args.pytest_args
 
         if args:
-            env['PYTEST_ADDOPTS'] = ' '.join(args)
+            env['PYTEST_ADDOPTS'] = ' '.join(
+                a if ' ' not in a else '"{a}"'.format_map(locals())
+                for a in args)
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest
