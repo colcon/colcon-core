@@ -53,4 +53,5 @@ def test_command_to_string():
             "Invoking command in '/some/path': executable && 'other exec'"
     else:
         assert command.to_string() == \
-            "Invoking command in '/some/path': executable && other exec"
+            "Invoking command in '/some/path': " \
+            'executable && "other exec"'

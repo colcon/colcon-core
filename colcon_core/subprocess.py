@@ -198,10 +198,6 @@ def escape_shell_argument(arg):
     :returns: The escaped command line argument
     :rtype: str
     """
-    if sys.platform == 'win32':
-        # no escaping of shell arguments on Windows
-        return arg
-
     # some literals must not be quoted
     unquoted_values = [';', '|', '&&', '||']
     if arg in unquoted_values:
@@ -211,7 +207,14 @@ def escape_shell_argument(arg):
         return arg
     if arg.startswith('$(') and arg.endswith(')'):
         return arg
-    return shlex.quote(arg)
+
+    quoted = shlex.quote(arg)
+    if sys.platform == 'win32':
+        # Windows doesn't like paths with single quotes
+        if len(quoted) > 1 and quoted.startswith("'") and quoted.endswith("'"):
+            quoted = '"' + quoted[1:-1] + '"'
+
+    return quoted
 
 
 async def _fd2callback(stream, callback):
