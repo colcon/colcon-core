@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import signal
+from tempfile import TemporaryDirectory
 
 from colcon_core.command import CommandContext
 from colcon_core.command import create_parser
@@ -45,7 +46,10 @@ def test_main():
                 main(argv=['--log-level', 'invalid'])
             assert e.value.code == 2
 
-            main(argv=['--log-level', 'info'])
+            # avoid creating log directory in the package directory
+            with TemporaryDirectory(prefix='test_colcon_') as log_base:
+                argv = ['--log-base', log_base]
+                main(argv=argv + ['--log-level', 'info'])
 
             with pytest.raises(SystemExit) as e:
                 main(argv=['--help'])
@@ -62,7 +66,10 @@ def test_main():
                         'a_very_long_consecutive_word'),
                 }
             ):
-                main(argv=['extension1'])
+                # avoid creating log directory in the package directory
+                with TemporaryDirectory(prefix='test_colcon_') as log_base:
+                    argv = ['--log-base', log_base]
+                    main(argv=argv + ['extension1'])
 
 
 def test_create_parser():
