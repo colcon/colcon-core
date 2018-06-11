@@ -62,7 +62,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         from pytest import __version__ as pytest_version
         if parse_version(pytest_version) >= parse_version('3.3.0'):
             args += [
-                '-o cache_dir=' + str(PurePosixPath(
+                '-o', 'cache_dir=' + str(PurePosixPath(
                     *(Path(context.args.build_base).parts)) / '.pytest_cache'),
             ]
         env = dict(env)
