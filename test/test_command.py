@@ -1,7 +1,9 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import shutil
 import signal
+from tempfile import mkdtemp
 
 from colcon_core.command import CommandContext
 from colcon_core.command import create_parser
@@ -42,27 +44,35 @@ def test_main():
             return_value={}
         ):
             with pytest.raises(SystemExit) as e:
-                main(argv=['--log-level', 'invalid'])
-            assert e.value.code == 2
-
-            main(argv=['--log-level', 'info'])
-
-            with pytest.raises(SystemExit) as e:
                 main(argv=['--help'])
             assert e.value.code == 0
 
-            with patch(
-                'colcon_core.command.load_entry_points',
-                return_value={
-                    'key1': EnvironmentVariable('name', 'description'),
-                    'key2': EnvironmentVariable(
-                        'extra_long_name_to_wrap help',
-                        'extra long description text to require a wrap of the '
-                        'help text not_only_on_spaces_but_also_forced_within_'
-                        'a_very_long_consecutive_word'),
-                }
-            ):
-                main(argv=['extension1'])
+            with pytest.raises(SystemExit) as e:
+                main(argv=['--log-level', 'invalid'])
+            assert e.value.code == 2
+
+            # avoid creating log directory in the package directory
+            log_base = mkdtemp(prefix='test_colcon_')
+            argv = ['--log-base', log_base]
+            try:
+                main(argv=argv + ['--log-level', 'info'])
+
+                with patch(
+                    'colcon_core.command.load_entry_points',
+                    return_value={
+                        'key1': EnvironmentVariable('name', 'description'),
+                        'key2': EnvironmentVariable(
+                            'extra_long_name_to_wrap help',
+                            'extra long description text to require a wrap of '
+                            'the help text not_only_on_spaces_but_also_forced_'
+                            'within_a_very_long_consecutive_word'),
+                    }
+                ):
+                    main(argv=argv + ['extension1'])
+            finally:
+                # the logging subsystem might still have file handles pending
+                # therefore only try to delete the temporary directory
+                shutil.rmtree(log_base, ignore_errors=True)
 
 
 def test_create_parser():
