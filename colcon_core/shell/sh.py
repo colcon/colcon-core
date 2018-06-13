@@ -3,6 +3,7 @@
 
 from collections import OrderedDict
 from pathlib import Path
+import shutil
 import sys
 
 from colcon_core import shell
@@ -23,13 +24,11 @@ class ShShell(ShellExtensionPoint):
 
     def __init__(self):  # noqa: D107
         super().__init__()
-        satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
+        satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^2.0')
         if sys.platform == 'win32' and not shell.use_all_shell_extensions:
             raise SkipExtensionException('Not used on Windows systems')
 
-    def create_prefix_script(
-        self, prefix_path, pkg_names, merge_install
-    ):  # noqa: D102
+    def create_prefix_script(self, prefix_path, merge_install):  # noqa: D102
         prefix_env_path = prefix_path / 'local_setup.sh'
         logger.info("Creating prefix script '%s'" % prefix_env_path)
         expand_template(
@@ -37,10 +36,13 @@ class ShShell(ShellExtensionPoint):
             prefix_env_path,
             {
                 'prefix_path': prefix_path,
-                'pkg_names': pkg_names,
+                'python_executable': sys.executable,
                 'merge_install': merge_install,
                 'package_script_no_ext': 'package',
             })
+        shutil.copy(
+            str(self._get_prefix_util_path()),
+            str(prefix_path / '_local_setup_util.py'))
 
         prefix_chain_env_path = prefix_path / 'setup.sh'
         logger.info(

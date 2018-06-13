@@ -172,8 +172,7 @@ class BuildVerb(VerbExtensionPoint):
 
         rc = execute_jobs(context, jobs)
 
-        self._create_prefix_scripts(
-            install_base, decorators, context.args.merge_install)
+        self._create_prefix_scripts(install_base, context.args.merge_install)
 
         return rc
 
@@ -233,17 +232,14 @@ class BuildVerb(VerbExtensionPoint):
             jobs[pkg.name] = job
         return jobs
 
-    def _create_prefix_scripts(
-        self, install_base, decorators, merge_install,
-    ):
-        ordered_pkg_names = [m.descriptor.name for m in decorators]
+    def _create_prefix_scripts(self, install_base, merge_install):
         extensions = get_shell_extensions()
         for priority in extensions.keys():
             extensions_same_prio = extensions[priority]
             for extension in extensions_same_prio.values():
                 try:
                     retval = extension.create_prefix_script(
-                        Path(install_base), ordered_pkg_names, merge_install)
+                        Path(install_base), merge_install)
                     assert retval is None, \
                         'create_prefix_script() should return None'
                 except Exception as e:
