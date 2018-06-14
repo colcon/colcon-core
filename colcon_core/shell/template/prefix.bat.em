@@ -13,7 +13,7 @@ call:ament_get_ordered_packages _ordered_packages "%~dp0"
 :: source packages
 if "%_ordered_packages%" NEQ "" (
   for %%p in ("%_ordered_packages:;=";"%") do (
-    call:_colcon_prefix_bat_call_script "%%~dp0@('' if merge_install else '%%~p\\')share\%%~p\@(package_script_no_ext).bat"
+    call:_colcon_prefix_bat_call_script "%~dp0@('' if merge_install else '%%~p\\')share\%%~p\@(package_script_no_ext).bat"
   )
   set "_ordered_packages="
 )
