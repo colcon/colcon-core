@@ -51,10 +51,10 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             'egg_info', '--egg-base', context.args.build_base,
         ]
         # avoid using backslashes in the PYTEST_ADDOPTS env var on Windows
+        junit_xml_path = Path(context.args.build_base) / 'pytest.xml'
         args = [
             '--tb=short',
-            '--junit-xml=' + str(PurePosixPath(
-                *(Path(context.args.build_base).parts)) / 'pytest.xml'),
+            '--junit-xml=' + str(PurePosixPath(*junit_xml_path.parts)),
             '--junit-prefix=' + context.pkg.name,
         ]
         # use -o option only when available
@@ -121,6 +121,17 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             env['PYTEST_ADDOPTS'] = ' '.join(
                 a if ' ' not in a else '"{a}"'.format_map(locals())
                 for a in args)
+
+        # create dummy result in case the invocation fails early
+        # and doesn't generate a result file at all
+        junit_xml_path.write_text("""<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="{context.pkg.name}" tests="1" failures="1" time="0" errors="0" skip="0">
+  <testcase classname="{context.pkg.name}" name="pytest.missing_result" status="run" time="0">
+    <failure message="The test invocation failed without generating a result file."/>
+  </testcase>
+</testsuite>
+""".format_map(locals()))  # noqa: E501
+
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest
