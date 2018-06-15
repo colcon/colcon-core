@@ -6,13 +6,17 @@
 
 :: add this prefix to the COLCON_PREFIX_PATH
 call:_colcon_prefix_bat_prepend_unique_value COLCON_PREFIX_PATH "%%~dp0"
-@[if pkg_names]@
+
+:: get all packages in topological order
+call:_colcon_get_ordered_packages _ordered_packages "%~dp0"
 
 :: source packages
-@[  for pkg_name in pkg_names]@
-call:_colcon_prefix_bat_call_script "%%~dp0@('' if merge_install else (pkg_name + '\\'))share\@(pkg_name)\@(package_script_no_ext).bat"
-@[  end for]@
-@[end if]@
+if "%_ordered_packages%" NEQ "" (
+  for %%p in ("%_ordered_packages:;=";"%") do (
+    call:_colcon_prefix_bat_call_script "%~dp0@('' if merge_install else '%%~p\\')share\%%~p\@(package_script_no_ext).bat"
+  )
+  set "_ordered_packages="
+)
 
 goto:eof
 
@@ -49,6 +53,36 @@ goto:eof
   :: set result variable in parent scope
   endlocal & (
     set "%~1=%all_values%"
+  )
+goto:eof
+
+
+:: Get the package names in topological order
+:: using semicolons as separators and avoiding leading separators.
+:: first argument: the name of the result variable
+:: second argument: the base path to look for packages
+:_colcon_get_ordered_packages
+  setlocal enabledelayedexpansion
+
+  :: use the Python executable known at configure time
+  set "_colcon_python_executable=@(python_executable)"
+  :: allow overriding it with a custom location
+  if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
+    set "_colcon_python_executable=%COLCON_PYTHON_EXECUTABLE%"
+  )
+
+  set "_colcon_ordered_packages="
+  for /f %%p in ('""%_colcon_python_executable%" "%~dp0_local_setup_util.py"@
+@[if merge_install]@
+ --merged-install@
+@[end if]@
+"') do (
+    if "!_colcon_ordered_packages!" NEQ "" set "_colcon_ordered_packages=!_colcon_ordered_packages!;"
+    set "_colcon_ordered_packages=!_colcon_ordered_packages!%%p"
+  )
+  endlocal & (
+    :: set result variable in parent scope
+    set "%~1=%_colcon_ordered_packages%"
   )
 goto:eof
 

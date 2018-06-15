@@ -32,7 +32,7 @@ class Extension2(ShellExtensionPoint):
 def test_extension_interface():
     extension = Extension1()
     with pytest.raises(NotImplementedError):
-        extension.create_prefix_script(None, None, None)
+        extension.create_prefix_script(None, None)
     with pytest.raises(NotImplementedError):
         extension.create_package_script(None, None, None)
     with pytest.raises(NotImplementedError):

@@ -35,7 +35,7 @@ class ShellExtensionPoint:
     """
 
     """The version of the shell extension interface."""
-    EXTENSION_POINT_VERSION = '1.0'
+    EXTENSION_POINT_VERSION = '2.0'
 
     """
     The default priority of shell extensions.
@@ -53,7 +53,7 @@ class ShellExtensionPoint:
     """
     PRIORITY = 100
 
-    def create_prefix_script(self, prefix_path, pkg_names, merge_install):
+    def create_prefix_script(self, prefix_path, merge_install):
         """
         Create a script in the install prefix path.
 
@@ -62,11 +62,19 @@ class ShellExtensionPoint:
         This method must be overridden in a subclass.
 
         :param Path prefix_path: The path of the install prefix
-        :param list pkg_names: The package names
         :param bool merge_install: The flag if all packages share the same
           install prefix
         """
         raise NotImplementedError()
+
+    def _get_prefix_util_path(self):
+        """
+        Get the absolute path of the `prefix_util.py` module.
+
+        :returns: The path of the module file
+        :rtype: Path
+        """
+        return Path(__file__).parent / 'template' / 'prefix_util.py'
 
     def create_package_script(self, prefix_path, pkg_name, hooks):
         """

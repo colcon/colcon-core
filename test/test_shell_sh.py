@@ -36,11 +36,9 @@ def _test_extension(prefix_path):
     extension = ShShell()
 
     # create_prefix_script
-    extension.create_prefix_script(prefix_path, ['pkgA', 'pkgB'], False)
+    extension.create_prefix_script(prefix_path, False)
     assert (prefix_path / 'local_setup.sh').exists()
-    content = (prefix_path / 'local_setup.sh').read_text()
-    assert 'pkgA' in content
-    assert 'pkgB' in content
+    assert (prefix_path / '_local_setup_util.py').exists()
 
     # create_package_script
     extension.create_package_script(

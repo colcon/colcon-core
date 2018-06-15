@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -51,49 +52,51 @@ class Extension4(ShellExtensionPoint):
 
 
 def test_create_environment_scripts():
-    pkg = Mock()
-    pkg.name = 'name'
-    pkg.hooks = []
-    args = Mock()
-    args.install_base = '/some/path'
+    with TemporaryDirectory(prefix='test_colcon_') as basepath:
+        pkg = Mock()
+        pkg.name = 'name'
+        pkg.dependencies = {}
+        pkg.hooks = []
+        args = Mock()
+        args.install_base = basepath
 
-    # no hooks at all
-    with patch(
-        'colcon_core.environment.create_environment_hooks', return_value=[]
-    ):
+        # no hooks at all
         with patch(
-            'colcon_core.environment.get_shell_extensions', return_value={}
+            'colcon_core.environment.create_environment_hooks', return_value=[]
         ):
-            create_environment_scripts(pkg, args)
+            with patch(
+                'colcon_core.environment.get_shell_extensions', return_value={}
+            ):
+                create_environment_scripts(pkg, args)
 
-    pkg.hooks = ['/some/path/subA']
-    with EntryPointContext(extension3=Extension3, extension4=Extension4):
-        extensions = get_shell_extensions()
-        # one invalid return value, one check correct hooks argument
-        extensions[100]['extension3'].create_package_script = Mock()
-        extensions[100]['extension4'].create_package_script = Mock(
-            return_value=None)
-        with patch('colcon_core.environment.logger.error') as error:
-            create_environment_scripts(
-                pkg, args, default_hooks=[('subB', )],
-                additional_hooks=[['subC', 'arg1', 'arg2']])
-        # the raised exception is catched and results in an error message
-        assert error.call_count == 1
-        assert len(error.call_args[0]) == 1
-        assert error.call_args[0][0].startswith(
-            "Exception in shell extension 'extension3': "
-            'create_package_script() should return None\n')
-        # check for correct hooks argument
-        mock = extensions[100]['extension4'].create_package_script
-        assert mock.call_count == 1
-        assert len(mock.call_args[0]) == 3
-        assert mock.call_args[0][0] == Path(args.install_base)
-        assert mock.call_args[0][1] == pkg.name
-        hook_tuples = mock.call_args[0][2]
-        assert len(hook_tuples) == 3
-        assert hook_tuples[0] == ('subB', ())
-        assert hook_tuples[1] == ('subC', ['arg1', 'arg2'])
-        assert hook_tuples[2] == ('subA', [])
+        pkg.hooks = [os.path.join(basepath, 'subA')]
+        with EntryPointContext(extension3=Extension3, extension4=Extension4):
+            extensions = get_shell_extensions()
+            # one invalid return value, one check correct hooks argument
+            extensions[100]['extension3'].create_package_script = Mock()
+            extensions[100]['extension4'].create_package_script = Mock(
+                return_value=None)
+            with patch('colcon_core.environment.logger.error') as error:
+                create_environment_scripts(
+                    pkg, args, default_hooks=[('subB', )],
+                    additional_hooks=[['subC', 'arg1', 'arg2']])
+            # the raised exception is catched and results in an error message
+            assert error.call_count == 1
+            assert len(error.call_args[0]) == 1
+            assert error.call_args[0][0].startswith(
+                "Exception in shell extension 'extension3': "
+                'create_package_script() should return None\n')
+            # check for correct hooks argument
+            mock = extensions[100]['extension4'].create_package_script
+            assert mock.call_count == 1
+            assert len(mock.call_args[0]) == 3
+            assert mock.call_args[0][0] == Path(args.install_base)
+            assert mock.call_args[0][1] == pkg.name
+            hook_tuples = mock.call_args[0][2]
+            assert len(hook_tuples) == 3
+            assert hook_tuples[0] == ('subB', ())
+            assert hook_tuples[1] == ('subC', ['arg1', 'arg2'])
+            assert hook_tuples[2] == ('subA', [])
 
 
 def test_create_environment_hooks():

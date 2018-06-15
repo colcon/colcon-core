@@ -67,6 +67,9 @@ def create_environment_scripts(
     """
     Create the environment scripts for a package.
 
+    Also create a file with the runtime dependencies of each packages which can
+    be used by the prefix scripts to source all packages in topological order.
+
     :param pkg: The package descriptor
     :param args: The parsed command line arguments
     :param list default_hooks: If none are parsed explicitly the hooks provided
@@ -118,6 +121,12 @@ def create_environment_scripts(
                     "Exception in shell extension '{extension.SHELL_NAME}': "
                     '{e}\n{exc}'.format_map(locals()))
                 # skip failing extension, continue with next one
+
+    # create file containing the runtime dependencies
+    path = prefix_path / 'share' / 'colcon_core' / 'packages' / pkg.name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        os.pathsep.join(sorted(pkg.dependencies.get('run', set()))))
 
 
 def create_environment_hooks(prefix_path, pkg_name):
