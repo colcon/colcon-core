@@ -8,7 +8,7 @@
 call:_colcon_prefix_bat_prepend_unique_value COLCON_PREFIX_PATH "%%~dp0"
 
 :: get all packages in topological order
-call:ament_get_ordered_packages _ordered_packages "%~dp0"
+call:_colcon_get_ordered_packages _ordered_packages "%~dp0"
 
 :: source packages
 if "%_ordered_packages%" NEQ "" (
@@ -61,7 +61,7 @@ goto:eof
 :: using semicolons as separators and avoiding leading separators.
 :: first argument: the name of the result variable
 :: second argument: the base path to look for packages
-:ament_get_ordered_packages
+:_colcon_get_ordered_packages
   setlocal enabledelayedexpansion
 
   :: use the Python executable known at configure time
