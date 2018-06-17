@@ -50,8 +50,11 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             'setup.py', 'pytest',
             'egg_info', '--egg-base', context.args.build_base,
         ]
+        junit_xml_path = Path(
+            context.args.test_result_base
+            if context.args.test_result_base
+            else context.args.build_base) / 'pytest.xml'
         # avoid using backslashes in the PYTEST_ADDOPTS env var on Windows
-        junit_xml_path = Path(context.args.build_base) / 'pytest.xml'
         args = [
             '--tb=short',
             '--junit-xml=' + str(PurePosixPath(*junit_xml_path.parts)),
@@ -124,6 +127,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
 
         # create dummy result in case the invocation fails early
         # and doesn't generate a result file at all
+        junit_xml_path.parent.mkdir(parents=True, exist_ok=True)
         junit_xml_path.write_text("""<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="{context.pkg.name}" tests="1" failures="1" time="0" errors="0" skip="0">
   <testcase classname="{context.pkg.name}" name="pytest.missing_result" status="run" time="0">
