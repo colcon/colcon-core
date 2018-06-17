@@ -48,6 +48,9 @@ class TestPackageArguments:
         if not args.merge_install:
             self.install_base = os.path.join(
                 self.install_base, pkg.name)
+        self.test_result_base = os.path.abspath(os.path.join(
+            os.getcwd(), args.test_result_base, pkg.name)) \
+            if args.test_result_base else None
 
         # set additional arguments from the command line or package metadata
         for dest in (additional_destinations or []):
@@ -146,6 +149,9 @@ class TestVerb(VerbExtensionPoint):
             '--merge-install',
             action='store_true',
             help='Merge all install prefixes into a single location')
+        parser.add_argument(
+            '--test-result-base',
+            help='The base path for all test results (default: --build-base)')
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
             '--retest-until-fail',

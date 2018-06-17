@@ -51,6 +51,9 @@ class BuildPackageArguments:
             self.install_base = os.path.join(
                 self.install_base, pkg.name)
         self.symlink_install = args.symlink_install
+        self.test_result_base = os.path.abspath(os.path.join(
+            os.getcwd(), args.test_result_base, pkg.name)) \
+            if args.test_result_base else None
 
         # set additional arguments from the command line or package metadata
         for dest in (additional_destinations or []):
@@ -147,6 +150,9 @@ class BuildVerb(VerbExtensionPoint):
             '--symlink-install',
             action='store_true',
             help='Use symlinks instead of copying files where possible')
+        parser.add_argument(
+            '--test-result-base',
+            help='The base path for all test results (default: --build-base)')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
