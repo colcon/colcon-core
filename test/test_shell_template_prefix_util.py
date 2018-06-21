@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from colcon_core.location import get_relative_package_index_path
 from colcon_core.shell.template.prefix_util import get_packages
 from colcon_core.shell.template.prefix_util import main
 from colcon_core.shell.template.prefix_util import order_packages
@@ -29,7 +30,7 @@ def test_get_packages():
         prefix_path = Path(prefix_path)
 
         # mock packages in not merged install layout
-        subdirectory = 'share/colcon_core/packages'
+        subdirectory = get_relative_package_index_path()
         for pkg_name in ('pkgA', 'pkgB'):
             (prefix_path / pkg_name / subdirectory).mkdir(parents=True)
             (prefix_path / pkg_name / subdirectory / pkg_name).write_text(

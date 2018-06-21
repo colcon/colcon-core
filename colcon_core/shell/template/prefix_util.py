@@ -34,6 +34,8 @@ def get_packages(prefix_path, merged_install):
     :rtype: dict
     """
     packages = {}
+    # since importing colcon_core isn't feasible here the following constant
+    # must match colcon_core.location.get_relative_package_index_path()
     subdirectory = 'share/colcon_core/packages'
     if merged_install:
         # find all files in the subdirectory

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import traceback
 
+from colcon_core.location import get_relative_package_index_path
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_priority
@@ -123,7 +124,7 @@ def create_environment_scripts(
                 # skip failing extension, continue with next one
 
     # create file containing the runtime dependencies
-    path = prefix_path / 'share' / 'colcon_core' / 'packages' / pkg.name
+    path = prefix_path / get_relative_package_index_path() / pkg.name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         os.pathsep.join(sorted(pkg.dependencies.get('run', set()))))

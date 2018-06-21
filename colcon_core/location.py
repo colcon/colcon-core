@@ -169,3 +169,14 @@ def _create_symlink(src, dst):
     except ValueError as e:
         pass
     os.symlink(str(src), str(dst))
+
+
+def get_relative_package_index_path():
+    """
+    Get the prefix-relative path to the package index.
+
+    :returns: The relative path to the package index
+    :rtype: Path
+    """
+    # the value is also being hard coded in shell/template/prefix_util.py
+    return Path('share', 'colcon_core', 'packages')
