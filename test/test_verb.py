@@ -5,6 +5,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from colcon_core.verb import check_and_mark_build_tool
+from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import get_verb_extensions
 from colcon_core.verb import VerbExtensionPoint
 import pytest
@@ -65,3 +66,31 @@ def test_check_and_mark_build_tool():
         marker_path.write_text('other')
         with pytest.raises(RuntimeError):
             check_and_mark_build_tool(str(path))
+
+
+def test_check_and_mark_install_layout():
+    with TemporaryDirectory(prefix='test_colcon_') as base_path:
+        base_path = Path(base_path)
+
+        # create marker if it doesn't exist
+        check_and_mark_install_layout(str(base_path), merge_install=False)
+        marker_path = base_path / '.colcon_install_layout'
+        assert marker_path.exists()
+        assert marker_path.read_text().rstrip() == 'isolated'
+
+        # create path and marker if it doesn't exist
+        path = base_path / 'no_base'
+        check_and_mark_install_layout(str(path), merge_install=True)
+        assert path.exists()
+        marker_path = path / '.colcon_install_layout'
+        assert marker_path.exists()
+        assert marker_path.read_text().rstrip() == 'merged'
+
+        # existing marker with same content
+        check_and_mark_install_layout(str(path), merge_install=True)
+        assert marker_path.exists()
+        assert marker_path.read_text().rstrip() == 'merged'
+
+        # existing marker with different content
+        with pytest.raises(RuntimeError):
+            check_and_mark_install_layout(str(path), merge_install=False)
