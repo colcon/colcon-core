@@ -112,6 +112,11 @@ def check_and_mark_install_layout(install_base, *, merge_install):
                 'install directory, pick a different one or {change_option} '
                 "the '--merge-install' option.".format_map(locals()))
     else:
-        os.makedirs(install_base, exist_ok=True)
+        try:
+            os.makedirs(install_base, exist_ok=True)
+        except FileExistsError:
+            raise RuntimeError(
+                "The install base '{install_base}' is not a directory"
+                .format_map(locals()))
 
     marker_path.write_text(this_install_layout + '\n')

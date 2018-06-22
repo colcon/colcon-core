@@ -94,3 +94,7 @@ def test_check_and_mark_install_layout():
         # existing marker with different content
         with pytest.raises(RuntimeError):
             check_and_mark_install_layout(str(path), merge_install=False)
+
+        # install base which is a file
+        with pytest.raises(RuntimeError):
+            check_and_mark_install_layout(str(marker_path), merge_install=True)
