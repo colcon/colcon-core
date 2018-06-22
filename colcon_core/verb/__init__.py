@@ -85,3 +85,38 @@ def check_and_mark_build_tool(build_base, *, this_build_tool='colcon'):
         os.makedirs(build_base, exist_ok=True)
 
     marker_path.write_text(this_build_tool + '\n')
+
+
+def check_and_mark_install_layout(install_base, *, merge_install):
+    """
+    Check the marker file for the previous install layout, otherwise create it.
+
+    The marker filename is `.colcon_install_layout`.
+
+    :param str install_base: The install directory
+    :param bool merge_install: The flag if all packages share the same prefix
+    :raises RuntimeError: if the marker file contains a different install
+      layout
+    """
+    this_install_layout = 'merged' if merge_install else 'isolated'
+    marker_path = Path(install_base) / '.colcon_install_layout'
+    if marker_path.parent.is_dir():
+        if marker_path.is_file():
+            previous_install_layout = marker_path.read_text().rstrip()
+            if previous_install_layout == this_install_layout:
+                return
+            change_option = 'remove' if merge_install else 'add'
+            raise RuntimeError(
+                "The install directory '{install_base}' was created with the "
+                "layout '{previous_install_layout}'. Please remove the "
+                'install directory, pick a different one or {change_option} '
+                "the '--merge-install' option.".format_map(locals()))
+    else:
+        try:
+            os.makedirs(install_base, exist_ok=True)
+        except FileExistsError:
+            raise RuntimeError(
+                "The install base '{install_base}' is not a directory"
+                .format_map(locals()))
+
+    marker_path.write_text(this_install_layout + '\n')

@@ -21,6 +21,7 @@ from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
 from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
+from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import VerbExtensionPoint
 
 logger = colcon_logger.getChild(__name__)
@@ -181,6 +182,9 @@ class TestVerb(VerbExtensionPoint):
 
     def main(self, *, context):  # noqa: D102
         check_and_mark_build_tool(context.args.build_base)
+        check_and_mark_install_layout(
+            context.args.install_base,
+            merge_install=context.args.merge_install)
 
         decorators = get_packages(
             context.args,
