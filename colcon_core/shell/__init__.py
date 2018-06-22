@@ -373,9 +373,6 @@ def check_dependency_availability(dependencies, *, script_filename):
       check for
     :raises RuntimeError: if any package isn't found in either of the locations
     """
-    # check if all dependencies are available
-    # removes dependencies available in the environment from the parameter
-
     missing = OrderedDict()
     # check if the dependency exists in the install base of this workspace
     for pkg_name, pkg_install_base in dependencies.items():
@@ -397,7 +394,7 @@ def check_dependency_availability(dependencies, *, script_filename):
     # warn about using packages from the environment
     if env_packages:
         logger.warn(
-            "'The following packages are in the workspace but haven't been "
+            "The following packages are in the workspace but haven't been "
             'built:' +
             ''.join('\n- %s' % name for name in env_packages.keys()) +
             '\nThey are being used from the following locations instead:' +
