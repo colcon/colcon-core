@@ -386,7 +386,7 @@ def check_dependency_availability(dependencies, *, script_filename):
     env_packages = OrderedDict()
     for pkg_name, pkg_install_base in list(missing.items()):
         if pkg_name in packages_in_env:
-            env_packages[pkg_name] = pkg_install_base
+            env_packages[pkg_name] = packages_in_env[pkg_name]
             # no need to source any script for this package
             del dependencies[pkg_name]
             del missing[pkg_name]
@@ -466,8 +466,8 @@ def find_installed_packages(install_base):
                 continue
             if p.name.startswith('.'):
                 continue
-            p = p / get_relative_package_index_path() / p.name
-            if p.is_file():
+            marker = p / get_relative_package_index_path() / p.name
+            if marker.is_file():
                 packages[p.name] = p
     else:
         # find all files in the subdirectory
