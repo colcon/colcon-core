@@ -359,6 +359,18 @@ def get_colcon_prefix_path(*, skip=None):
 
 
 def check_dependency_availability(dependencies):
+    """
+    Check if all dependencies are available.
+
+    First the install base of the workspace is being checked.
+    Second all prefix paths set in the environment are considered.
+    In the second case a warning is logged to notify the user.
+
+    :param dependencies: The ordered dictionary mapping dependency names to
+      their paths. Packages which have been found in the environment are being
+      removed from the dictionary.
+    :raises RuntimeError: if any package isn't found in either of the locations
+    """
     # check if all dependencies are available
     # removes dependencies available in the environment from the parameter
 
