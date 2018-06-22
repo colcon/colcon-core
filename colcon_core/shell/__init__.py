@@ -358,7 +358,7 @@ def get_colcon_prefix_path(*, skip=None):
     return prefix_path
 
 
-def check_dependency_availability(dependencies):
+def check_dependency_availability(dependencies, *, script_filename):
     """
     Check if all dependencies are available.
 
@@ -369,6 +369,8 @@ def check_dependency_availability(dependencies):
     :param dependencies: The ordered dictionary mapping dependency names to
       their paths. Packages which have been found in the environment are being
       removed from the dictionary.
+    :param str script_filename: The filename of the package specific script to
+      check for
     :raises RuntimeError: if any package isn't found in either of the locations
     """
     # check if all dependencies are available
@@ -378,7 +380,7 @@ def check_dependency_availability(dependencies):
     # check if the dependency exists in the install base of this workspace
     for pkg_name, pkg_install_base in dependencies.items():
         pkg_script = Path(
-            pkg_install_base) / 'share' / pkg_name / 'package.sh'
+            pkg_install_base) / 'share' / pkg_name / script_filename
         if not pkg_script.exists():
             missing[pkg_name] = pkg_script
 

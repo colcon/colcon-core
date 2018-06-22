@@ -90,7 +90,8 @@ class BatShell(ShellExtensionPoint):
 
         # check if all dependencies are available
         # removes dependencies available in the environment from the parameter
-        check_dependency_availability(dependencies)
+        check_dependency_availability(
+            dependencies, script_filename='package.bat')
 
         hook_path = build_base / ('colcon_command_prefix_%s.bat' % task_name)
         expand_template(
