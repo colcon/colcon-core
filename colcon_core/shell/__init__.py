@@ -471,10 +471,12 @@ def find_installed_packages(install_base):
                 packages[p.name] = p
     else:
         # find all files in the subdirectory
-        for p in (install_base / get_relative_package_index_path()).iterdir():
-            if not p.is_file():
-                continue
-            if p.name.startswith('.'):
-                continue
-            packages[p.name] = install_base
+        if (install_base / get_relative_package_index_path()).is_dir():
+            package_index = install_base / get_relative_package_index_path()
+            for p in package_index.iterdir():
+                if not p.is_file():
+                    continue
+                if p.name.startswith('.'):
+                    continue
+                packages[p.name] = install_base
     return packages
