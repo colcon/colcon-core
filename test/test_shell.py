@@ -1,12 +1,16 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import OrderedDict
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from colcon_core.plugin_system import SkipExtensionException
+from colcon_core.shell import check_dependency_availability
 from colcon_core.shell import create_environment_hook
+from colcon_core.shell import find_installed_packages
+from colcon_core.shell import find_installed_packages_in_environment
 from colcon_core.shell import get_colcon_prefix_path
 from colcon_core.shell import get_command_environment
 from colcon_core.shell import get_environment_variables
@@ -181,7 +185,7 @@ def test_create_environment_hook():
 def test_get_colcon_prefix_path():
     # empty environment variable
     with EnvironmentContext(COLCON_PREFIX_PATH=''):
-        prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+        prefix_path = get_colcon_prefix_path()
         assert prefix_path == []
 
     # extra path separator
@@ -206,8 +210,140 @@ def test_get_colcon_prefix_path():
         with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
             [str(basepath), str(basepath / 'non-existing-sub')]
         )):
-            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+            with patch('colcon_core.shell.logger.warn') as warn:
+                prefix_path = get_colcon_prefix_path()
             assert prefix_path == [str(basepath)]
-            # cached result
-            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+            assert warn.call_count == 1
+            assert len(warn.call_args[0]) == 1
+            assert warn.call_args[0][0].endswith(
+                "non-existing-sub' in the environment variable "
+                "COLCON_PREFIX_PATH doesn't exist")
+            # suppress duplicate warning
+            with patch('colcon_core.shell.logger.warn') as warn:
+                prefix_path = get_colcon_prefix_path()
             assert prefix_path == [str(basepath)]
+            assert warn.call_count == 0
+
+
+def test_check_dependency_availability():
+    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
+        prefix_path = Path(prefix_path)
+
+        dependencies = OrderedDict()
+        dependencies['pkgA'] = prefix_path
+
+        # missing package
+        with pytest.raises(RuntimeError) as e:
+            check_dependency_availability(
+                dependencies, script_filename='package.ext')
+        assert len(dependencies) == 1
+        assert 'Failed to find the following files:' in str(e.value)
+        assert str(prefix_path / 'share' / 'pkgA' / 'package.ext') \
+            in str(e.value)
+        assert 'Check that the following packages have been built:' \
+            in str(e.value)
+        assert '- pkgA' in str(e.value)
+
+        # package in workspace
+        (prefix_path / 'share' / 'pkgA').mkdir(parents=True)
+        (prefix_path / 'share' / 'pkgA' / 'package.ext').write_text('')
+        check_dependency_availability(
+            dependencies, script_filename='package.ext')
+        assert len(dependencies) == 1
+
+        # package in environment
+        dependencies['pkgA'] = prefix_path / 'invalid'
+        with patch(
+            'colcon_core.shell.find_installed_packages_in_environment',
+            side_effect=lambda: {'pkgA': prefix_path / 'env'}
+        ):
+            with patch('colcon_core.shell.logger.warn') as warn:
+                check_dependency_availability(
+                    dependencies, script_filename='package.ext')
+        assert len(dependencies) == 0
+        assert warn.call_count == 1
+        assert len(warn.call_args[0]) == 1
+        assert warn.call_args[0][0].startswith(
+            "The following packages are in the workspace but haven't been "
+            'built:')
+        assert '- pkgA' in warn.call_args[0][0]
+        assert 'They are being used from the following locations instead:' \
+            in warn.call_args[0][0]
+        assert str(prefix_path / 'env') in warn.call_args[0][0]
+        assert '--packages-ignore pkgA' in warn.call_args[0][0]
+
+
+def test_find_installed_packages_in_environment():
+    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
+        prefix_path = Path(prefix_path)
+        prefix_path1 = prefix_path / 'one'
+        prefix_path2 = prefix_path / 'two'
+
+        with patch(
+            'colcon_core.shell.get_colcon_prefix_path',
+            return_value=[prefix_path1, prefix_path2]
+        ):
+            # not used prefixes result debug messages
+            with patch('colcon_core.shell.logger.debug') as debug:
+                find_installed_packages_in_environment()
+            assert debug.call_count == 2
+
+            # the package is picked up from the first prefix
+            with patch(
+                'colcon_core.shell.find_installed_packages',
+                side_effect=lambda p: {'pkgA': p}
+            ):
+                packages = find_installed_packages_in_environment()
+        assert len(packages) == 1
+        assert 'pkgA' in packages
+        assert packages['pkgA'] == prefix_path1
+
+
+def test_find_installed_packages():
+    with TemporaryDirectory(prefix='test_colcon_') as install_base:
+        install_base = Path(install_base)
+
+        # install base doesn't exist
+        assert find_installed_packages(install_base) is None
+
+        # unknown install layout
+        marker_file = install_base / '.colcon_install_layout'
+        marker_file.write_text('unknown')
+        assert find_installed_packages(install_base) is None
+
+        # package index directory doesn't exist
+        marker_file.write_text('merged')
+        packages = find_installed_packages(install_base)
+        assert len(packages) == 0
+
+        with patch(
+            'colcon_core.shell.get_relative_package_index_path',
+            return_value=Path('relative/package/index')
+        ) as rel_path:
+            # setup for isolated case
+            (install_base / 'dummy_file').write_text('')
+            (install_base / '.hidden_dir').mkdir()
+            (install_base / 'dummy_dir' / rel_path() / 'dummy_dir').mkdir(
+                parents=True)
+            (install_base / 'pkgA' / rel_path()).mkdir(parents=True)
+            (install_base / 'pkgA' / rel_path() / 'pkgA').write_text('')
+
+            # setup for merged case
+            (install_base / rel_path() / 'dummy_dir').mkdir(parents=True)
+            (install_base / rel_path() / '.dummy').write_text('')
+            (install_base / rel_path() / 'pkgB').write_text('')
+            (install_base / rel_path() / 'pkgC').write_text('')
+
+            marker_file.write_text('isolated')
+            packages = find_installed_packages(install_base)
+            assert len(packages) == 1
+            assert 'pkgA' in packages.keys()
+            assert packages['pkgA'] == install_base / 'pkgA'
+
+            marker_file.write_text('merged')
+            packages = find_installed_packages(install_base)
+            assert len(packages) == 2
+            assert 'pkgB' in packages.keys()
+            assert packages['pkgC'] == install_base
+            assert 'pkgC' in packages.keys()
+            assert packages['pkgB'] == install_base
