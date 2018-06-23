@@ -53,7 +53,8 @@ def get_packages(prefix_path, merged_install):
             if p.name.startswith('.'):
                 continue
             p = p / subdirectory / p.name
-            add_package(p, packages)
+            if p.is_file():
+                add_package(p, packages)
 
     # remove unknown dependencies
     pkg_names = set(packages.keys())
@@ -71,8 +72,6 @@ def add_package(path, packages):
     :param dict packages: A mapping from package names to the sets of runtime
       dependencies to add to
     """
-    if not path.exists() or not path.is_file():
-        return
     content = path.read_text()
     dependencies = set(content.split(os.pathsep) if content else [])
     packages[path.name] = dependencies
