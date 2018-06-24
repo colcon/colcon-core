@@ -352,7 +352,7 @@ def get_colcon_prefix_path(*, skip=None):
                 logger.warn(
                     "The path '{path}' in the environment variable "
                     "COLCON_PREFIX_PATH doesn't exist".format_map(locals()))
-                _get_colcon_prefix_path_warnings.add(path)
+            _get_colcon_prefix_path_warnings.add(path)
             continue
         prefix_path.append(path)
     return prefix_path
