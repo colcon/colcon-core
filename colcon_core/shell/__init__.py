@@ -175,7 +175,8 @@ class ShellExtensionPoint:
 
         :param str task_name: The name of the task
         :param Path build_base: The base path of the build directory
-        :param set dependencies: The name of the recursive dependencies
+        :param set dependencies: The ordered dictionary mapping dependency
+          names to their paths
         :returns: The environment
         :rtype: dict
         :raises SkipExtensionException: if the shell is not usable on the
