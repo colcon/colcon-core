@@ -1,12 +1,14 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import OrderedDict
 from concurrent.futures import CancelledError
 import os
 from pathlib import Path
 import traceback
 
 from colcon_core.environment_variable import EnvironmentVariable
+from colcon_core.location import get_relative_package_index_path
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_grouped_by_priority
@@ -323,7 +325,7 @@ def create_environment_hook(
 _get_colcon_prefix_path_warnings = set()
 
 
-def get_colcon_prefix_path(*, skip):
+def get_colcon_prefix_path(*, skip=None):
     """
     Get the paths from the COLCON_PREFIX_PATH environment variable.
 
@@ -343,14 +345,138 @@ def get_colcon_prefix_path(*, skip):
     for path in colcon_prefix_path.split(os.pathsep):
         if not path:
             continue
-        if path == str(skip):
+        if skip is not None and path == str(skip):
             continue
         if not os.path.exists(path):
             if path not in _get_colcon_prefix_path_warnings:
                 logger.warn(
                     "The path '{path}' in the environment variable "
                     "COLCON_PREFIX_PATH doesn't exist".format_map(locals()))
-                _get_colcon_prefix_path_warnings.add(path)
+            _get_colcon_prefix_path_warnings.add(path)
             continue
         prefix_path.append(path)
     return prefix_path
+
+
+def check_dependency_availability(dependencies, *, script_filename):
+    """
+    Check if all dependencies are available.
+
+    First the install base of the workspace is being checked.
+    Second all prefix paths set in the environment are considered.
+    In the second case a warning is logged to notify the user.
+
+    :param dependencies: The ordered dictionary mapping dependency names to
+      their paths. Packages which have been found in the environment are being
+      removed from the dictionary.
+    :param str script_filename: The filename of the package specific script to
+      check for
+    :raises RuntimeError: if any package isn't found in either of the locations
+    """
+    missing = OrderedDict()
+    # check if the dependency exists in the install base of this workspace
+    for pkg_name, pkg_install_base in dependencies.items():
+        pkg_script = Path(
+            pkg_install_base) / 'share' / pkg_name / script_filename
+        if not pkg_script.exists():
+            missing[pkg_name] = pkg_script
+
+    # check if the dependency exists in any other prefix path
+    packages_in_env = find_installed_packages_in_environment()
+    env_packages = OrderedDict()
+    for pkg_name, pkg_install_base in list(missing.items()):
+        if pkg_name in packages_in_env:
+            env_packages[pkg_name] = packages_in_env[pkg_name]
+            # no need to source any script for this package
+            del dependencies[pkg_name]
+            del missing[pkg_name]
+
+    # warn about using packages from the environment
+    if env_packages:
+        logger.warn(
+            "The following packages are in the workspace but haven't been "
+            'built:' +
+            ''.join('\n- %s' % name for name in env_packages.keys()) +
+            '\nThey are being used from the following locations instead:' +
+            ''.join('\n- %s' % path for path in env_packages.values()) +
+            '\nTo suppress this warning ignore these packages in the ' +
+            'workspace:\n--packages-ignore ' + ' '.join(env_packages.keys()))
+
+    # raise error in case any dependencies are not matched
+    if missing:
+        raise RuntimeError(
+            'Failed to find the following files:' +
+            ''.join('\n- %s' % path for path in missing.values()) +
+            '\nCheck that the following packages have been built:' +
+            ''.join('\n- %s' % name for name in missing.keys()))
+
+
+def find_installed_packages_in_environment():
+    """
+    Find packages under the COLCON_PREFIX_PATH.
+
+    For each prefix path the package index is being read and the first time a
+    package is being found its install prefix is being added to the result.
+
+    :returns: The mapping from a package name to the prefix path
+    :rtype: OrderedDict
+    """
+    packages = OrderedDict()
+    for prefix_path in get_colcon_prefix_path():
+        prefix_path = Path(prefix_path)
+        pkgs = find_installed_packages(prefix_path)
+        if pkgs is None:
+            logger.debug(
+                "Ignoring prefix path '{prefix_path}'".format_map(locals()))
+            continue
+        for pkg_name in sorted(pkgs.keys()):
+            # ignore packages with the same name in "lower" prefix path
+            if pkg_name in packages:
+                continue
+            packages[pkg_name] = pkgs[pkg_name]
+    return packages
+
+
+def find_installed_packages(install_base):
+    """
+    Find install packages under the install base path.
+
+    The path must contain a marker file with the install layout.
+    Based on the install layout the packages are discovered i different
+    locations.
+
+    :param Path install_base: The base path to find installed packages in
+    :returns: The mapping from a package name to the prefix path, None if the
+      path doesn't exist or doesn't contain a marker file with a valid install
+      layout
+    :rtype: OrderedDict or None
+    """
+    marker_file = install_base / '.colcon_install_layout'
+    if not marker_file.is_file():
+        return None
+    install_layout = marker_file.read_text().rstrip()
+    if install_layout not in ('isolated', 'merged'):
+        return None
+
+    packages = {}
+    if install_layout == 'isolated':
+        # for each subdirectory look for the package specific file
+        for p in install_base.iterdir():
+            if not p.is_dir():
+                continue
+            if p.name.startswith('.'):
+                continue
+            marker = p / get_relative_package_index_path() / p.name
+            if marker.is_file():
+                packages[p.name] = p
+    else:
+        # find all files in the subdirectory
+        if (install_base / get_relative_package_index_path()).is_dir():
+            package_index = install_base / get_relative_package_index_path()
+            for p in package_index.iterdir():
+                if not p.is_file():
+                    continue
+                if p.name.startswith('.'):
+                    continue
+                packages[p.name] = install_base
+    return packages
