@@ -179,4 +179,4 @@ def get_relative_package_index_path():
     :rtype: Path
     """
     # the value is also being hard coded in shell/template/prefix_util.py
-    return Path('share', 'colcon_core', 'packages')
+    return Path('share', 'colcon-core', 'packages')
