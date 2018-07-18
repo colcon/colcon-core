@@ -64,26 +64,24 @@ goto:eof
 :_colcon_get_ordered_packages
   setlocal enabledelayedexpansion
 
-  :: use the Python executable known at configure time
-  set "_colcon_python_executable=@(python_executable)"
-  :: allow overriding it with a custom location
+  :: check environment variable for custom Python executable
   if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
     if not exist "%COLCON_PYTHON_EXECUTABLE%" (
-      echo error: Provided '%COLCON_PYTHON_EXECUTABLE%' does not exist
+      echo error: COLCON_PYTHON_EXECUTABLE '%COLCON_PYTHON_EXECUTABLE%' doesn't exist
       exit /b 1
     )
     set "_colcon_python_executable=%COLCON_PYTHON_EXECUTABLE%"
   ) else (
+    :: use the Python executable known at configure time
+    set "_colcon_python_executable=@(python_executable)"
+    :: if it doesn't exist try a fall back
     if not exist "%_colcon_python_executable%" (
-      rem compile time python not available
-      rem falling back to python executable on the path
-      python --version > NUL
+      python --version > NUL 2> NUL
       if errorlevel 1 (
-        echo error: Unable to find fallback python3 executable
+        echo error: unable to find python3 executable
         exit /b 1
-      ) else (
-        set "_colcon_python_executable=python"
       )
+      set "_colcon_python_executable=python"
     )
   )
 
