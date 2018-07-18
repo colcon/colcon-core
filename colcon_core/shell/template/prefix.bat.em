@@ -64,11 +64,25 @@ goto:eof
 :_colcon_get_ordered_packages
   setlocal enabledelayedexpansion
 
-  :: use the Python executable known at configure time
-  set "_colcon_python_executable=@(python_executable)"
-  :: allow overriding it with a custom location
+  :: check environment variable for custom Python executable
   if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
+    if not exist "%COLCON_PYTHON_EXECUTABLE%" (
+      echo error: COLCON_PYTHON_EXECUTABLE '%COLCON_PYTHON_EXECUTABLE%' doesn't exist
+      exit /b 1
+    )
     set "_colcon_python_executable=%COLCON_PYTHON_EXECUTABLE%"
+  ) else (
+    :: use the Python executable known at configure time
+    set "_colcon_python_executable=@(python_executable)"
+    :: if it doesn't exist try a fall back
+    if not exist "%_colcon_python_executable%" (
+      python --version > NUL 2> NUL
+      if errorlevel 1 (
+        echo error: unable to find python executable
+        exit /b 1
+      )
+      set "_colcon_python_executable=python"
+    )
   )
 
   set "_colcon_ordered_packages="
