@@ -68,13 +68,15 @@ goto:eof
   set "_colcon_python_executable=@(python_executable)"
   :: allow overriding it with a custom location
   if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
+    if not exist "%COLCON_PYTHON_EXECUTABLE%" (
+      echo error: Provided '%COLCON_PYTHON_EXECUTABLE%' does not exist
+      exit /b 1
+    )
     set "_colcon_python_executable=%COLCON_PYTHON_EXECUTABLE%"
-  )
-  if not exist "%_colcon_python_executable%" (
-    rem provided colcon_python_executable not found
-    rem falling back to build time python
-    if not exist "%(python_executable)" (
-      rem falling back to python command
+  ) else (
+    if not exist "%_colcon_python_executable%" (
+      rem compile time python not available
+      rem falling back to python executable on the path
       python --version > NUL
       if errorlevel 1 (
         echo error: Unable to find fallback python3 executable
@@ -82,11 +84,8 @@ goto:eof
       ) else (
         set "_colcon_python_executable=python"
       )
-    ) else (
-     set "_colcon_python_executable=@(python_executable)"
     )
   )
-
 
   set "_colcon_ordered_packages="
   for /f %%p in ('""%_colcon_python_executable%" "%~dp0_local_setup_util.py"@
