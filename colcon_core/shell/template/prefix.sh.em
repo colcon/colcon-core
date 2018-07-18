@@ -66,7 +66,7 @@ unset _colcon_prefix_sh_prepend_unique_value
 
 # check environment variable for custom Python executable
 if [ -n "$COLCON_PYTHON_EXECUTABLE" ]; then
-  if [ ! -f "$COLCON_PYTHON_EXECUTABLE"]; then
+  if [ ! -f "$COLCON_PYTHON_EXECUTABLE" ]; then
     echo "error: COLCON_PYTHON_EXECUTABLE '$COLCON_PYTHON_EXECUTABLE' doesn't exist"
     return 1
   fi
