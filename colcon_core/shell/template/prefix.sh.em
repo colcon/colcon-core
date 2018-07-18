@@ -68,16 +68,21 @@ unset _colcon_prefix_sh_prepend_unique_value
 _colcon_python_executable="@(python_executable)"
 # allow overriding it with a custom location
 if [ -n "$COLCON_PYTHON_EXECUTABLE" ]; then
-  _colcon_python_executable="$COLCON_PYTHON_EXECUTABLE"
-fi
-# if the Python executable doesn't exist try another fall back
-if [ ! -f "$_colcon_python_executable" ]; then
-  if /usr/bin/env python3 --version > /dev/null
-  then
-    _colcon_python_executable=`/usr/bin/env python3 -c "import sys; print(sys.executable)"`
-  else
-    echo "error: unable to find fallback python3 executable"
+  if [ ! -f "$COLCON_PYTHON_EXECUTABLE"]; then
+    echo "error: provided '$COLCON_PYTHON_EXECUTABLE' doesn't exist"
     return 1
+  fi
+  _colcon_python_executable="$COLCON_PYTHON_EXECUTABLE"
+else
+  # if the Python executable doesn't exist try another fall back
+  if [ ! -f "$_colcon_python_executable" ]; then
+    if /usr/bin/env python3 --version > /dev/null
+    then
+      _colcon_python_executable=`/usr/bin/env python3 -c "import sys; print(sys.executable)"`
+    else
+      echo "error: unable to find fallback python3 executable"
+      return 1
+    fi
   fi
 fi
 
