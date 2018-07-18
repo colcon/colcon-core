@@ -78,7 +78,7 @@ goto:eof
     if not exist "%_colcon_python_executable%" (
       python --version > NUL 2> NUL
       if errorlevel 1 (
-        echo error: unable to find python3 executable
+        echo error: unable to find python executable
         exit /b 1
       )
       set "_colcon_python_executable=python"
