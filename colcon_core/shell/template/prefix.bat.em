@@ -70,6 +70,23 @@ goto:eof
   if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
     set "_colcon_python_executable=%COLCON_PYTHON_EXECUTABLE%"
   )
+  if not exist "%_colcon_python_executable%" (
+    rem provided colcon_python_executable not found
+    rem falling back to build time python
+    if not exist "%(python_executable)" (
+      rem falling back to python command
+      python --version > NUL
+      if errorlevel 1 (
+        echo error: Unable to find fallback python3 executable
+        exit /b 1
+      ) else (
+        set "_colcon_python_executable=python"
+      )
+    ) else (
+     set "_colcon_python_executable=@(python_executable)"
+    )
+  )
+
 
   set "_colcon_ordered_packages="
   for /f %%p in ('""%_colcon_python_executable%" "%~dp0_local_setup_util.py"@
