@@ -50,7 +50,7 @@ class ShellExtensionPoint:
     `sh` shell extension to setup environment variables and only contributes
     additional information like completion.
 
-    All "non-primiry" shell extensions must use a priority equal to or lower
+    All "non-primary" shell extensions must use a priority equal to or lower
     than the default.
     """
     PRIORITY = 100
