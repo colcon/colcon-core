@@ -55,6 +55,18 @@ class ShellExtensionPoint:
     """
     PRIORITY = 100
 
+    def get_file_extensions(self):
+        """
+        Get the file extensions provided by this extension.
+
+        By default the extension name will be returned.
+        The method is intended to be overridden in a subclass.
+
+        :returns: the file extensions
+        :rtype: tuple
+        """
+        return (self.SHELL_NAME, )
+
     def create_prefix_script(self, prefix_path, merge_install):
         """
         Create a script in the install prefix path.
