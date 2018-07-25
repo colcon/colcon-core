@@ -7,7 +7,20 @@ from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
-from setuptools.config import read_configuration
+try:
+    from setuptools.config import read_configuration
+except ImportError as e:
+    from pkg_resources import get_distribution
+    from pkg_resources import parse_version
+    setuptools_version = get_distribution('setuptools').version
+    minimum_version = '30.3.0'
+    if parse_version(setuptools_version) < parse_version(minimum_version):
+        e.msg += ', ' \
+            "'setuptools' needs to be at least version {minimum_version}, if" \
+            ' a newer version is not available from the package manager use ' \
+            "'pip3 install -U setuptools' to update to the latest version" \
+            .format_map(locals())
+    raise
 
 
 class PythonPackageIdentification(PackageIdentificationExtensionPoint):
