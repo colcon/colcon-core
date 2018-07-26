@@ -17,5 +17,5 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 +	# pytest-repeat
 +	# pytest-rerunfailures
  	pytest-runner
- 	setuptools
+ 	setuptools>=30.3.0
  packages = find:
