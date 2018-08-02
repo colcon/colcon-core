@@ -8,6 +8,7 @@ from colcon_core.event.job import JobEnded
 from colcon_core.event.job import JobStarted
 from colcon_core.event.test import TestFailure
 from colcon_core.event_handler import EventHandlerExtensionPoint
+from colcon_core.event_handler import format_duration
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.subprocess import SIGINT_RESULT
 
@@ -43,10 +44,10 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
             self._with_test_failures.add(job)
 
         elif isinstance(data, JobEnded):
-            duration = time.time() - self._start_times[data.identifier]
-
             if not data.rc:
-                msg = 'Finished <<< {data.identifier} [{duration:.2f}s]' \
+                duration = time.time() - self._start_times[data.identifier]
+                duration_string = format_duration(duration)
+                msg = 'Finished <<< {data.identifier} [{duration_string}]' \
                     .format_map(locals())
                 job = event[1]
                 if job in self._with_test_failures:

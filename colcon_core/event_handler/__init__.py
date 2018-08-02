@@ -103,3 +103,49 @@ def apply_event_handler_arguments(extensions, args):
         key = arg[:-1]
         extension = extensions[key]
         extension.enabled = suffix == '+'
+
+
+def format_duration(seconds, *, fixed_decimal_points=None):
+    """
+    Stringify a duration as hours, minutes, seconds and decimal points.
+
+    :param float seconds: The duration in seconds
+    :param int fixed_decimal_points: A fixed number of decimal points for the
+      seconds, if None two, one or none will be used depending on the duration
+      size
+    :returns: The string representation of the duration
+    :rtype: str
+    """
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    # determine number of decimal points for seconds
+    if fixed_decimal_points is not None:
+        decimal_points = fixed_decimal_points
+    elif hours or minutes:
+        decimal_points = 0
+    # compare rounded number to account for floating point imprecision
+    elif round(seconds, 2) < 9.995:
+        decimal_points = 2
+    else:
+        decimal_points = 1
+
+    # check if rounding of seconds pushes it to a full minute
+    if round(seconds, decimal_points) >= 60.0:
+        # check if the desired decimal points change due to the wrapping
+        if fixed_decimal_points is None and not minutes and not hours:
+            decimal_points = 0
+        seconds = 0.0
+        minutes += 1
+
+    # check if rounding of minutes pushes it to a full hour
+    if round(minutes, 0) >= 60.0:
+        minutes = 0.0
+        hours += 1
+
+    format_string = '{seconds:.%sf}s' % decimal_points
+    if hours or minutes:
+        format_string = '{minutes:.0f}min ' + format_string
+        if hours:
+            format_string = '{hours:.0f}h ' + format_string
+    return format_string.format_map(locals())
