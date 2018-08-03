@@ -17,6 +17,7 @@ const
 cov
 ctrl
 cwd
+decodable
 decoree
 desc
 descs
