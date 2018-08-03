@@ -116,6 +116,10 @@ def format_duration(seconds, *, fixed_decimal_points=None):
     :returns: The string representation of the duration
     :rtype: str
     """
+    if seconds < 0.0:
+        raise ValueError(
+            "The duration '{seconds}' must be a non-negative number"
+            .format_map(locals()))
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
 
