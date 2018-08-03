@@ -57,6 +57,7 @@ sigint
 stderr
 stdout
 str
+stringify
 subparser
 subparsers
 symlink
