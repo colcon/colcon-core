@@ -111,3 +111,6 @@ def test_format_duration():
     assert format_duration(34.5, fixed_decimal_points=1) == '34.5s'
     assert format_duration(3599.4, fixed_decimal_points=1) == '59min 59.4s'
     assert format_duration(4984.5, fixed_decimal_points=1) == '1h 23min 4.5s'
+    # raise for negative parameter
+    with pytest.raises(ValueError):
+        format_duration(-1.0)
