@@ -3,6 +3,7 @@
 
 from collections import OrderedDict
 from concurrent.futures import CancelledError
+import locale
 import os
 from pathlib import Path
 import traceback
@@ -270,7 +271,15 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
         line = line.rstrip()
         if not line:
             continue
-        parts = line.decode().split('=', 1)
+        encoding = locale.getpreferredencoding()
+        try:
+            parts = line.decode(encoding).split('=', 1)
+        except UnicodeDecodeError as e:
+            line_replaced = line.decode(encoding=encoding, errors='replace')
+            logger.warn(
+                'Failed to decode line from the environment using the '
+                "encoding '{encoding}': {line_replaced}".format_map(locals()))
+            continue
         if len(parts) != 2:
             # skip lines which don't contain an equal sign
             continue
