@@ -43,7 +43,7 @@ class Job:
         self.dependencies = dependencies
         self.task = task
         self.returncode = None
-        self._task_context = task_context
+        self.task_context = task_context
 
     def set_event_queue(self, event_queue):
         """
@@ -58,7 +58,7 @@ class Job:
         self._event_queue = event_queue
 
         self._put_event_into_queue(JobQueued(
-            self._task_context.pkg.name, self._task_context.dependencies))
+            self.task_context.pkg.name, self.task_context.dependencies))
 
     async def __call__(self, *args, **kwargs):
         """
@@ -77,11 +77,11 @@ class Job:
         :returns: The return code of the invoked task
         :raises Exception: Any exception the invoked task raises
         """
-        self._put_event_into_queue(JobStarted(self._task_context.pkg.name))
+        self._put_event_into_queue(JobStarted(self.task_context.pkg.name))
 
         # replace function to use this job as the event context
-        self._task_context.put_event_into_queue = self._put_event_into_queue
-        self.task.set_context(context=self._task_context)
+        self.task_context.put_event_into_queue = self._put_event_into_queue
+        self.task.set_context(context=self.task_context)
 
         rc = 0
         try:
@@ -97,7 +97,7 @@ class Job:
             if self.returncode is None:
                 self.returncode = rc or 0
             self._put_event_into_queue(
-                JobEnded(self._task_context.pkg.name, self.returncode))
+                JobEnded(self.task_context.pkg.name, self.returncode))
         return self.returncode
 
     def _put_event_into_queue(self, event):
