@@ -159,17 +159,19 @@ def get_task_extensions(task_name, *, unique_instance=False):
 
     The extensions are ordered by their entry point name.
 
-    :param str task_name: The task name identifying a group of task extensions
+    :param str task_name: The entry point name identifying a group of task
+      extensions
     :param bool unique_instance: The flag if the returned instances should be
       unique or cached instances can be returned instead
     :rtype: OrderedDict
     """
     extensions = instantiate_extensions(
-        '%s.%s' % (__name__, task_name), unique_instance=unique_instance)
+        task_name, unique_instance=unique_instance)
+    task_basename = task_name.split('.')[-1]
     for name in list(extensions.keys()):
         extension = extensions[name]
-        assert hasattr(extension, task_name)
-        extension.TASK_NAME = task_name
+        assert hasattr(extension, task_basename)
+        extension.TASK_NAME = task_basename
         extension.PACKAGE_TYPE = name
     return order_extensions_by_name(extensions)
 
@@ -179,7 +181,8 @@ def add_task_arguments(parser, task_name):
     Add the command line arguments for the task extensions.
 
     :param parser: The argument parser
-    :param str task_name: The task name identifying a group of task extensions
+    :param str task_name: The entry point name identifying a group of task
+      extensions
     """
     extensions = get_task_extensions(task_name, unique_instance=True)
     for extension_name, extension in extensions.items():
@@ -203,17 +206,18 @@ def get_task_extension(task_name, package_type):
     """
     Get a specific task extension.
 
-    :param str task_name: The task name identifying a group of task extensions
+    :param str task_name: The entry point name identifying a group of task
+      extensions
     :param str package_type: The package type identifying a task extension
       within the group
     :returns: The task extension
     """
     extensions = instantiate_extensions(
-        '%s.%s' % (__name__, task_name), unique_instance=True)
+        task_name, unique_instance=True)
     if package_type not in extensions:
         return None
     extension = extensions[package_type]
-    extension.TASK_NAME = task_name
+    extension.TASK_NAME = task_name.split('.')[-1]
     extension.PACKAGE_TYPE = package_type
     return extension
 

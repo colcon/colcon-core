@@ -173,7 +173,7 @@ class TestVerb(VerbExtensionPoint):
         add_packages_arguments(parser)
 
         decorated_parser = DestinationCollectorDecorator(parser)
-        add_task_arguments(decorated_parser, 'test')
+        add_task_arguments(decorated_parser, 'colcon_core.task.test')
         self.task_argument_destinations = decorated_parser.get_destinations()
         self.task_argument_destinations['retest-until-pass'] = \
             'retest_until_pass'
@@ -205,7 +205,7 @@ class TestVerb(VerbExtensionPoint):
                 continue
 
             pkg = decorator.descriptor
-            extension = get_task_extension('test', pkg.type)
+            extension = get_task_extension('colcon_core.task.test', pkg.type)
             if not extension:
                 logger.warn(
                     "No task extension to 'test' a '{pkg.type}' package"
