@@ -160,7 +160,7 @@ class BuildVerb(VerbExtensionPoint):
         add_packages_arguments(parser)
 
         decorated_parser = DestinationCollectorDecorator(parser)
-        add_task_arguments(decorated_parser, 'build')
+        add_task_arguments(decorated_parser, 'colcon_core.task.build')
         self.task_argument_destinations = decorated_parser.get_destinations()
 
     def main(self, *, context):  # noqa: D102
@@ -206,7 +206,7 @@ class BuildVerb(VerbExtensionPoint):
                 continue
 
             pkg = decorator.descriptor
-            extension = get_task_extension('build', pkg.type)
+            extension = get_task_extension('colcon_core.task.build', pkg.type)
             if not extension:
                 logger.warn(
                     "No task extension to 'build' a '{pkg.type}' package"
