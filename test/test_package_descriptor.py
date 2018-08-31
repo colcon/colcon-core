@@ -4,8 +4,11 @@
 import os
 from pathlib import Path
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_descriptor import PackageDescriptor
 import pytest
+
+from .test_dependency_descriptor import check_dependencies
 
 
 def test_constructor():
@@ -33,15 +36,17 @@ def test_identifies_package():
 def test_get_dependencies():
     d1 = PackageDescriptor('/some/path')
     d1.name = 'self'
-    d1.dependencies['build'].add('build-depend')
-    d1.dependencies['build'].add('depend')
-    d1.dependencies['run'].add('run-depend')
-    d1.dependencies['run'].add('depend')
-    assert d1.get_dependencies() == {'build-depend', 'run-depend', 'depend'}
+    d1.dependencies['build'].add(DependencyDescriptor('build-depend'))
+    d1.dependencies['build'].add(DependencyDescriptor('depend'))
+    d1.dependencies['run'].add(DependencyDescriptor('run-depend'))
+    d1.dependencies['run'].add(DependencyDescriptor('depend'))
+    assert check_dependencies(d1.get_dependencies(),
+                              ['build-depend', 'run-depend', 'depend',
+                               'depend'])
 
-    d1.dependencies['test'].add('self')
-    assert d1.get_dependencies(categories=('build', )) == \
-        {'build-depend', 'depend'}
+    d1.dependencies['test'].add(DependencyDescriptor('self'))
+    assert check_dependencies(d1.get_dependencies(categories=('build', )),
+                              ['build-depend', 'depend'])
 
     with pytest.raises(AssertionError) as e:
         d1.get_dependencies()
@@ -51,44 +56,44 @@ def test_get_dependencies():
 def test_get_recursive_dependencies():
     d = PackageDescriptor('/some/path')
     d.name = 'A'
-    d.dependencies['build'].add('B')
-    d.dependencies['run'].add('c')
-    d.dependencies['test'].add('d')
+    d.dependencies['build'].add(DependencyDescriptor('B'))
+    d.dependencies['run'].add(DependencyDescriptor('c'))
+    d.dependencies['test'].add(DependencyDescriptor('d'))
 
     d1 = PackageDescriptor('/other/path')
     d1.name = 'B'
-    d1.dependencies['build'].add('e')
-    d1.dependencies['run'].add('F')
-    d1.dependencies['test'].add('G')
+    d1.dependencies['build'].add(DependencyDescriptor('e'))
+    d1.dependencies['run'].add(DependencyDescriptor('F'))
+    d1.dependencies['test'].add(DependencyDescriptor('G'))
 
     d2 = PackageDescriptor('/another/path')
     d2.name = 'd'
 
     d3 = PackageDescriptor('/yet-another/path')
     d3.name = 'F'
-    d3.dependencies['build'].add('h')
-    d3.dependencies['test'].add('G')
-    d3.dependencies['test'].add('I')
+    d3.dependencies['build'].add(DependencyDescriptor('h'))
+    d3.dependencies['test'].add(DependencyDescriptor('G'))
+    d3.dependencies['test'].add(DependencyDescriptor('I'))
 
     d4 = PackageDescriptor('/more/path')
     d4.name = 'G'
-    d4.dependencies['test'].add('I')
+    d4.dependencies['test'].add(DependencyDescriptor('I'))
 
     d5 = PackageDescriptor('/yet-more/path')
     d5.name = 'I'
     # circular dependencies should be ignored
-    d5.dependencies['run'].add('A')
+    d5.dependencies['run'].add(DependencyDescriptor('A'))
 
     rec_deps = d.get_recursive_dependencies(
         {d, d1, d2, d3, d4, d5},
         direct_categories=('build', 'run'),
         recursive_categories=('run', 'test'))
-    assert rec_deps == {
+    assert check_dependencies(rec_deps, [
         # direct dependencies
         'B',
         # recursive dependencies
-        'F', 'G', 'I',
-    }
+        'F', 'G', 'I'
+    ])
 
 
 def test_magic_methods():

@@ -3,6 +3,7 @@
 
 import os
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_augmentation import augment_packages
 from colcon_core.package_augmentation \
     import get_package_augmentation_extensions
@@ -14,6 +15,7 @@ from mock import Mock
 from mock import patch
 
 from .entry_point_context import EntryPointContext
+from .test_dependency_descriptor import check_dependencies
 
 
 class Extension1(PackageAugmentationExtensionPoint):
@@ -107,29 +109,32 @@ def test_update_descriptor():
     assert len(desc.metadata) == 0
 
     data = {
-        'build-dependencies': {'b1', 'b2'},
-        'test-dependencies': {'t1'},
+        'build-dependencies': {
+            DependencyDescriptor('b1'),
+            DependencyDescriptor('b2')
+        },
+        'test-dependencies': {DependencyDescriptor('t1')},
     }
     update_descriptor(desc, data)
     assert len(desc.dependencies) == 2
     assert 'build' in desc.dependencies.keys()
-    assert desc.dependencies['build'] == {'b1', 'b2'}
+    assert check_dependencies(desc.dependencies['build'], ['b1','b2'])
     assert 'test' in desc.dependencies.keys()
-    assert desc.dependencies['test'] == {'t1'}
+    assert check_dependencies(desc.dependencies['test'], ['t1'])
 
     data = {
-        'dependencies': {'d1'},
+        'dependencies': {DependencyDescriptor('d1')},
         'hooks': ['hook1', 'hook2'],
         'key': 'value',
     }
     update_descriptor(desc, data, additional_argument_names=['*'])
     assert len(desc.dependencies) == 3
     assert 'build' in desc.dependencies.keys()
-    assert desc.dependencies['build'] == {'d1', 'b1', 'b2'}
+    assert check_dependencies(desc.dependencies['build'], ['d1', 'b1', 'b2'])
     assert 'run' in desc.dependencies.keys()
-    assert desc.dependencies['run'] == {'d1'}
+    assert check_dependencies(desc.dependencies['run'], ['d1'])
     assert 'test' in desc.dependencies.keys()
-    assert desc.dependencies['test'] == {'d1', 't1'}
+    assert check_dependencies(desc.dependencies['test'], ['d1', 't1'])
 
     assert len(desc.hooks) == 2
     assert desc.hooks == ['hook1', 'hook2']

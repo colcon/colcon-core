@@ -27,10 +27,11 @@ def topological_order_packages(
             descriptors,
             direct_categories=direct_categories,
             recursive_categories=recursive_categories)
+        rec_dep_names = {d.name for d in rec_deps}
         d = _PackageDependencies(
             descriptor=descriptor,
-            recursive_dependencies=rec_deps,
-            remaining_dependencies=copy.deepcopy(rec_deps),
+            recursive_dependencies=rec_dep_names,
+            remaining_dependencies=copy.deepcopy(rec_dep_names),
         )
         queued.add(d)
 

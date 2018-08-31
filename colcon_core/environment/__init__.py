@@ -126,8 +126,8 @@ def create_environment_scripts(
     # create file containing the runtime dependencies
     path = prefix_path / get_relative_package_index_path() / pkg.name
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        os.pathsep.join(sorted(pkg.dependencies.get('run', set()))))
+    dependencies = [d.name for d in pkg.dependencies.get('run', set())]
+    path.write_text(os.pathsep.join(sorted(dependencies)))
 
 
 def create_environment_hooks(prefix_path, pkg_name):
