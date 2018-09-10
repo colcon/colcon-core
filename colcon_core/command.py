@@ -78,10 +78,28 @@ def main(*, command_name='colcon', argv=None):
 
     parser = create_parser('colcon_core.environment_variable')
 
-    # get verb extensions and let them add their arguments
     verb_extensions = get_verb_extensions()
-    add_subparsers(
+
+    # add subparsers for all verb extensions but without arguments for now
+    subparser = create_subparser(
         parser, command_name, verb_extensions, attribute='verb_name')
+    verb_parsers = add_parsers_without_arguments(
+        parser, subparser, verb_extensions, attribute='verb_name')
+
+    # temporary prevent help action to exit early if help is requested
+    callbacks = {}
+    for p in verb_parsers.values():
+        callbacks[p] = p.print_help, p.exit
+        p.print_help = p.exit = lambda: None
+    # parse known args to determine if a specific verb is being requested
+    known_args, _ = parser.parse_known_args(args=argv)
+    # restore original callbacks
+    for p, t in callbacks.items():
+        p.print_help, p.exit = t
+
+    # add the arguments for the requested verb
+    if known_args.verb_name:
+        add_parser_arguments(known_args.verb_parser, known_args.verb_extension)
 
     args = parser.parse_args(args=argv)
     context = CommandContext(command_name=command_name, args=args)
@@ -239,7 +257,7 @@ def add_subparsers(parser, cmd_name, verb_extensions, *, attribute):
     """
     Create argparse subparsers for each verb.
 
-    The `cmd_name` is used for the title and description of the
+    The `cmd_name` is used for the title and description of the argparse
     `add_subparsers` function call.
 
     For each verb extension a subparser is created.
@@ -250,8 +268,32 @@ def add_subparsers(parser, cmd_name, verb_extensions, *, attribute):
     :param str cmd_name: The name of the command to which the verbs are being
       added
     :param dict verb_extensions: The verb extensions indexed by the verb name
-    :returns: The subparsers indexed by the verb name
-    :rtype: dict
+    :param str attribute: The name of the attribute in the parsed args for the
+      selected verb
+    """
+    subparser = create_subparser(
+        parser, cmd_name, verb_extensions, attribute=attribute)
+    verb_parsers = add_parsers_without_arguments(
+        parser, subparser, verb_extensions, attribute=attribute)
+    for name, verb_parser in verb_parsers.items():
+        add_parser_arguments(
+            verb_parser, verb_extensions[name])
+
+
+def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
+    """
+    Create the special action object to contain subparsers.
+
+    The `cmd_name` is used for the title and description of the argparse
+    `add_subparsers` function call.
+
+    :param parser: The argument parser for this command
+    :param str cmd_name: The name of the command to which the verbs are being
+      added
+    :param dict verb_extensions: The verb extensions indexed by the verb name
+    :param str attribute: The name of the attribute in the parsed args for the
+      selected verb
+    :returns: The special action object
     """
     global colcon_logger
     assert verb_extensions, 'No verb extensions'
@@ -270,7 +312,26 @@ def add_subparsers(parser, cmd_name, verb_extensions, *, attribute):
         help='call `{cmd_name} VERB -h` for specific help'
              .format_map(locals())
     )
+    return subparser
 
+
+def add_parsers_without_arguments(
+    parser, subparser, verb_extensions, *, attribute
+):
+    """
+    Create subparsers for each verb but without any arguments.
+
+    For each verb extension a subparser is created.
+
+    :param parser: The argument parser for this command
+    :param subparser: The special action object to add the subparsers to
+    :param dict verb_extensions: The verb extensions indexed by the verb name
+    :param str attribute: The name of the attribute in the extension containing
+      the verb
+    :returns: The subparsers indexed by the verb name
+    :rtype: dict
+    """
+    verb_parsers = {}
     # add verb specific group and arguments
     for name, extension in verb_extensions.items():
         verb_parser = subparser.add_parser(
@@ -278,18 +339,29 @@ def add_subparsers(parser, cmd_name, verb_extensions, *, attribute):
             description=get_first_line_doc(extension) + '.',
             formatter_class=parser.formatter_class,
         )
-        verb_parser.set_defaults(main=extension.main)
-        if hasattr(extension, 'add_arguments'):
-            try:
-                retval = extension.add_arguments(parser=verb_parser)
-                assert retval is None, 'add_arguments() should return None'
-            except Exception as e:
-                # catch exceptions raised in verb extension
-                exc = traceback.format_exc()
-                colcon_logger.error(
-                    "Exception in verb extension '{extension.VERB_NAME}': "
-                    '{e}\n{exc}'.format_map(locals()))
-                # skip failing extension, continue with next one
+        verb_parser.set_defaults(
+            verb_parser=verb_parser, verb_extension=extension,
+            main=extension.main)
+        verb_parsers[name] = verb_parser
+    return verb_parsers
+
+
+def add_parser_arguments(verb_parser, extension):
+    """
+    Add the arguments and recursive subparsers to a specific verb parser.
+
+    If the extension has an `add_arguments` method it is being called with the
+    subparser being passed as the only argument.
+
+    :param verb_parser: The verb parser
+    :param extension: The verb extension
+    """
+    if hasattr(extension, 'add_arguments'):
+        retval = extension.add_arguments(parser=verb_parser)
+        if retval is not None:
+            colcon_logger.error(
+                "Exception in verb extension '{extension.VERB_NAME}': "
+                'add_arguments() should return None'.format_map(locals()))
 
 
 def _format_pair(key, value, *, indent, align):
