@@ -89,7 +89,7 @@ def test_discover_packages():
         'colcon_core.package_discovery.get_package_discovery_extensions',
         return_value={},
     ) as get_extensions:
-        with patch('colcon_core.package_discovery.logger.warn') as warn:
+        with patch('colcon_core.package_discovery.logger.warning') as warn:
             descs = discover_packages(None, None)
     assert get_extensions.call_count == 1
     warn.assert_called_once_with('No package discovery extensions found')

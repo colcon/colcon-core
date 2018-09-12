@@ -208,7 +208,7 @@ class BuildVerb(VerbExtensionPoint):
             pkg = decorator.descriptor
             extension = get_task_extension('colcon_core.task.build', pkg.type)
             if not extension:
-                logger.warn(
+                logger.warning(
                     "No task extension to 'build' a '{pkg.type}' package"
                     .format_map(locals()))
                 continue

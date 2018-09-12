@@ -21,9 +21,9 @@ def test_set_logger_level_from_env():
 
     # invalid value
     with EnvironmentContext(COLCON_TEST_LOGGER_LEVEL='invalid'):
-        logger.warn = Mock()
+        logger.warning = Mock()
         set_logger_level_from_env(logger, 'COLCON_TEST_LOGGER_LEVEL')
-        assert logger.warn.call_count == 1
+        assert logger.warning.call_count == 1
     assert logger.getEffectiveLevel() == default_level
 
     # valid value

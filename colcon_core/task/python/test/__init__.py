@@ -64,7 +64,7 @@ class PythonTestTask(TaskExtensionPoint):
                 if matched:
                     break
             else:
-                logger.warn(
+                logger.warning(
                     "No Python Testing Step extension matched in '{args.path}'"
                     .format_map(locals()))
                 return

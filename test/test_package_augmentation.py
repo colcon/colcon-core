@@ -185,7 +185,7 @@ def test_update_metadata():
     assert 's' in desc.metadata.keys()
     assert desc.metadata['s'] == {1, 2, 3}
 
-    with patch('colcon_core.package_augmentation.logger.warn') as warn:
+    with patch('colcon_core.package_augmentation.logger.warning') as warn:
         update_metadata(desc, 's', 'different type')
     warn.assert_called_once_with(
         "update package 'name' metadata 's' from value '{1, 2, 3}' to "
@@ -194,7 +194,7 @@ def test_update_metadata():
     assert 's' in desc.metadata.keys()
     assert desc.metadata['s'] == 'different type'
 
-    with patch('colcon_core.package_augmentation.logger.warn') as warn:
+    with patch('colcon_core.package_augmentation.logger.warning') as warn:
         update_metadata(desc, 's', 'same type')
     assert warn.call_count == 0
     assert len(desc.metadata) == 3

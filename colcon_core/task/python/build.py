@@ -130,7 +130,7 @@ class PythonBuildTask(TaskExtensionPoint):
         packages = setup_py_data['packages']
         for module_name in packages:
             if module_name in sys.modules:
-                logger.warn(
+                logger.warning(
                     "Switching to 'develop' for package '{pkg.name}' while it "
                     'is being used might result in import errors later'
                     .format_map(locals()))

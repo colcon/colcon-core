@@ -135,7 +135,7 @@ def test_get_environment_variables():
     async def check_output(cmd, **kwargs):
         return b'DECODE_ERROR=\x81\nNAME=value'
     with patch('colcon_core.shell.check_output', side_effect=check_output):
-        with patch('colcon_core.shell.logger.warn') as warn:
+        with patch('colcon_core.shell.logger.warning') as warn:
             coroutine = get_environment_variables(['not-used'], shell=False)
             env = run_until_complete(coroutine)
 
@@ -228,7 +228,7 @@ def test_get_colcon_prefix_path():
         with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
             [str(basepath), str(basepath / 'non-existing-sub')]
         )):
-            with patch('colcon_core.shell.logger.warn') as warn:
+            with patch('colcon_core.shell.logger.warning') as warn:
                 prefix_path = get_colcon_prefix_path()
             assert prefix_path == [str(basepath)]
             assert warn.call_count == 1
@@ -237,7 +237,7 @@ def test_get_colcon_prefix_path():
                 "non-existing-sub' in the environment variable "
                 "COLCON_PREFIX_PATH doesn't exist")
             # suppress duplicate warning
-            with patch('colcon_core.shell.logger.warn') as warn:
+            with patch('colcon_core.shell.logger.warning') as warn:
                 prefix_path = get_colcon_prefix_path()
             assert prefix_path == [str(basepath)]
             assert warn.call_count == 0
@@ -275,7 +275,7 @@ def test_check_dependency_availability():
             'colcon_core.shell.find_installed_packages_in_environment',
             side_effect=lambda: {'pkgA': prefix_path / 'env'}
         ):
-            with patch('colcon_core.shell.logger.warn') as warn:
+            with patch('colcon_core.shell.logger.warning') as warn:
                 check_dependency_availability(
                     dependencies, script_filename='package.ext')
         assert len(dependencies) == 0

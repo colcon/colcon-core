@@ -32,7 +32,7 @@ def set_logger_level_from_env(logger, env_name):
         try:
             numeric_log_level = get_numeric_log_level(log_level)
         except ValueError as e:
-            logger.warn(
+            logger.warning(
                 "environment variable '{env_name}' has unsupported value "
                 "'{log_level}', {e}".format_map(locals()))
         else:
