@@ -143,7 +143,9 @@ def test__identify():
         extensions = get_package_identification_extensions()[100]
         extensions['extension2'].identify = identify_name
         extensions['extension4'].identify = identify_type
-        with patch('colcon_core.package_identification.logger.warn') as warn:
+        with patch(
+            'colcon_core.package_identification.logger.warning'
+        ) as warn:
             desc = _identify(extensions, desc_path_only)
             assert desc is False
             # the raised exception is catched and results in a warn message

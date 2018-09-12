@@ -216,7 +216,7 @@ def update_metadata(desc, key, value):
         return
 
     if type(old_value) != type(value):
-        logger.warn(
+        logger.warning(
             "update package '{desc.name}' metadata '{key}' from value "
             "'{old_value}' to '{value}'".format_map(locals()))
 

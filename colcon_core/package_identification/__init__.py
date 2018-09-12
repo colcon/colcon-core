@@ -116,7 +116,7 @@ def identify(
         desc = result
 
     if getattr(desc, 'type', None) or getattr(desc, 'name', None):
-        logger.warn(
+        logger.warning(
             "package '{desc.path}' has type or name but is incomplete"
             .format_map(locals()))
     return None
@@ -151,7 +151,7 @@ def _identify(extensions_same_prio, desc):
 
     # multiple extensions populated the descriptor with different values
     if len(results) > 2:
-        logger.warn(
+        logger.warning(
             '_identify({desc.path}) has multiple matches and therefore is '
             'being ignored: '.format_map(locals()) +
             ', '.join(sorted(d.type for d in results if d.type is not None)))

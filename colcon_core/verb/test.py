@@ -207,7 +207,7 @@ class TestVerb(VerbExtensionPoint):
             pkg = decorator.descriptor
             extension = get_task_extension('colcon_core.task.test', pkg.type)
             if not extension:
-                logger.warn(
+                logger.warning(
                     "No task extension to 'test' a '{pkg.type}' package"
                     .format_map(locals()))
                 continue

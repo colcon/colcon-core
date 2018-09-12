@@ -172,7 +172,7 @@ def discover_packages(
     if discovery_extensions is None:
         discovery_extensions = get_package_discovery_extensions()
     if not discovery_extensions:
-        logger.warn('No package discovery extensions found')
+        logger.warning('No package discovery extensions found')
         return set()
 
     # use only the discovery extensions which have parameters if any

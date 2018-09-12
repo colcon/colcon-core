@@ -93,7 +93,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             try:
                 import pytest_repeat  # noqa: F401
             except ImportError:
-                logger.warn(
+                logger.warning(
                     "Ignored '--retest-until-fail' for package "
                     "'{context.pkg.name}' since the pytest extension 'repeat' "
                     'was not found'.format_map(locals()))
@@ -107,7 +107,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             try:
                 import pytest_rerunfailures  # noqa: F401
             except ImportError:
-                logger.warn(
+                logger.warning(
                     "Ignored '--retest-until-pass' for package "
                     "'{context.pkg.name}' since pytest extension "
                     "'rerunfailures' was not found".format_map(locals()))

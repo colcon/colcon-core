@@ -276,7 +276,7 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
             parts = line.decode(encoding).split('=', 1)
         except UnicodeDecodeError as e:
             line_replaced = line.decode(encoding=encoding, errors='replace')
-            logger.warn(
+            logger.warning(
                 'Failed to decode line from the environment using the '
                 "encoding '{encoding}': {line_replaced}".format_map(locals()))
             continue
@@ -371,7 +371,7 @@ def get_colcon_prefix_path(*, skip=None):
             continue
         if not os.path.exists(path):
             if path not in _get_colcon_prefix_path_warnings:
-                logger.warn(
+                logger.warning(
                     "The path '{path}' in the environment variable "
                     "COLCON_PREFIX_PATH doesn't exist".format_map(locals()))
             _get_colcon_prefix_path_warnings.add(path)
@@ -415,7 +415,7 @@ def check_dependency_availability(dependencies, *, script_filename):
 
     # warn about using packages from the environment
     if env_packages:
-        logger.warn(
+        logger.warning(
             "The following packages are in the workspace but haven't been "
             'built:' +
             ''.join('\n- %s' % name for name in env_packages.keys()) +

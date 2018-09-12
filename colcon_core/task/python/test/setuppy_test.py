@@ -22,13 +22,13 @@ class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
 
     async def step(self, context, env, setup_py_data):  # noqa: D102
         if context.args.retest_until_fail:
-            logger.warn(
+            logger.warning(
                 "Ignored '--retest-until-fail' for package "
                 "'{context.pkg.name}' since 'setup.py test' does not support "
                 'the usage'.format_map(locals()))
 
         if context.args.retest_until_pass:
-            logger.warn(
+            logger.warning(
                 "Ignored '--retest-until-pass' for package "
                 "'{context.pkg.name}' since 'setup.py test' does not support "
                 'the usage'.format_map(locals()))
