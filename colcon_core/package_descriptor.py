@@ -4,6 +4,8 @@
 from collections import defaultdict
 from pathlib import Path
 
+from colcon_core.dependency_descriptor import dependency_name
+
 
 class PackageDescriptor:
     """
@@ -14,7 +16,7 @@ class PackageDescriptor:
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
 
-    The names of 'dependencies' are grouped by their category.
+    'dependencies' are grouped by their category as DependencyDescriptor or str
 
     Each item in 'hooks' must be a relative path in the installation space.
 
@@ -58,8 +60,8 @@ class PackageDescriptor:
         Get the dependencies for specific categories or for all categories.
 
         :param Iterable[str] categories: The names of the specific categories
-        :returns: The names of the dependencies
-        :rtype: set
+        :returns: The dependencies for the passed in category or all
+        :rtype: set[DependencyDescriptor, str]
         :raises AssertionError: if the package name is listed as a dependency
         """
         dependencies = set()
@@ -67,7 +69,8 @@ class PackageDescriptor:
             categories = self.dependencies.keys()
         for category in sorted(categories):
             dependencies |= self.dependencies[category]
-        assert self.name not in dependencies, \
+        dependency_names = {dependency_name(d) for d in dependencies}
+        assert self.name not in dependency_names, \
             "The package '{self.name}' has a dependency with the same name" \
             .format_map(locals())
         return dependencies
@@ -87,17 +90,18 @@ class PackageDescriptor:
           categories
         :param Iterable[str] recursive_categories: The names of the recursive
           categories
-        :returns: The names of the recursive dependencies
-        :rtype: set
+        :returns: The recursive dependencies of self
+        :rtype: set[DependencyDescriptor, str]
         :raises AssertionError: if a package lists itself as a dependency
         """
         queue = self.get_dependencies(categories=direct_categories)
         dependencies = set()
         while queue:
             # pick one dependency from the queue
-            name = queue.pop()
+            dependency = queue.pop()
+            name = dependency_name(dependency)
             # ignore redundant dependencies
-            if name in dependencies:
+            if name in {dependency_name(dep) for dep in dependencies}:
                 continue
             # ignore circular dependencies
             if name == self.name:
@@ -112,7 +116,7 @@ class PackageDescriptor:
             for d in descs:
                 queue |= d.get_dependencies(categories=recursive_categories)
             # add dependency to result set
-            dependencies.add(name)
+            dependencies.add(dependency)
         return dependencies
 
     def __hash__(self):  # noqa: D105

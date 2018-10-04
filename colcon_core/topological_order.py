@@ -4,6 +4,7 @@
 from collections import OrderedDict
 import copy
 
+from colcon_core.dependency_descriptor import dependency_name
 from colcon_core.package_decorator import PackageDecorator
 
 
@@ -27,10 +28,11 @@ def topological_order_packages(
             descriptors,
             direct_categories=direct_categories,
             recursive_categories=recursive_categories)
+        rec_dep_names = {dependency_name(d) for d in rec_deps}
         d = _PackageDependencies(
             descriptor=descriptor,
-            recursive_dependencies=rec_deps,
-            remaining_dependencies=copy.deepcopy(rec_deps),
+            recursive_dependencies=rec_dep_names,
+            remaining_dependencies=copy.deepcopy(rec_dep_names),
         )
         queued.add(d)
 

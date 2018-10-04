@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.topological_order import topological_order_packages
 import pytest
@@ -12,20 +13,20 @@ def test_topological_order_packages():
     d1.dependencies['build'].add('c')
     d2 = PackageDescriptor('/other/path')
     d2.name = 'b'
-    d2.dependencies['run'].add('c')
+    d2.dependencies['run'].add(DependencyDescriptor('c'))
 
     d3 = PackageDescriptor('/another/path')
     d3.name = 'c'
-    d3.dependencies['build'].add('e')
-    d3.dependencies['run'].add('f')
-    d3.dependencies['test'].add('d')
+    d3.dependencies['build'].add(DependencyDescriptor('e'))
+    d3.dependencies['run'].add(DependencyDescriptor('f'))
+    d3.dependencies['test'].add(DependencyDescriptor('d'))
 
     d4 = PackageDescriptor('/yet-another/path')
     d4.name = 'd'
-    d4.dependencies['run'].add('f')
+    d4.dependencies['run'].add(DependencyDescriptor('f'))
     d5 = PackageDescriptor('/more/path')
     d5.name = 'e'
-    d5.dependencies['run'].add('f')
+    d5.dependencies['run'].add(DependencyDescriptor('f'))
 
     d6 = PackageDescriptor('/yet-more/path')
     d6.name = 'f'
@@ -49,19 +50,19 @@ def test_topological_order_packages_with_circular_dependency():
 
     d2 = PackageDescriptor('/other/path')
     d2.name = 'two'
-    d2.dependencies['run'].add('three')
+    d2.dependencies['run'].add(DependencyDescriptor('three'))
 
     d3 = PackageDescriptor('/another/path')
     d3.name = 'three'
-    d3.dependencies['run'].add('one')
-    d3.dependencies['run'].add('six')
+    d3.dependencies['run'].add(DependencyDescriptor('one'))
+    d3.dependencies['run'].add(DependencyDescriptor('six'))
 
     d4 = PackageDescriptor('/yet-another/path')
     d4.name = 'four'
 
     d5 = PackageDescriptor('/more/path')
     d5.name = 'five'
-    d5.dependencies['run'].add('four')
+    d5.dependencies['run'].add(DependencyDescriptor('four'))
 
     d6 = PackageDescriptor('/yet-more/path')
     d6.name = 'six'

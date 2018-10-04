@@ -3,6 +3,7 @@
 
 import re
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
@@ -100,5 +101,5 @@ def extract_dependencies(options):
             # remove environmental markers (separated by semicolons)
             # and version specifiers (separated by comparison operators)
             name = re.split(r';|<|>|<=|>=|==|!=', dep)[0].rstrip()
-            dependencies[dependency_type].add(name)
+            dependencies[dependency_type].add(DependencyDescriptor(name))
     return dependencies

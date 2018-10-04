@@ -9,6 +9,8 @@ from colcon_core.package_identification.python \
     import PythonPackageIdentification
 import pytest
 
+from .test_dependency_descriptor import check_dependencies
+
 
 def test_identify():
     extension = PythonPackageIdentification()
@@ -63,9 +65,11 @@ def test_identify():
         assert desc.name == 'other-name'
         assert desc.type == 'python'
         assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
-        assert desc.dependencies['build'] == {'build', 'build-windows'}
-        assert desc.dependencies['run'] == {'runA', 'runB'}
-        assert desc.dependencies['test'] == {'test'}
+        assert check_dependencies(desc.dependencies['build'],
+                                  ['build', 'build-windows'])
+        assert check_dependencies(desc.dependencies['run'],
+                                  ['runA', 'runB'])
+        assert check_dependencies(desc.dependencies['test'], ['test'])
 
         assert callable(desc.metadata['get_python_setup_options'])
         options = desc.metadata['get_python_setup_options'](None)

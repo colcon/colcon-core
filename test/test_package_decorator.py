@@ -1,11 +1,14 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_decorator import add_recursive_dependencies
 from colcon_core.package_decorator import get_decorators
 from colcon_core.package_decorator import PackageDecorator
 from colcon_core.package_descriptor import PackageDescriptor
 from mock import Mock
+
+from .test_dependency_descriptor import check_dependencies
 
 
 def test_constructor():
@@ -29,22 +32,22 @@ def test_add_recursive_dependencies():
     d = PackageDescriptor('/some/path')
     d.name = 'A'
     d.dependencies['build'].add('B')
-    d.dependencies['build'].add('c')
-    d.dependencies['run'].add('D')
-    d.dependencies['test'].add('e')
+    d.dependencies['build'].add(DependencyDescriptor('c'))
+    d.dependencies['run'].add(DependencyDescriptor('D'))
+    d.dependencies['test'].add(DependencyDescriptor('e'))
 
     d1 = PackageDescriptor('/other/path')
     d1.name = 'B'
-    d1.dependencies['build'].add('f')
-    d1.dependencies['run'].add('G')
+    d1.dependencies['build'].add(DependencyDescriptor('f'))
+    d1.dependencies['run'].add(DependencyDescriptor('G'))
 
     d2 = PackageDescriptor('/other/path')
     d2.name = 'D'
-    d2.dependencies['run'].add('h')
+    d2.dependencies['run'].add(DependencyDescriptor('h'))
 
     d3 = PackageDescriptor('/another/path')
     d3.name = 'G'
-    d3.dependencies['build'].add('i')
+    d3.dependencies['build'].add(DependencyDescriptor('i'))
 
     decos = get_decorators([d, d1, d2, d3])
     add_recursive_dependencies(
@@ -55,4 +58,5 @@ def test_add_recursive_dependencies():
     assert decos[1].recursive_dependencies is not None
     assert decos[2].recursive_dependencies is not None
     assert decos[3].recursive_dependencies is not None
-    assert decos[0].recursive_dependencies == {'B', 'D', 'G'}
+    assert check_dependencies(
+        decos[0].recursive_dependencies, ['B', 'D', 'G'])
