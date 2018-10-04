@@ -16,7 +16,7 @@ class PackageDescriptor:
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
 
-    'dependencies' are grouped by their category as DependencyDescriptor
+    'dependencies' are grouped by their category as DependencyDescriptor or str
 
     Each item in 'hooks' must be a relative path in the installation space.
 
@@ -61,7 +61,7 @@ class PackageDescriptor:
 
         :param Iterable[str] categories: The names of the specific categories
         :returns: The dependencies for the passed in category or all
-        :rtype: set[DependencyDescriptor]
+        :rtype: set[DependencyDescriptor, str]
         :raises AssertionError: if the package name is listed as a dependency
         """
         dependencies = set()
@@ -91,7 +91,7 @@ class PackageDescriptor:
         :param Iterable[str] recursive_categories: The names of the recursive
           categories
         :returns: The recursive dependencies of self
-        :rtype: set[DependencyDescriptor]
+        :rtype: set[DependencyDescriptor, str]
         :raises AssertionError: if a package lists itself as a dependency
         """
         queue = self.get_dependencies(categories=direct_categories)
