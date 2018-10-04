@@ -4,6 +4,8 @@
 from collections import defaultdict
 from pathlib import Path
 
+from colcon_core.dependency_descriptor import dependency_name
+
 
 class PackageDescriptor:
     """
@@ -67,7 +69,7 @@ class PackageDescriptor:
             categories = self.dependencies.keys()
         for category in sorted(categories):
             dependencies |= self.dependencies[category]
-        dependency_names = {d.name for d in dependencies}
+        dependency_names = {dependency_name(d) for d in dependencies}
         assert self.name not in dependency_names, \
             "The package '{self.name}' has a dependency with the same name" \
             .format_map(locals())
@@ -97,9 +99,9 @@ class PackageDescriptor:
         while queue:
             # pick one dependency from the queue
             dependency = queue.pop()
-            name = dependency.name
+            name = dependency_name(dependency)
             # ignore redundant dependencies
-            if name in {dep.name for dep in dependencies}:
+            if name in {dependency_name(dep) for dep in dependencies}:
                 continue
             # ignore circular dependencies
             if name == self.name:

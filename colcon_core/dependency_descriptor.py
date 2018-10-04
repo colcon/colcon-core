@@ -35,3 +35,24 @@ class DependencyDescriptor:
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(
             ['%s: %s' % (s, getattr(self, s)) for s in self.__slots__]) + '}'
+
+
+def dependency_name(dependency):
+    """
+    Get the name of the dependency.
+
+    This should be used to maintain backwards compatibility with extensions
+    that treat PackageDescriptor.dependencies as a list of strings
+    instead of a list of DependencyDescriptor
+
+    :param dependency: string or DependencyDescriptor
+    :return: name of the dependency
+    :rtype: str
+    """
+    if isinstance(dependency, DependencyDescriptor):
+        return dependency.name
+    elif isinstance(dependency, str):
+        return dependency
+    else:
+        raise RuntimeError(
+            'Passed in object is not a str or DependencyDescriptor')

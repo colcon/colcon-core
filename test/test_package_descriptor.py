@@ -36,7 +36,7 @@ def test_identifies_package():
 def test_get_dependencies():
     d1 = PackageDescriptor('/some/path')
     d1.name = 'self'
-    d1.dependencies['build'].add(DependencyDescriptor('build-depend'))
+    d1.dependencies['build'].add('build-depend')
     d1.dependencies['build'].add(DependencyDescriptor('depend'))
     d1.dependencies['run'].add(DependencyDescriptor('run-depend'))
     d1.dependencies['run'].add(DependencyDescriptor('depend'))
@@ -64,7 +64,7 @@ def test_get_recursive_dependencies():
     d1.name = 'B'
     d1.dependencies['build'].add(DependencyDescriptor('e'))
     d1.dependencies['run'].add(DependencyDescriptor('F'))
-    d1.dependencies['test'].add(DependencyDescriptor('G'))
+    d1.dependencies['test'].add('G')
 
     d2 = PackageDescriptor('/another/path')
     d2.name = 'd'

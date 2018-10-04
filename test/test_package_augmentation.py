@@ -118,7 +118,7 @@ def test_update_descriptor():
     update_descriptor(desc, data)
     assert len(desc.dependencies) == 2
     assert 'build' in desc.dependencies.keys()
-    assert check_dependencies(desc.dependencies['build'], ['b1','b2'])
+    assert check_dependencies(desc.dependencies['build'], ['b1', 'b2'])
     assert 'test' in desc.dependencies.keys()
     assert check_dependencies(desc.dependencies['test'], ['t1'])
 

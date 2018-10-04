@@ -1,9 +1,9 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_decorator import add_recursive_dependencies
 from colcon_core.package_decorator import get_decorators
-from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_decorator import PackageDecorator
 from colcon_core.package_descriptor import PackageDescriptor
 from mock import Mock
@@ -31,7 +31,7 @@ def test_get_decorators():
 def test_add_recursive_dependencies():
     d = PackageDescriptor('/some/path')
     d.name = 'A'
-    d.dependencies['build'].add(DependencyDescriptor('B'))
+    d.dependencies['build'].add('B')
     d.dependencies['build'].add(DependencyDescriptor('c'))
     d.dependencies['run'].add(DependencyDescriptor('D'))
     d.dependencies['test'].add(DependencyDescriptor('e'))
@@ -58,4 +58,5 @@ def test_add_recursive_dependencies():
     assert decos[1].recursive_dependencies is not None
     assert decos[2].recursive_dependencies is not None
     assert decos[3].recursive_dependencies is not None
-    assert check_dependencies(decos[0].recursive_dependencies, ['B', 'D', 'G'])
+    assert check_dependencies(
+        decos[0].recursive_dependencies, ['B', 'D', 'G'])

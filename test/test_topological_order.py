@@ -10,7 +10,7 @@ import pytest
 def test_topological_order_packages():
     d1 = PackageDescriptor('/some/path')
     d1.name = 'a'
-    d1.dependencies['build'].add(DependencyDescriptor('c'))
+    d1.dependencies['build'].add('c')
     d2 = PackageDescriptor('/other/path')
     d2.name = 'b'
     d2.dependencies['run'].add(DependencyDescriptor('c'))
@@ -46,7 +46,7 @@ def test_topological_order_packages():
 def test_topological_order_packages_with_circular_dependency():
     d1 = PackageDescriptor('/some/path')
     d1.name = 'one'
-    d1.dependencies['run'].add(DependencyDescriptor('two'))
+    d1.dependencies['run'].add('two')
 
     d2 = PackageDescriptor('/other/path')
     d2.name = 'two'

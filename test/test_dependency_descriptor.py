@@ -3,7 +3,8 @@
 
 import copy
 
-from colcon_core.dependency_descriptor import DependencyDescriptor
+from colcon_core.dependency_descriptor import dependency_name, \
+    DependencyDescriptor
 
 
 def test_constructor():
@@ -37,7 +38,7 @@ def test_str():
 
 def check_dependencies(actual, expected):
     """
-    Check that all of the expected names are in actual
+    Check that all of the expected names are in actual.
 
     :param actual: Set of DependencyDescriptor
     :param expected: List of str names
@@ -50,7 +51,7 @@ def check_dependencies(actual, expected):
 
     for name in expected:
         descriptor = next(iter(
-            [d for d in deps if d.name == name]), None)
+            [d for d in deps if dependency_name(d) == name]), None)
         if descriptor is None:
             return False
         deps.remove(descriptor)
