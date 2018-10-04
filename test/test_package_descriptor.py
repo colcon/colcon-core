@@ -37,12 +37,11 @@ def test_get_dependencies():
     d1 = PackageDescriptor('/some/path')
     d1.name = 'self'
     d1.dependencies['build'].add('build-depend')
-    d1.dependencies['build'].add(DependencyDescriptor('depend'))
+    d1.dependencies['build'].add('depend')
     d1.dependencies['run'].add(DependencyDescriptor('run-depend'))
     d1.dependencies['run'].add(DependencyDescriptor('depend'))
     assert check_dependencies(d1.get_dependencies(),
-                              ['build-depend', 'run-depend', 'depend',
-                               'depend'])
+                              ['build-depend', 'run-depend', 'depend'])
 
     d1.dependencies['test'].add(DependencyDescriptor('self'))
     assert check_dependencies(d1.get_dependencies(categories=('build', )),

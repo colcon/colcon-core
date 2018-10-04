@@ -27,13 +27,18 @@ def test_str():
     d = DependencyDescriptor('Package1')
     d.metadata['key'] = 'value'
     s = str(d)
-    assert s.startswith('{')
-    assert s.endswith('}')
-    assert 'name: ' in s
-    assert 'Package1' in s
-    assert 'metadata: ' in s
-    assert 'key' in s
-    assert 'value' in s
+    assert s == 'Package1'
+
+
+def test_eq():
+    d = DependencyDescriptor('foo')
+    assert 'foo' == d
+    assert d == 'foo'
+
+
+def test_hash():
+    d = DependencyDescriptor('hashme')
+    assert d.__hash__() == hash('hashme')
 
 
 def check_dependencies(actual, expected):
