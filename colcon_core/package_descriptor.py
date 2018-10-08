@@ -4,6 +4,8 @@
 from collections import defaultdict
 from pathlib import Path
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
+
 
 class PackageDescriptor:
     """
@@ -14,7 +16,8 @@ class PackageDescriptor:
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
 
-    The names of 'dependencies' are grouped by their category.
+    'dependencies' are grouped by their category as `DependencyDescriptor` or
+    `str`.
 
     Each item in 'hooks' must be a relative path in the installation space.
 
@@ -58,8 +61,8 @@ class PackageDescriptor:
         Get the dependencies for specific categories or for all categories.
 
         :param Iterable[str] categories: The names of the specific categories
-        :returns: The names of the dependencies
-        :rtype: set
+        :returns: The dependencies
+        :rtype: set[DependencyDescriptor]
         :raises AssertionError: if the package name is listed as a dependency
         """
         dependencies = set()
@@ -70,7 +73,9 @@ class PackageDescriptor:
         assert self.name not in dependencies, \
             "The package '{self.name}' has a dependency with the same name" \
             .format_map(locals())
-        return dependencies
+        return {
+            (DependencyDescriptor(d) if d is str else d)
+            for d in dependencies}
 
     def get_recursive_dependencies(
         self, descriptors, direct_categories=None, recursive_categories=None,
@@ -78,8 +83,8 @@ class PackageDescriptor:
         """
         Get the recursive dependencies.
 
-        Dependency names which are not in the set of package descriptor names
-        are ignored.
+        Dependencies which are not in the set of package descriptor names are
+        ignored.
 
         :param set descriptors: The known packages to
           consider
@@ -87,8 +92,8 @@ class PackageDescriptor:
           categories
         :param Iterable[str] recursive_categories: The names of the recursive
           categories
-        :returns: The names of the recursive dependencies
-        :rtype: set
+        :returns: The dependencies
+        :rtype: set[DependencyDescriptor]
         :raises AssertionError: if a package lists itself as a dependency
         """
         queue = self.get_dependencies(categories=direct_categories)
