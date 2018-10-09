@@ -1,10 +1,8 @@
 # Copyright 2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-import collections
 
-
-class DependencyDescriptor(collections.UserString):
+class DependencyDescriptor(str):
     """
     A descriptor for a package dependency.
 
@@ -18,8 +16,11 @@ class DependencyDescriptor(collections.UserString):
     You should not rely on this but use the `name` property instead.
     """
 
-    def __init__(self, *args, metadata=None, **kwargs):  # noqa: D107
-        super().__init__(*args, **kwargs)
+    @staticmethod
+    def __new__(cls, name, *, metadata=None):  # noqa: D102
+        return str.__new__(cls, name)
+
+    def __init__(self, name, *, metadata=None):  # noqa: D107
         self.metadata = metadata if metadata is not None else {}
 
     @property
