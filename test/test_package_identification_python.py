@@ -6,7 +6,9 @@ from tempfile import TemporaryDirectory
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification.python \
-    import create_dependency_descriptor, PythonPackageIdentification
+    import create_dependency_descriptor
+from colcon_core.package_identification.python \
+    PythonPackageIdentification
 import pytest
 
 
