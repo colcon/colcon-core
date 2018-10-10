@@ -77,35 +77,35 @@ def test_identify():
 
 
 def test_create_dependency_descriptor():
-    eq_str = 'flake8==2.2.0'
+    eq_str = 'pkgname==2.2.0'
     dep = create_dependency_descriptor(eq_str)
     assert dep.metadata['version_eq'] == '2.2.0'
 
-    lt_str = 'flake8<2.3.0'
+    lt_str = 'pkgname<2.3.0'
     dep = create_dependency_descriptor(lt_str)
     assert dep.metadata['version_lt'] == '2.3.0'
 
-    lte_str = 'flake8<=2.2.0'
+    lte_str = 'pkgname<=2.2.0'
     dep = create_dependency_descriptor(lte_str)
     assert dep.metadata['version_lte'] == '2.2.0'
 
-    gt_str = 'flake8>2.3.0'
+    gt_str = 'pkgname>2.3.0'
     dep = create_dependency_descriptor(gt_str)
     assert dep.metadata['version_gt'] == '2.3.0'
 
-    gte_str = 'flake8>=2.2.0'
+    gte_str = 'pkgname>=2.2.0'
     dep = create_dependency_descriptor(gte_str)
     assert dep.metadata['version_gte'] == '2.2.0'
 
-    neq_str = 'flake8!=1.2.1'
+    neq_str = 'pkgname!=1.2.1'
     dep = create_dependency_descriptor(neq_str)
     assert dep.metadata['version_neq'] == '1.2.1'
 
-    neq_str = 'flake8~=1.4.1'
+    neq_str = 'pkgname~=1.4.1'
     dep = create_dependency_descriptor(neq_str)
     assert dep.metadata['version_compatible'] == '1.4.1'
 
-    multi_str = 'flake8<=3.2.0, >=2.2.0'
+    multi_str = 'pkgname<=3.2.0, >=2.2.0'
     dep = create_dependency_descriptor(multi_str)
     assert dep.metadata['version_gte'] == '2.2.0'
     assert dep.metadata['version_lte'] == '3.2.0'
