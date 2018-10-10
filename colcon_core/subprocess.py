@@ -178,7 +178,7 @@ async def _async_check_call(
                 stdout if use_pty else None, stderr if use_pty else None))
         try:
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
-        except CancelledError as e:
+        except CancelledError:
             # finish the communication with the subprocess
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
             raise
