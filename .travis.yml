@@ -10,7 +10,7 @@ before_install:
 install:
   - pip install -U setuptools
   # install_requires
-  - pip install -U EmPy distlib
+  - pip install -U distlib EmPy
   # tests_require
   - if [ "$TEST_SUITE" = "pytest" ]; then pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pyenchant pylint pytest pytest-cov; fi
   # colcon test needs pytest-cov and pytest-runner
