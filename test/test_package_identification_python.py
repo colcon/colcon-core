@@ -8,7 +8,7 @@ from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification.python \
     import create_dependency_descriptor
 from colcon_core.package_identification.python \
-    PythonPackageIdentification
+    import PythonPackageIdentification
 import pytest
 
 
