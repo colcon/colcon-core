@@ -108,27 +108,27 @@ def create_dependency_descriptor(requirement_string):
 
     See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 
-    :param requirement_string: a PEP440 compliant requirement string
-    :return: A descriptor with metadata from the requirement string
+    :param str requirement_string: a PEP440 compliant requirement string
+    :return: A descriptor with version constraints from the requirement string
     :rtype: DependencyDescriptor
     """
     symbol_mapping = {
+        '~=': 'version_compatible',
         '==': 'version_eq',
         '!=': 'version_neq',
-        '>': 'version_gt',
-        '<': 'version_lt',
         '<=': 'version_lte',
         '>=': 'version_gte',
-        '~=': 'version_compatible'
+        '>': 'version_gt',
+        '<': 'version_lt',
     }
 
     requirement = parse_requirement(requirement_string)
     metadata = {}
-    if requirement.constraints is not None:
-        for symbol, version in requirement.constraints:
-            if symbol in symbol_mapping:
-                metadata[symbol_mapping[symbol]] = version
-            else:
-                logger.warn('Could not parse {symbol} in {requirement}'
-                            .format(locals()))
+    for symbol, version in (requirement.constraints or []):
+        if symbol in symbol_mapping:
+            metadata[symbol_mapping[symbol]] = version
+        else:
+            logger.warn(
+                "Ignoring unknown symbol '{symbol}' in '{requirement}'"
+                .format(locals()))
     return DependencyDescriptor(requirement.name, metadata=metadata)
