@@ -7,6 +7,7 @@ from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
 from distlib.util import parse_requirement
+from distlib.version import NormalizedVersion
 try:
     from setuptools.config import read_configuration
 except ImportError as e:
@@ -113,7 +114,6 @@ def create_dependency_descriptor(requirement_string):
     :rtype: DependencyDescriptor
     """
     symbol_mapping = {
-        '~=': 'version_compatible',
         '==': 'version_eq',
         '!=': 'version_neq',
         '<=': 'version_lte',
@@ -127,8 +127,41 @@ def create_dependency_descriptor(requirement_string):
     for symbol, version in (requirement.constraints or []):
         if symbol in symbol_mapping:
             metadata[symbol_mapping[symbol]] = version
+        elif symbol == '~=':
+            metadata['version_gte'] = version
+            metadata['version_lt'] = _next_incompatible_version(version)
         else:
             logger.warn(
                 "Ignoring unknown symbol '{symbol}' in '{requirement}'"
                 .format(locals()))
     return DependencyDescriptor(requirement.name, metadata=metadata)
+
+
+def _next_incompatible_version(version):
+    """
+    Find the next non-compatible version.
+
+    This is for use with the ~= compatible syntax. It will provide
+    the first version that this version must be less than in order
+    to be compatible.
+
+    :param str version: PEP 440 compliant version number
+    :return: The first version after this version that is not compatible
+    :rtype: str
+    """
+    normalized = NormalizedVersion(version)
+    parse_tuple = normalized.parse(version)
+    version_tuple = parse_tuple[1]
+    limit = len(version_tuple) - 1
+    lt_string = ''
+    for i in range(limit):
+        if i != 0:
+            lt_string += '.'
+        v = version_tuple[i]
+        if i == limit - 1:
+            v += 1
+        lt_string += str(v)
+    if len(lt_string) == 1:
+        # Version has minimum valid length
+        lt_string += '.0'
+    return lt_string

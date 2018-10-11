@@ -101,9 +101,25 @@ def test_create_dependency_descriptor():
     dep = create_dependency_descriptor(neq_str)
     assert dep.metadata['version_neq'] == '1.2.1'
 
-    neq_str = 'pkgname~=1.4.1'
-    dep = create_dependency_descriptor(neq_str)
-    assert dep.metadata['version_compatible'] == '1.4.1'
+    compat_str = 'pkgname~=1.4.1a4'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4.1a4'
+    assert dep.metadata['version_lt'] == '1.5'
+
+    compat_str = 'pkgname~=1.4.1'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4.1'
+    assert dep.metadata['version_lt'] == '1.5'
+
+    compat_str = 'pkgname~=1.4.1.4'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4.1.4'
+    assert dep.metadata['version_lt'] == '1.4.2'
+
+    compat_str = 'pkgname~=1.4'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4'
+    assert dep.metadata['version_lt'] == '2.0'
 
     multi_str = 'pkgname<=3.2.0, >=2.2.0'
     dep = create_dependency_descriptor(multi_str)
