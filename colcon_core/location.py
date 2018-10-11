@@ -166,7 +166,7 @@ def _create_symlink(src, dst):
     # use relative path when possible
     try:
         src = src.relative_to(dst.parent)
-    except ValueError as e:
+    except ValueError:
         pass
     os.symlink(str(src), str(dst))
 

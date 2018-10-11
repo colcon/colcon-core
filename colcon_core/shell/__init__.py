@@ -274,7 +274,7 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
         encoding = locale.getpreferredencoding()
         try:
             parts = line.decode(encoding).split('=', 1)
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError:
             line_replaced = line.decode(encoding=encoding, errors='replace')
             logger.warning(
                 'Failed to decode line from the environment using the '

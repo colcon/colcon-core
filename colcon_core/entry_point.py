@@ -96,7 +96,7 @@ def load_entry_points(group_name):
     for entry_point in get_entry_points(group_name).values():
         try:
             extension_type = load_entry_point(entry_point)
-        except RuntimeError as e:
+        except RuntimeError:
             continue
         except Exception as e:
             # catch exceptions raised when loading entry point
