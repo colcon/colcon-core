@@ -1,12 +1,13 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-import re
-
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
+from distlib.util import parse_requirement
+from distlib.version import NormalizedVersion
 try:
     from setuptools.config import read_configuration
 except ImportError as e:
@@ -86,7 +87,7 @@ def extract_dependencies(options):
     :param options: The dictionary from the options section of the setup.cfg
       file
     :returns: The dependencies
-    :rtype: dict
+    :rtype: dict(string, set(DependencyDescriptor))
     """
     mapping = {
         'setup_requires': 'build',
@@ -97,8 +98,68 @@ def extract_dependencies(options):
     for option_name, dependency_type in mapping.items():
         dependencies[dependency_type] = set()
         for dep in options.get(option_name, []):
-            # remove environmental markers (separated by semicolons)
-            # and version specifiers (separated by comparison operators)
-            name = re.split(r';|<|>|<=|>=|==|!=', dep)[0].rstrip()
-            dependencies[dependency_type].add(name)
+            dependencies[dependency_type].add(
+                create_dependency_descriptor(dep))
     return dependencies
+
+
+def create_dependency_descriptor(requirement_string):
+    """
+    Create a DependencyDescriptor from a PEP440 compliant string.
+
+    See https://www.python.org/dev/peps/pep-0440/#version-specifiers
+
+    :param str requirement_string: a PEP440 compliant requirement string
+    :return: A descriptor with version constraints from the requirement string
+    :rtype: DependencyDescriptor
+    """
+    symbol_mapping = {
+        '==': 'version_eq',
+        '!=': 'version_neq',
+        '<=': 'version_lte',
+        '>=': 'version_gte',
+        '>': 'version_gt',
+        '<': 'version_lt',
+    }
+
+    requirement = parse_requirement(requirement_string)
+    metadata = {}
+    for symbol, version in (requirement.constraints or []):
+        if symbol in symbol_mapping:
+            metadata[symbol_mapping[symbol]] = version
+        elif symbol == '~=':
+            metadata['version_gte'] = version
+            metadata['version_lt'] = _next_incompatible_version(version)
+        else:
+            logger.warn(
+                "Ignoring unknown symbol '{symbol}' in '{requirement}'"
+                .format(locals()))
+    return DependencyDescriptor(requirement.name, metadata=metadata)
+
+
+def _next_incompatible_version(version):
+    """
+    Find the next non-compatible version.
+
+    This is for use with the ~= compatible syntax. It will provide
+    the first version that this version must be less than in order
+    to be compatible.
+
+    :param str version: PEP 440 compliant version number
+    :return: The first version after this version that is not compatible
+    :rtype: str
+    """
+    normalized = NormalizedVersion(version)
+    parse_tuple = normalized.parse(version)
+    version_tuple = parse_tuple[1]
+    lt_string_parts = []
+    # the last part of the version tuple is dropped
+    for i, v in enumerate(version_tuple[:-1]):
+        # the second last part of the version tuple if being incremented
+        if i == len(version_tuple) - 2:
+            v += 1
+        lt_string_parts.append(str(v))
+    if len(lt_string_parts) == 1:
+        # the version must have a minimum length
+        lt_string_parts.append('0')
+    return '.'.join(lt_string_parts)

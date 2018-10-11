@@ -5,7 +5,7 @@ environment:
 install:
   - "%PYTHON%\\python.exe -m pip install -U setuptools"
   # install_requires
-  - "%PYTHON%\\python.exe -m pip install -U coloredlogs EmPy"
+  - "%PYTHON%\\python.exe -m pip install -U coloredlogs distlib EmPy"
   # tests_require, except pyenchant, additionally mock
   - "%PYTHON%\\python.exe -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes mock pep8-naming pylint pytest pytest-cov"
   # for uploading the coverage information to codecov

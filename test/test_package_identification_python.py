@@ -6,6 +6,8 @@ from tempfile import TemporaryDirectory
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification.python \
+    import create_dependency_descriptor
+from colcon_core.package_identification.python \
     import PythonPackageIdentification
 import pytest
 
@@ -65,8 +67,61 @@ def test_identify():
         assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
         assert desc.dependencies['build'] == {'build', 'build-windows'}
         assert desc.dependencies['run'] == {'runA', 'runB'}
+        dep = next(x for x in desc.dependencies['run'] if x == 'runA')
+        assert dep.metadata['version_gt'] == '1.2.3'
         assert desc.dependencies['test'] == {'test'}
 
         assert callable(desc.metadata['get_python_setup_options'])
         options = desc.metadata['get_python_setup_options'](None)
         assert 'zip_safe' in options
+
+
+def test_create_dependency_descriptor():
+    eq_str = 'pkgname==2.2.0'
+    dep = create_dependency_descriptor(eq_str)
+    assert dep.metadata['version_eq'] == '2.2.0'
+
+    lt_str = 'pkgname<2.3.0'
+    dep = create_dependency_descriptor(lt_str)
+    assert dep.metadata['version_lt'] == '2.3.0'
+
+    lte_str = 'pkgname<=2.2.0'
+    dep = create_dependency_descriptor(lte_str)
+    assert dep.metadata['version_lte'] == '2.2.0'
+
+    gt_str = 'pkgname>2.3.0'
+    dep = create_dependency_descriptor(gt_str)
+    assert dep.metadata['version_gt'] == '2.3.0'
+
+    gte_str = 'pkgname>=2.2.0'
+    dep = create_dependency_descriptor(gte_str)
+    assert dep.metadata['version_gte'] == '2.2.0'
+
+    neq_str = 'pkgname!=1.2.1'
+    dep = create_dependency_descriptor(neq_str)
+    assert dep.metadata['version_neq'] == '1.2.1'
+
+    compat_str = 'pkgname~=1.4.1a4'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4.1a4'
+    assert dep.metadata['version_lt'] == '1.5'
+
+    compat_str = 'pkgname~=1.4.1'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4.1'
+    assert dep.metadata['version_lt'] == '1.5'
+
+    compat_str = 'pkgname~=1.4.1.4'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '1.4.1.4'
+    assert dep.metadata['version_lt'] == '1.4.2'
+
+    compat_str = 'pkgname~=11.12'
+    dep = create_dependency_descriptor(compat_str)
+    assert dep.metadata['version_gte'] == '11.12'
+    assert dep.metadata['version_lt'] == '12.0'
+
+    multi_str = 'pkgname<=3.2.0, >=2.2.0'
+    dep = create_dependency_descriptor(multi_str)
+    assert dep.metadata['version_gte'] == '2.2.0'
+    assert dep.metadata['version_lte'] == '3.2.0'
