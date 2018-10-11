@@ -116,10 +116,10 @@ def test_create_dependency_descriptor():
     assert dep.metadata['version_gte'] == '1.4.1.4'
     assert dep.metadata['version_lt'] == '1.4.2'
 
-    compat_str = 'pkgname~=1.4'
+    compat_str = 'pkgname~=11.12'
     dep = create_dependency_descriptor(compat_str)
-    assert dep.metadata['version_gte'] == '1.4'
-    assert dep.metadata['version_lt'] == '2.0'
+    assert dep.metadata['version_gte'] == '11.12'
+    assert dep.metadata['version_lt'] == '12.0'
 
     multi_str = 'pkgname<=3.2.0, >=2.2.0'
     dep = create_dependency_descriptor(multi_str)
