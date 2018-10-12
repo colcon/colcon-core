@@ -152,14 +152,13 @@ def _next_incompatible_version(version):
     normalized = NormalizedVersion(version)
     parse_tuple = normalized.parse(version)
     version_tuple = parse_tuple[1]
-    lt_string_parts = []
-    # the last part of the version tuple is dropped
-    for i, v in enumerate(version_tuple[:-1]):
-        # the second last part of the version tuple if being incremented
-        if i == len(version_tuple) - 2:
-            v += 1
-        lt_string_parts.append(str(v))
-    if len(lt_string_parts) == 1:
-        # the version must have a minimum length
-        lt_string_parts.append('0')
-    return '.'.join(lt_string_parts)
+
+    *unchanged, increment, dropped = version_tuple
+    incremented = increment + 1
+
+    version = unchanged
+    version.append(incremented)
+    # versions have a minimum length of 2
+    if len(version) == 1:
+        version.append(0)
+    return '.'.join(map(str, version))
