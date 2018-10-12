@@ -5,17 +5,17 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 
 --- setup.cfg	2018-05-27 11:22:33.000000000 -0700
 +++ setup.cfg.patched	2018-05-27 11:22:33.000000000 -0700
-@@ -31,8 +31,11 @@
- 	EmPy
- 	pytest
- 	pytest-cov
--	pytest-repeat
--	pytest-rerunfailures
-+	# the following dependencies are not available from Debian
-+	# so listing them here but not installing them in the Debian package
-+	# would result in a runtime error by pkg_resources
-+	# pytest-repeat
-+	# pytest-rerunfailures
- 	pytest-runner
- 	setuptools>=30.3.0
+@@ -33,8 +33,11 @@
+   # even though they are only conditional
+   pytest
+   pytest-cov
+-  pytest-repeat
+-  pytest-rerunfailures
++  # the following dependencies are not available from Debian
++  # so listing them here but not installing them in the Debian package
++  # would result in a runtime error by pkg_resources
++  # pytest-repeat
++  # pytest-rerunfailures
+   pytest-runner
+   setuptools>=30.3.0
  packages = find:
