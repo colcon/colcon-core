@@ -52,7 +52,7 @@ class PythonTestTask(TaskExtensionPoint):
                     1, "test() by extension '{key}'".format_map(locals()))
                 try:
                     matched = extension.match(self.context, env, setup_py_data)
-                except Exception as e:
+                except Exception as e:  # noqa: F841
                     # catch exceptions raised in python testing step extension
                     exc = traceback.format_exc()
                     logger.error(
@@ -73,7 +73,7 @@ class PythonTestTask(TaskExtensionPoint):
             1, "test.step() by extension '{key}'".format_map(locals()))
         try:
             return await extension.step(self.context, env, setup_py_data)
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in python testing step extension
             exc = traceback.format_exc()
             logger.error(
@@ -176,7 +176,7 @@ def add_python_testing_step_arguments(parser):
         try:
             retval = extension.add_arguments(parser=parser)
             assert retval is None, 'add_arguments() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in package selection extension
             exc = traceback.format_exc()
             logger.error(

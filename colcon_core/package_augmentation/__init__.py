@@ -98,7 +98,7 @@ def augment_packages(
                 descs,
                 additional_argument_names=additional_argument_names)
             assert retval is None, 'augment_packages() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in augmentation extension
             exc = traceback.format_exc()
             logger.error(

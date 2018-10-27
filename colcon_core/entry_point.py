@@ -98,7 +98,7 @@ def load_entry_points(group_name):
             extension_type = load_entry_point(entry_point)
         except RuntimeError:
             continue
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised when loading entry point
             exc = traceback.format_exc()
             logger.error(

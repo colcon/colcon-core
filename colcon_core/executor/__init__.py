@@ -221,7 +221,7 @@ def add_executor_arguments(parser):
             try:
                 retval = extension.add_arguments(parser=group)
                 assert retval is None, 'add_arguments() should return None'
-            except Exception as e:
+            except Exception as e:  # noqa: F841
                 # catch exceptions raised in executor extension
                 exc = traceback.format_exc()
                 logger.error(
@@ -266,7 +266,7 @@ def execute_jobs(context, jobs, *, abort_on_error=True):
     try:
         rc = executor.execute(
             context.args, jobs, abort_on_error=abort_on_error)
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         # catch exceptions raised in executor extension
         exc = traceback.format_exc()
         logger.error(

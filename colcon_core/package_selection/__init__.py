@@ -108,7 +108,7 @@ def _add_package_selection_arguments(parser):
         try:
             retval = extension.add_arguments(parser=group)
             assert retval is None, 'add_arguments() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in package selection extension
             exc = traceback.format_exc()
             logger.error(
@@ -197,7 +197,7 @@ def _check_package_selection_parameters(args, pkg_names):
         try:
             retval = extension.check_parameters(args=args, pkg_names=pkg_names)
             assert retval is None, 'check_parameters() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in package selection extension
             exc = traceback.format_exc()
             logger.error(
@@ -224,7 +224,7 @@ def select_package_decorators(args, decorators):
             retval = extension.select_packages(
                 args=args, decorators=decorators)
             assert retval is None, 'select_packages() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in package selection extension
             exc = traceback.format_exc()
             logger.error(
