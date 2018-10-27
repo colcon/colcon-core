@@ -114,7 +114,7 @@ def add_package_discovery_arguments(parser, *, extensions=None):
     for name, extension in extensions.items():
         try:
             has_default = extension.has_default()
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in discovery extension
             exc = traceback.format_exc()
             logger.error(
@@ -134,7 +134,7 @@ def add_package_discovery_arguments(parser, *, extensions=None):
             retval = extension.add_arguments(
                 parser=group, with_default=with_default)
             assert retval is None, 'add_arguments() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in discovery extension
             exc = traceback.format_exc()
             logger.error(
@@ -197,7 +197,7 @@ def _get_extensions_with_parameters(
             'parameters'.format_map(locals()))
         try:
             has_parameter = extension.has_parameters(args=args)
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in discovery extension
             exc = traceback.format_exc()
             logger.error(
@@ -227,7 +227,7 @@ def _discover_packages(
         except NotImplementedError:
             # skip extension not implementing discovery
             continue
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in discovery extension
             exc = traceback.format_exc()
             logger.error(

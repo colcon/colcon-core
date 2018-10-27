@@ -77,7 +77,7 @@ class EventReactor(Thread):
             try:
                 retval = observer(event)
                 assert retval is None, 'event handler should return None'
-            except Exception as e:
+            except Exception as e:  # noqa: F841
                 # catch exceptions raised in event handler extension
                 exc = traceback.format_exc()
                 logger.error(

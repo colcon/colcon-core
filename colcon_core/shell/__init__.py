@@ -235,7 +235,7 @@ async def get_command_environment(task_name, build_base, dependencies):
                 logger.debug(
                     "Skip shell extension '{extension.SHELL_NAME}' for "
                     'command environment'.format_map(locals()))
-            except SkipExtensionException as e:
+            except SkipExtensionException as e:  # noqa: F841
                 # skip extension, continue with next one
                 logger.info(
                     "Skip shell extension '{extension.SHELL_NAME}' for "
@@ -244,7 +244,7 @@ async def get_command_environment(task_name, build_base, dependencies):
                 # re-raise same exception to handle it in the executor
                 # without a traceback
                 raise
-            except Exception as e:
+            except Exception as e:  # noqa: F841
                 # catch exceptions raised in shell extension
                 exc = traceback.format_exc()
                 logger.error(
@@ -325,7 +325,7 @@ def create_environment_hook(
                         'create_hook_prepend_value() should return a Path ' \
                         'object'
 
-                except Exception as e:
+                except Exception as e:  # noqa: F841
                     # catch exceptions raised in shell extension
                     exc = traceback.format_exc()
                     logger.error(

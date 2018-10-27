@@ -70,7 +70,7 @@ def decorate_argument_parser(parser):
                 parser=parser)
             assert hasattr(decorated_parser, 'add_argument'), \
                 'decorate_argument_parser() should return a parser like object'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in decorator extension
             exc = traceback.format_exc()
             logger.error(

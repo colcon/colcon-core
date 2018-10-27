@@ -31,7 +31,7 @@ def expand_template(template_path, destination_path, data):
             content = h.read()
         interpreter.string(content, str(template_path), locals=data)
         output = output.getvalue()
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         logger.error(
             "{e.__class__.__name__} processing template '{template_path}'"
             .format_map(locals()))

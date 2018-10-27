@@ -246,7 +246,7 @@ class LogLevelAction(argparse.Action):
         """See :class:`argparse.Action.__call__`."""
         try:
             value = get_numeric_log_level(values)
-        except ValueError as e:
+        except ValueError as e:  # noqa: F841
             parser.error(
                 '{option_string} has unsupported value, {e}'
                 .format_map(locals()))
@@ -443,13 +443,13 @@ def verb_main(context, logger):
         rc = context.args.main(context=context)
     except KeyboardInterrupt:
         rc = signal.SIGINT
-    except RuntimeError as e:
+    except RuntimeError as e:  # noqa: F841
         # only log the error message for "known" exceptions
         logger.error(
             '{context.command_name} {context.args.verb_name}: {e}'
             .format_map(locals()))
         return 1
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         # log the error message and a traceback for "unexpected" exceptions
         exc = traceback.format_exc()
         logger.error(

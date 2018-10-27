@@ -65,7 +65,7 @@ class SequentialExecutor(ExecutorExtensionPoint):
                         "run_until_complete '{name}' finished"
                         .format_map(locals()))
                     return signal.SIGINT
-                except Exception as e:
+                except Exception as e:  # noqa: F841
                     exc = traceback.format_exc()
                     logger.error(
                         "Exception in job execution '{name}': {e}\n{exc}"

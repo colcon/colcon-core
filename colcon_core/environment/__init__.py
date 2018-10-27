@@ -115,7 +115,7 @@ def create_environment_scripts(
                     prefix_path, pkg.name, hook_tuples)
                 assert retval is None, \
                     'create_package_script() should return None'
-            except Exception as e:
+            except Exception as e:  # noqa: F841
                 # catch exceptions raised in shell extension
                 exc = traceback.format_exc()
                 logger.error(
@@ -147,7 +147,7 @@ def create_environment_hooks(prefix_path, pkg_name):
             hooks = extension.create_environment_hooks(prefix_path, pkg_name)
             assert isinstance(hooks, Iterable), \
                 'create_environment_hooks() should return an iterable'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in environment extension
             exc = traceback.format_exc()
             logger.error(

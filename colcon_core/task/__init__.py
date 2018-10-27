@@ -192,7 +192,7 @@ def add_task_arguments(parser, task_name):
         try:
             retval = extension.add_arguments(parser=group)
             assert retval is None, 'add_arguments() should return None'
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in task extension
             exc = traceback.format_exc()
             logger.error(

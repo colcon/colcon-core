@@ -137,7 +137,7 @@ def _identify(extensions_same_prio, desc):
         except IgnoreLocationException:
             logger.log(1, '_identify(%s) ignored', desc.path)
             raise
-        except Exception as e:
+        except Exception as e:  # noqa: F841
             # catch exceptions raised in identification extension
             exc = traceback.format_exc()
             logger.error(

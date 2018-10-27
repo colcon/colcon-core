@@ -49,10 +49,10 @@ async def run(
     stdout_callback: Callable[[bytes], None],
     stderr_callback: Callable[[bytes], None],
     *,
-    cwd: str=None,
-    env: Mapping[str, str]=None,
-    shell: bool=False,
-    use_pty: UsePtyType=None
+    cwd: str = None,
+    env: Mapping[str, str] = None,
+    shell: bool = False,
+    use_pty: UsePtyType = None
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
@@ -89,9 +89,9 @@ async def run(
 async def check_output(
     args: Sequence[str],
     *,
-    cwd: str=None,
-    env: Mapping[str, str]=None,
-    shell: bool=False
+    cwd: str = None,
+    env: Mapping[str, str] = None,
+    shell: bool = False
 ) -> subprocess.CompletedProcess:
     """
     Get the output of an invoked command.

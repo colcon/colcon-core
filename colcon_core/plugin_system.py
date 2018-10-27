@@ -61,12 +61,12 @@ def _instantiate_extension(
         extension_instance = extension_class()
         assert isinstance(extension_instance, object), \
             'invocation should return an object'
-    except SkipExtensionException as e:
+    except SkipExtensionException as e:  # noqa: F841
         logger.info(
             "Skipping extension '{group_name}.{extension_name}': {e}"
             .format_map(locals()))
         extension_instance = None
-    except Exception as e:
+    except Exception as e:  # noqa: F841
         # catch exceptions raised in extension constructor
         exc = traceback.format_exc()
         logger.error(

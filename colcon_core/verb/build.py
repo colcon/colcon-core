@@ -252,7 +252,7 @@ class BuildVerb(VerbExtensionPoint):
                         Path(install_base), merge_install)
                     assert retval is None, \
                         'create_prefix_script() should return None'
-                except Exception as e:
+                except Exception as e:  # noqa: F841
                     # catch exceptions raised in shell extension
                     exc = traceback.format_exc()
                     logger.error(
