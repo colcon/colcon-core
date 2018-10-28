@@ -7,6 +7,7 @@ import sys
 
 from flake8 import LOG
 from flake8.api.legacy import get_style_guide
+from pydocstyle.utils import log
 
 
 # avoid debug and info messages from flake8 internals
@@ -14,6 +15,10 @@ LOG.setLevel(logging.WARN)
 
 
 def test_flake8():
+    # for some reason the pydocstyle logger changes to an effective level of 1
+    # set higher level to prevent the output to be flooded with debug messages
+    log.setLevel(logging.WARN)
+
     style_guide = get_style_guide(
         ignore=['D100', 'D104', 'W504'],
         show_source=True,
