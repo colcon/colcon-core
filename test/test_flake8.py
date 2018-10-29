@@ -20,12 +20,12 @@ def test_flake8():
     log.setLevel(logging.WARN)
 
     style_guide = get_style_guide(
-        ignore=['D100', 'D104', 'W504'],
+        extend_ignore=['D100', 'D104'],
         show_source=True,
     )
     style_guide_tests = get_style_guide(
-        ignore=[
-            'D100', 'D101', 'D102', 'D103', 'D104', 'D105', 'D107', 'W504'],
+        extend_ignore=[
+            'D100', 'D101', 'D102', 'D103', 'D104', 'D105', 'D107'],
         show_source=True,
     )
 
