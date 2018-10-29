@@ -45,10 +45,14 @@ def test_flake8():
     if total_errors:  # pragma: no cover
         # output summary with per-category counts
         print()
-        report._application.formatter.show_statistics(report._stats)
+        if report.total_errors:
+            report._application.formatter.show_statistics(report._stats)
+        if report_tests.total_errors:
+            report_tests._application.formatter.show_statistics(
+                report_tests._stats)
         print(
             'flake8 reported {total_errors} errors'
             .format_map(locals()), file=sys.stderr)
 
-    assert not report.total_errors, \
+    assert not total_errors, \
         'flake8 reported {total_errors} errors'.format_map(locals())
