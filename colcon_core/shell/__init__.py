@@ -6,6 +6,7 @@ from concurrent.futures import CancelledError
 import locale
 import os
 from pathlib import Path
+import re
 import traceback
 
 from colcon_core.environment_variable import EnvironmentVariable
@@ -266,24 +267,29 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
     :rtype: dict
     """
     output = await check_output(cmd, cwd=cwd, shell=shell)
-    env = {}
+    env = OrderedDict()
     for line in output.splitlines():
         line = line.rstrip()
         if not line:
             continue
         encoding = locale.getpreferredencoding()
         try:
-            parts = line.decode(encoding).split('=', 1)
+            line = line.decode(encoding)
         except UnicodeDecodeError:
             line_replaced = line.decode(encoding=encoding, errors='replace')
             logger.warning(
                 'Failed to decode line from the environment using the '
                 "encoding '{encoding}': {line_replaced}".format_map(locals()))
             continue
-        if len(parts) != 2:
-            # skip lines which don't contain an equal sign
-            continue
-        env[parts[0]] = parts[1]
+        parts = line.split('=', 1)
+        if len(parts) == 2 and re.match('^[a-zA-Z0-9_%]+$', parts[0]):
+            # add new environment variable
+            env[parts[0]] = parts[1]
+        else:
+            # assume a line without an equal sign or with a "key" which is not
+            # a valid name is a continuation of the previous line
+            if env:
+                env[list(env.keys())[-1]] += '\n' + line
     assert len(env) > 0, "The environment shouldn't be empty"
     return env
 
