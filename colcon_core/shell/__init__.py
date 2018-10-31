@@ -288,8 +288,8 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
         else:
             # assume a line without an equal sign or with a "key" which is not
             # a valid name is a continuation of the previous line
-            assert env
-            env[list(env.keys())[-1]] += '\n' + line
+            if env:
+                env[list(env.keys())[-1]] += '\n' + line
     assert len(env) > 0, "The environment shouldn't be empty"
     return env
 
