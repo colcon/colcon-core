@@ -127,7 +127,7 @@ def test_get_environment_variables():
 
     assert len(env.keys()) == 2
     assert 'NAME' in env.keys()
-    assert env['NAME'] == 'value'
+    assert env['NAME'] == 'value\nSOMETHING'
     assert 'NAME2' in env.keys()
     assert env['NAME2'] == 'value with spaces'
 
