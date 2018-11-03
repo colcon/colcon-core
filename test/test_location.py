@@ -5,10 +5,9 @@ import os
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
-from threading import Thread
-from time import sleep
 
 from colcon_core import location
+from colcon_core.location import _create_symlink
 from colcon_core.location import create_log_path
 from colcon_core.location import get_config_path
 from colcon_core.location import get_log_path
@@ -27,6 +26,7 @@ def reset_global_variables():
     assert location._log_base_path is not None
     location._config_path = None
     location._config_path_env_var = None
+    location._create_log_path_called = False
     location._log_base_path = None
     location._log_base_path_env_var = None
     location._log_subdirectory = None
@@ -77,15 +77,11 @@ def test_log_path():
 
     # use specific subdirectory
     subdirectory = 'sub'
-    with patch('colcon_core.location.logger.info') as info:
-        set_default_log_path(
-            base_path=log_base_path, env_var=log_base_path_env_var,
-            subdirectory=subdirectory)
-        assert isinstance(get_log_path(), Path)
-        assert get_log_path() == Path(log_base_path) / subdirectory
-        info.assert_called_once_with(
-            "Using log path '{log_base_path}/{subdirectory}'"
-            .format_map(locals()).replace('/', os.sep))
+    set_default_log_path(
+        base_path=log_base_path, env_var=log_base_path_env_var,
+        subdirectory=subdirectory)
+    assert isinstance(get_log_path(), Path)
+    assert get_log_path() == Path(log_base_path) / subdirectory
 
 
 def test_create_log_path():
@@ -102,14 +98,51 @@ def test_create_log_path():
     subdirectory = 'sub'
     with TemporaryDirectory(prefix='test_colcon_') as log_path:
         log_path = Path(log_path)
+        set_default_log_path(base_path=log_path, subdirectory=subdirectory)
+
+        # repeated call is a noop
+        with patch('os.makedirs') as makedirs:
+            makedirs.side_effect = AssertionError('should not be called')
+            create_log_path('verb2')
+        assert not (log_path.parent / 'latest').exists()
 
         # create a directory and symlink when the path doesn't exist
-        set_default_log_path(base_path=log_path, subdirectory=subdirectory)
+        location._create_log_path_called = False
         with patch('os.makedirs', wraps=os.makedirs) as makedirs:
             create_log_path('verb')
-            makedirs.assert_called_once_with(
-                str(log_path / subdirectory), exist_ok=True)
+            makedirs.assert_called_once_with(str(log_path / subdirectory))
         assert (log_path / subdirectory).exists()
+
+        # since the directory already exists create one with a suffix
+        location._create_log_path_called = False
+        with patch('os.makedirs', wraps=os.makedirs) as makedirs:
+            create_log_path('verb')
+            assert makedirs.call_count == 2
+            assert len(makedirs.call_args_list[0][0]) == 1
+            assert makedirs.call_args_list[0][0][0] == str(
+                log_path / subdirectory)
+            assert len(makedirs.call_args_list[1][0]) == 1
+            assert makedirs.call_args_list[1][0][0] == str(
+                log_path / subdirectory) + '_2'
+        assert (log_path / (str(subdirectory) + '_2')).exists()
+
+        # and another increment of the suffix
+        location._create_log_path_called = False
+        location._log_subdirectory = subdirectory
+        with patch('os.makedirs', wraps=os.makedirs) as makedirs:
+            create_log_path('verb')
+            assert makedirs.call_count == 3
+            assert len(makedirs.call_args_list[0][0]) == 1
+            assert makedirs.call_args_list[0][0][0] == str(
+                log_path / subdirectory)
+            assert len(makedirs.call_args_list[1][0]) == 1
+            assert makedirs.call_args_list[1][0][0] == str(
+                log_path / subdirectory) + '_2'
+            assert len(makedirs.call_args_list[2][0]) == 1
+            assert makedirs.call_args_list[2][0][0] == str(
+                log_path / subdirectory) + '_3'
+        assert (log_path / (str(subdirectory) + '_3')).exists()
+        subdirectory += '_3'
 
         # skip all symlink tests on Windows for now
         if sys.platform == 'win32':
@@ -127,6 +160,7 @@ def test_create_log_path():
 
         # create directory but correct latest symlink already exists
         (log_path / subdirectory).rmdir()
+        location._create_log_path_called = False
         create_log_path('verb')
         assert (log_path / subdirectory).exists()
         assert (log_path / 'latest').is_symlink()
@@ -136,6 +170,7 @@ def test_create_log_path():
         # create directory and update latest symlink
         subdirectory = 'other_sub'
         set_default_log_path(base_path=log_path, subdirectory=subdirectory)
+        location._create_log_path_called = False
         create_log_path('verb')
         assert (log_path / subdirectory).exists()
         assert (log_path / 'latest').is_symlink()
@@ -146,28 +181,36 @@ def test_create_log_path():
         (log_path / subdirectory).rmdir()
         (log_path / 'latest').unlink()
         (log_path / 'latest').mkdir()
+        location._create_log_path_called = False
         create_log_path('verb')
         assert (log_path / subdirectory).exists()
         assert not (log_path / 'latest').is_symlink()
 
 
-def test_create_log_path_race():
-    # check race if log path is created at the same time
-    subdirectory = 'sub'
-    with TemporaryDirectory(prefix='test_colcon_') as log_path:
-        log_path = Path(log_path)
+def test__create_symlink():
+    # check cases where functions raise exceptions and ensure it is being
+    # handled gracefully
+    with TemporaryDirectory(prefix='test_colcon_') as path:
+        path = Path(path)
 
-        set_default_log_path(base_path=log_path, subdirectory=subdirectory)
+        # relative path couldn't be computed, symlink couldn't be created
+        _create_symlink(path / 'nowhere', Path('/foo/bar'))
 
-        # spawn thread which hold the lock for some time
-        def hold_lock_for_some_time():
-            with location._create_log_path_lock:
-                sleep(1)
-                (log_path / subdirectory).mkdir()
-        Thread(target=hold_lock_for_some_time).start()
+        # unlinking symlink failed
+        class DummyPath:
 
-        with patch('os.makedirs') as makedirs:
-            makedirs.side_effect = AssertionError('should not be called')
-            create_log_path('verb')
-        # no latest symlink is being created either
-        assert not (log_path / 'latest').exists()
+            def __init__(self):
+                self.parent = 'parent'
+
+            def exists(self):
+                return False
+
+            def is_symlink(self):
+                return True
+
+            def unlink(self):
+                raise FileNotFoundError()
+
+        with patch('os.symlink') as symlink:
+            _create_symlink(path / 'src', DummyPath())
+            assert symlink.call_count == 1

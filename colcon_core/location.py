@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 import sys
-from threading import Lock
 import uuid
 
 from colcon_core.logging import colcon_logger
@@ -103,15 +102,24 @@ def set_default_log_path(*, base_path, env_var=None, subdirectory=None):
     _log_subdirectory = subdirectory \
         if subdirectory is not None \
         else str(uuid.uuid4())
-    logger.info("Using log path '%s'" % get_log_path())
 
 
-_create_log_path_lock = Lock()
+_create_log_path_called = False
 
 
 def create_log_path(verb_name):
     """
-    Create the logging directory if it doesn't exist yet.
+    Create a not yet existing logging directory.
+
+    The logging directory returned by :function:`get_log_path` must not yet
+    exist on the first call of this function.
+    If it does exist the function will append a serial number to the path until
+    the path doesn't exist and can be created.
+
+    Subsequent invocations of this function are noops.
+
+    A `COLCON_IGNORE` marker file is being placed in the parent directory of
+    the logging directory to avoid it being crawled for packages.
 
     On non-Windows platforms two symlinks are created as siblings of the log
     path:
@@ -120,33 +128,49 @@ def create_log_path(verb_name):
 
     :param str verb_name: The verb name
     """
-    path = get_log_path()
-    if path.exists():
+    global _create_log_path_called
+    if _create_log_path_called:
         return
+    _create_log_path_called = True
 
-    global _create_log_path_lock
-    with _create_log_path_lock:
-        # check again with lock
-        if path.exists():
-            return
-        os.makedirs(str(path), exist_ok=True)
+    path = get_log_path()
+    try:
+        # try to create the directory
+        os.makedirs(str(path))
+    except FileExistsError:
+        # if it already exists try again with serial number suffixes
+        global _log_subdirectory
+        assert path.name == _log_subdirectory
+        suffix = 2
+        while True:
+            path_with_suffix = path.with_name(path.name + '_' + str(suffix))
+            try:
+                os.makedirs(str(path_with_suffix))
+            except FileExistsError:
+                suffix += 1
+                assert suffix < 1000, 'Prevent infinite loop'
+                continue
+            _log_subdirectory = path_with_suffix.name
+            assert get_log_path() == path_with_suffix
+            path = path_with_suffix
+            break
 
-        # ensure the base log path has an ignore marker file
-        # to avoid recursively crawling through log directories
-        from colcon_core.package_identification.ignore import IGNORE_MARKER
-        ignore_marker = path.parent / IGNORE_MARKER
-        if not ignore_marker.exists():
-            with ignore_marker.open('w'):
-                pass
+    logger.info("Using log path '{path}'".format_map(locals()))
 
-        # create latest symlinks
-        if sys.platform == 'win32':
-            return
-        _create_symlink(
-            path, path.parent / 'latest_{verb_name}'.format_map(locals()))
-        _create_symlink(
-            path.parent / 'latest_{verb_name}'.format_map(locals()),
-            path.parent / 'latest')
+    # ensure the base log path has an ignore marker file
+    # to avoid recursively crawling through log directories
+    from colcon_core.package_identification.ignore import IGNORE_MARKER
+    ignore_marker = path.parent / IGNORE_MARKER
+    ignore_marker.touch()
+
+    # create latest symlinks
+    if sys.platform == 'win32':
+        return
+    _create_symlink(
+        path, path.parent / 'latest_{verb_name}'.format_map(locals()))
+    _create_symlink(
+        path.parent / 'latest_{verb_name}'.format_map(locals()),
+        path.parent / 'latest')
 
 
 def _create_symlink(src, dst):
@@ -158,17 +182,23 @@ def _create_symlink(src, dst):
         if dst.resolve() == src.resolve():
             # desired symlink already exists
             return
-    # remove valid symlink to wrong destination (if)
-    # or invalid symlink (else)
+    # remove valid symlink to wrong destination (previous if, no return)
+    # or invalid symlink (non-existing else from previous if)
     if dst.is_symlink():
-        os.remove(str(dst))
+        try:
+            dst.unlink()
+        except FileNotFoundError:
+            pass
 
     # use relative path when possible
     try:
         src = src.relative_to(dst.parent)
     except ValueError:
         pass
-    os.symlink(str(src), str(dst))
+    try:
+        os.symlink(str(src), str(dst))
+    except FileNotFoundError:
+        pass
 
 
 def get_relative_package_index_path():
