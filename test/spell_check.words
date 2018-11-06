@@ -19,6 +19,7 @@ lstrip
 mkdtemp
 nargs
 nonlocal
+noop
 noqa
 pathlib
 pkgname
@@ -44,5 +45,6 @@ thomas
 todo
 traceback
 tuples
+unlinking
 veyor
 wildcards
