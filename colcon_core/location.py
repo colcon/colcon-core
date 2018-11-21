@@ -124,7 +124,7 @@ def create_log_path(verb_name):
     * `latest_<verb_name>` linking to the log path
     * `latest` linking to `latest_<verb_name>`
 
-    On Windows platforms, Administrator privilges are required to create
+    On Windows platforms, Administrator privileges are required to create
     these symlinks.
 
     :param str verb_name: The verb name
