@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-import sys
 from tempfile import TemporaryDirectory
 
 from colcon_core import location
@@ -143,10 +142,6 @@ def test_create_log_path():
                 log_path / subdirectory) + '_3'
         assert (log_path / (str(subdirectory) + '_3')).exists()
         subdirectory += '_3'
-
-        # skip all symlink tests on Windows for now
-        if sys.platform == 'win32':
-            return
 
         # check that `latest_verb` was created and points to the subdirectory
         assert (log_path / 'latest_verb').is_symlink()

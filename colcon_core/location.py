@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-import sys
 import uuid
 
 from colcon_core.logging import colcon_logger
@@ -121,10 +120,12 @@ def create_log_path(verb_name):
     A `COLCON_IGNORE` marker file is being placed in the parent directory of
     the logging directory to avoid it being crawled for packages.
 
-    On non-Windows platforms two symlinks are created as siblings of the log
-    path:
+    Two symlinks are created as siblings of the log path:
     * `latest_<verb_name>` linking to the log path
     * `latest` linking to `latest_<verb_name>`
+
+    On Windows platforms, Administrator privilges are required to create
+    these symlinks.
 
     :param str verb_name: The verb name
     """
@@ -164,8 +165,6 @@ def create_log_path(verb_name):
     ignore_marker.touch()
 
     # create latest symlinks
-    if sys.platform == 'win32':
-        return
     _create_symlink(
         path, path.parent / 'latest_{verb_name}'.format_map(locals()))
     _create_symlink(
@@ -198,6 +197,9 @@ def _create_symlink(src, dst):
     try:
         os.symlink(str(src), str(dst))
     except FileNotFoundError:
+        pass
+    except OSError:
+        # Administrator privileges are required on Windows
         pass
 
 
