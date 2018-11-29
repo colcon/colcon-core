@@ -5,4 +5,4 @@ value = '$COLCON_CURRENT_PREFIX'
 if subdirectory:
     value += '/' + subdirectory
 }@
-colcon_prepend_unique_value @(name) "@(value)"
+_colcon_prepend_unique_value @(name) "@(value)"
