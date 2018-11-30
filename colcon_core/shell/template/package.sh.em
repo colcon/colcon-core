@@ -7,7 +7,7 @@
 # duplicates as well as trailing separators are avoided
 # first argument: the name of the result variable
 # second argument: the value to be prepended
-colcon_prepend_unique_value() {
+_colcon_prepend_unique_value() {
   # arguments
   _listname="$1"
   _value="$2"
@@ -90,4 +90,4 @@ unset _colcon_package_sh_source_script
 unset COLCON_CURRENT_PREFIX
 @[end if]@
 
-# do not unset colcon_prepend_unique_value since it might be used by non-primary shell hooks
+# do not unset _colcon_prepend_unique_value since it might be used by non-primary shell hooks
