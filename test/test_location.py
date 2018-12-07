@@ -209,3 +209,14 @@ def test__create_symlink():
         with patch('os.symlink') as symlink:
             _create_symlink(path / 'src', DummyPath())
             assert symlink.call_count == 1
+
+        # (Windows) OSError: symbolic link privilege not held
+        class ValidPath(DummyPath):
+
+            def is_symlink(self):
+                return False
+
+        with patch('os.symlink') as symlink:
+            symlink.side_effect = OSError()
+            _create_symlink(path / 'src', ValidPath())
+            assert symlink.call_count == 1
