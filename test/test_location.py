@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-import sys
 from tempfile import TemporaryDirectory
 
 from colcon_core import location
@@ -144,10 +143,6 @@ def test_create_log_path():
         assert (log_path / (str(subdirectory) + '_3')).exists()
         subdirectory += '_3'
 
-        # skip all symlink tests on Windows for now
-        if sys.platform == 'win32':
-            return
-
         # check that `latest_verb` was created and points to the subdirectory
         assert (log_path / 'latest_verb').is_symlink()
         assert (log_path / 'latest_verb').resolve() == \
@@ -213,4 +208,15 @@ def test__create_symlink():
 
         with patch('os.symlink') as symlink:
             _create_symlink(path / 'src', DummyPath())
+            assert symlink.call_count == 1
+
+        # (Windows) OSError: symbolic link privilege not held
+        class ValidPath(DummyPath):
+
+            def is_symlink(self):
+                return False
+
+        with patch('os.symlink') as symlink:
+            symlink.side_effect = OSError()
+            _create_symlink(path / 'src', ValidPath())
             assert symlink.call_count == 1
