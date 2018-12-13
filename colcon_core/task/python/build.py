@@ -127,7 +127,7 @@ class PythonBuildTask(TaskExtensionPoint):
         with open(install_log, 'r') as h:
             lines = [l.rstrip() for l in h.readlines()]
 
-        packages = setup_py_data['packages']
+        packages = setup_py_data.get('packages', [])
         for module_name in packages:
             if module_name in sys.modules:
                 logger.warning(
@@ -191,7 +191,7 @@ class PythonBuildTask(TaskExtensionPoint):
             items.append('setup.cfg')
         # add all first level packages
         package_dir = setup_py_data.get('package_dir', {})
-        for package in setup_py_data['packages']:
+        for package in setup_py_data.get('packages', []):
             if '.' in package:
                 continue
             if package in package_dir:
