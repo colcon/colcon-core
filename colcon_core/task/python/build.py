@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 from distutils.sysconfig import get_python_lib
 import os
 import re
@@ -19,6 +20,50 @@ from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
 
 logger = colcon_logger.getChild(__name__)
+
+_easy_install_pth_lock = None
+
+
+class _EasyInstallPthLockAsyncContext:
+    """
+    A context manager to access the easy-install.pth file exclusively.
+
+    The locking is only necessary when using --merge-install.
+    """
+
+    def __init__(self, pkg, args):
+        self._pkg_name = pkg.name
+        self._merge_install = args.merge_install
+
+    async def __aenter__(self):
+        global _easy_install_pth_lock
+        # since the command modifies the easy-install.pth file
+        # the invocation for multiple Python packages needs to happen
+        # sequentially when using --merge-install
+        if self._merge_install and _easy_install_pth_lock is None:
+            try:
+                # only available as of Python 3.7
+                loop = asyncio.get_running_loop()
+            except AttributeError:
+                loop = asyncio.get_event_loop()
+            _easy_install_pth_lock = asyncio.Lock(loop=loop)
+
+        if _easy_install_pth_lock:
+            logger.debug(
+                "Acquiring lock for package '{self._pkg_name}' to access "
+                'easy_install.pth'.format_map(locals()))
+            await _easy_install_pth_lock.acquire()
+            logger.debug(
+                "Acquired lock for package '{self._pkg_name}' to access "
+                'easy_install.pth'.format_map(locals()))
+
+    async def __aexit__(self, *_):
+        global _easy_install_pth_lock
+        if _easy_install_pth_lock:
+            logger.debug(
+                "Releasing lock for package '{self._pkg_name}' to access "
+                'easy_install.pth'.format_map(locals()))
+            _easy_install_pth_lock.release()
 
 
 class PythonBuildTask(TaskExtensionPoint):
@@ -94,8 +139,9 @@ class PythonBuildTask(TaskExtensionPoint):
             if setup_py_data.get('data_files', []):
                 cmd += ['install_data', '--install-dir', args.install_base]
             self._append_install_layout(args, cmd)
-            rc = await check_call(
-                self.context, cmd, cwd=args.build_base, env=env)
+            async with _EasyInstallPthLockAsyncContext(pkg, args):
+                rc = await check_call(
+                    self.context, cmd, cwd=args.build_base, env=env)
             if rc and rc.returncode:
                 return rc.returncode
 
@@ -114,8 +160,9 @@ class PythonBuildTask(TaskExtensionPoint):
                 'develop', '--prefix', args.install_base,
                 '--uninstall',
             ]
-            rc = await check_call(
-                self.context, cmd, cwd=args.build_base, env=env)
+            async with _EasyInstallPthLockAsyncContext(pkg, args):
+                rc = await check_call(
+                    self.context, cmd, cwd=args.build_base, env=env)
             if rc:
                 return rc
 
