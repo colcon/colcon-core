@@ -2,8 +2,11 @@
 # Licensed under the Apache License, Version 2.0
 
 from concurrent.futures import CancelledError
+from enum import Enum
+import inspect
 import os
 import traceback
+import warnings
 
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.event.job import JobEnded
@@ -108,6 +111,20 @@ class Job:
         return self.identifier
 
 
+class OnError(Enum):
+    """Decision how to proceed when one job fails."""
+
+    # ongoing jobs will continue, pending jobs will be executed
+    continue_ = 1
+    # ongoing jobs will be cancelled, pending jobs won't be executed
+    interrupt = 2
+    # ongoing jobs will continue, pending jobs won't be executed
+    skip_pending = 3
+    # ongoing jobs will continue, pending jobs will only be executed if they
+    # don't (recursively) depend on a failed job
+    skip_downstream = 4
+
+
 class ExecutorExtensionPoint:
     """
     The interface for executor extensions.
@@ -147,16 +164,25 @@ class ExecutorExtensionPoint:
         """
         self._event_controller = event_controller
 
-    def execute(self, args, jobs, *, abort_on_error=True):
+    def execute(
+        self, args, jobs, *, on_error: OnError = None, abort_on_error=None
+    ):
         """
         Execute the passed jobs.
 
         This method must be overridden in a subclass.
+        Subclass should not include the deprecated keyword argument
+        `abort_on_error` in their signature.
 
+        :param arguments: The passed arguments
+
+        The deprecated API accepts the following separate arguments:
         :param args: The parsed command line arguments
         :param jobs: The jobs
+        :param on_error: The decision how to proceed when one job fails
         :param abort_on_error: The flag if pending jobs should be aborted in
-          case of any errors or individual jobs failing
+          case of any errors or individual jobs failing (deprecated, use
+          `on_error` instead)
         """
         raise NotImplementedError()
 
@@ -231,7 +257,9 @@ def add_executor_arguments(parser):
                 # skip failing extension, continue with next one
 
 
-def execute_jobs(context, jobs, *, abort_on_error=True):
+def execute_jobs(
+    context, jobs, *, on_error: OnError = None, abort_on_error=None
+):
     """
     Execute jobs.
 
@@ -246,10 +274,22 @@ def execute_jobs(context, jobs, *, abort_on_error=True):
     * Join the event controller.
 
     :param jobs: The ordered dictionary of jobs
+    :param on_error: The decision how to proceed when one job fails
     :param abort_on_error: The flag if pending jobs should be aborted in case
-      of individual jobs failing
+      of individual jobs failing (deprecated, use `on_error` instead)
     :returns: The return code
     """
+    assert on_error is None or abort_on_error is None, \
+        'Only one of the two keyword arguments can be passed'
+    # keep default behavior of deprecated keyword argument
+    if on_error is None and abort_on_error is None:
+        on_error = OnError.interrupt
+    if abort_on_error is not None:
+        warnings.warn(
+            "'colcon_core.executor.execute_jobs' was called with the "
+            "deprecated keyword argument 'abort_on_error'", stacklevel=2)
+        on_error = OnError.interrupt if abort_on_error else OnError.continue_
+
     executor = select_executor_extension(context.args)
     assert executor
 
@@ -263,9 +303,23 @@ def execute_jobs(context, jobs, *, abort_on_error=True):
 
     logger.info("Executing jobs using '%s' executor", executor.EXECUTOR_NAME)
     event_controller.start()
+
+    func = executor.execute
+    signature = inspect.signature(func)
+    kwargs = {}
+    if 'on_error' in signature.parameters:
+        kwargs['on_error'] = on_error
+    else:
+        # fallback to legacy API
+        assert 'abort_on_error' in signature.parameters
+        warnings.warn(
+            "The ExecutorExtensionPoint '{executor.EXECUTOR_NAME}' uses a "
+            "deprecated signature for the 'execute' method"
+            .format_map(locals()))
+        kwargs['abort_on_error'] = on_error == OnError.interrupt
+
     try:
-        rc = executor.execute(
-            context.args, jobs, abort_on_error=abort_on_error)
+        rc = func(context.args, jobs, **kwargs)
     except Exception as e:  # noqa: F841
         # catch exceptions raised in executor extension
         exc = traceback.format_exc()

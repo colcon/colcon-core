@@ -9,6 +9,7 @@ import sys
 from threading import Thread
 import time
 
+from colcon_core.executor import OnError
 from colcon_core.executor.sequential import SequentialExecutor
 import pytest
 
@@ -61,7 +62,7 @@ def test_sequential():
 
     # continue after error, keeping first error code
     jobs['five'] = job5
-    rc = extension.execute(args, jobs, abort_on_error=False)
+    rc = extension.execute(args, jobs, on_error=OnError.continue_)
     assert rc == 2
     assert ran_jobs == ['job1', 'job4']
     ran_jobs.clear()
