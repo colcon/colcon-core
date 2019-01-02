@@ -14,6 +14,7 @@ from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
 from colcon_core.executor import Job
+from colcon_core.executor import OnError
 from colcon_core.package_identification.ignore import IGNORE_MARKER
 from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
@@ -155,6 +156,12 @@ class BuildVerb(VerbExtensionPoint):
         parser.add_argument(
             '--test-result-base',
             help='The base path for all test results (default: --build-base)')
+        parser.add_argument(
+            '--continue-on-error',
+            action='store_true',
+            help='Continue other packages when a package fails to build '
+                 '(packages recursively depending on the failed package are '
+                 'skipped)')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -181,7 +188,9 @@ class BuildVerb(VerbExtensionPoint):
             os.getcwd(), context.args.install_base))
         jobs = self._get_jobs(context.args, decorators, install_base)
 
-        rc = execute_jobs(context, jobs)
+        on_error = OnError.interrupt \
+            if not context.args.continue_on_error else OnError.skip_downstream
+        rc = execute_jobs(context, jobs, on_error=on_error)
 
         self._create_prefix_scripts(install_base, context.args.merge_install)
 
