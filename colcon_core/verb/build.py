@@ -48,6 +48,7 @@ class BuildPackageArguments:
             os.getcwd(), args.build_base, pkg.name))
         self.install_base = os.path.abspath(os.path.join(
             os.getcwd(), args.install_base))
+        self.merge_install = args.merge_install
         if not args.merge_install:
             self.install_base = os.path.join(
                 self.install_base, pkg.name)
