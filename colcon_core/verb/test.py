@@ -12,6 +12,7 @@ from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
 from colcon_core.executor import Job
+from colcon_core.executor import OnError
 from colcon_core.logging import colcon_logger
 from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
@@ -195,8 +196,9 @@ class TestVerb(VerbExtensionPoint):
             os.getcwd(), context.args.install_base))
         jobs = self._get_jobs(context.args, decorators, install_base)
 
-        return execute_jobs(
-            context, jobs, abort_on_error=context.args.abort_on_error)
+        on_error = OnError.continue_ \
+            if not context.args.abort_on_error else OnError.interrupt
+        return execute_jobs(context, jobs, on_error=on_error)
 
     def _get_jobs(self, args, decorators, install_base):
         jobs = OrderedDict()

@@ -30,8 +30,6 @@ class SequentialExecutor(ExecutorExtensionPoint):
             ExecutorExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def execute(self, args, jobs, *, on_error=OnError.interrupt):  # noqa: D102
-        abort_on_error = on_error == OnError.interrupt
-
         # avoid debug message from asyncio when colcon uses debug log level
         asyncio_logger = logging.getLogger('asyncio')
         asyncio_logger.setLevel(logging.INFO)
@@ -39,8 +37,10 @@ class SequentialExecutor(ExecutorExtensionPoint):
         rc = 0
         loop = new_event_loop()
         asyncio.set_event_loop(loop)
+        jobs = jobs.copy()
         try:
-            for name, job in jobs.items():
+            while jobs:
+                name, job = jobs.popitem(last=False)
                 coro = job()
                 future = asyncio.ensure_future(coro, loop=loop)
                 try:
@@ -81,8 +81,15 @@ class SequentialExecutor(ExecutorExtensionPoint):
                 if result:
                     if not rc:
                         rc = result
-                    if abort_on_error:
+                    if on_error in (OnError.interrupt, OnError.skip_pending):
+                        # skip pending jobs
                         return rc
+                    if on_error == OnError.skip_downstream:
+                        # skip downstream jobs of failed one
+                        for pending_name, pending_job in list(jobs.items()):
+                            if job.identifier in pending_job.dependencies:
+                                del jobs[pending_name]
+
         finally:
             for task in asyncio.Task.all_tasks():
                 if not task.done():
