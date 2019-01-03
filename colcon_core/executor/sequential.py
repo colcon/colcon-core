@@ -8,6 +8,7 @@ import sys
 import traceback
 
 from colcon_core.executor import ExecutorExtensionPoint
+from colcon_core.executor import OnError
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.subprocess import new_event_loop
@@ -28,7 +29,9 @@ class SequentialExecutor(ExecutorExtensionPoint):
         satisfies_version(
             ExecutorExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
-    def execute(self, args, jobs, *, abort_on_error=True):  # noqa: D102
+    def execute(self, args, jobs, *, on_error=OnError.interrupt):  # noqa: D102
+        abort_on_error = on_error == OnError.interrupt
+
         # avoid debug message from asyncio when colcon uses debug log level
         asyncio_logger = logging.getLogger('asyncio')
         asyncio_logger.setLevel(logging.INFO)

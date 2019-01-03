@@ -15,6 +15,7 @@ from colcon_core.executor import execute_jobs
 from colcon_core.executor import ExecutorExtensionPoint
 from colcon_core.executor import get_executor_extensions
 from colcon_core.executor import Job
+from colcon_core.executor import OnError
 from colcon_core.subprocess import SIGINT_RESULT
 from mock import Mock
 from mock import patch
@@ -224,8 +225,9 @@ def test_execute_jobs():
             event_reactor.get_queue().put.reset_mock()
             jobs['one'].returncode = 0
             extensions = get_executor_extensions()
-            extensions[110]['extension2'].execute = Mock(return_value=0)
-            rc = execute_jobs(context, jobs)
+            extensions[110]['extension2'].execute = \
+                lambda args, jobs, on_error: 0
+            rc = execute_jobs(context, jobs, on_error=OnError.interrupt)
             assert rc is 0
             assert event_reactor.get_queue().put.call_count == 1
             assert isinstance(
