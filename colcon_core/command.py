@@ -88,12 +88,15 @@ def main(*, command_name='colcon', argv=None):
 
     # temporary prevent help action to exit early if help is requested
     callbacks = {}
+    callback_parser = parser.print_help
+    parser.print_help = lambda: None
     for p in verb_parsers.values():
         callbacks[p] = p.print_help, p.exit
         p.print_help = p.exit = lambda: None
     # parse known args to determine if a specific verb is being requested
     known_args, _ = parser.parse_known_args(args=argv)
     # restore original callbacks
+    parser.print_help = callback_parser
     for p, t in callbacks.items():
         p.print_help, p.exit = t
 
