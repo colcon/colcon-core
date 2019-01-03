@@ -60,7 +60,7 @@ class Job:
         """
         self._event_queue = event_queue
 
-        self._put_event_into_queue(JobQueued(
+        self.put_event_into_queue(JobQueued(
             self.task_context.pkg.name, self.task_context.dependencies))
 
     async def __call__(self, *args, **kwargs):
@@ -80,10 +80,10 @@ class Job:
         :returns: The return code of the invoked task
         :raises Exception: Any exception the invoked task raises
         """
-        self._put_event_into_queue(JobStarted(self.task_context.pkg.name))
+        self.put_event_into_queue(JobStarted(self.task_context.pkg.name))
 
         # replace function to use this job as the event context
-        self.task_context.put_event_into_queue = self._put_event_into_queue
+        self.task_context.put_event_into_queue = self.put_event_into_queue
         self.task.set_context(context=self.task_context)
 
         rc = 0
@@ -93,17 +93,22 @@ class Job:
             rc = SIGINT_RESULT
         except Exception:
             rc = 1
-            self._put_event_into_queue(
+            self.put_event_into_queue(
                 StderrLine(traceback.format_exc().encode()))
             raise
         finally:
             if self.returncode is None:
                 self.returncode = rc or 0
-            self._put_event_into_queue(
+            self.put_event_into_queue(
                 JobEnded(self.task_context.pkg.name, self.returncode))
         return self.returncode
 
-    def _put_event_into_queue(self, event):
+    def put_event_into_queue(self, event):
+        """
+        Post a message event into the event queue.
+
+        :param event: The event
+        """
         self._event_queue.put((event, self))
 
     def __str__(self):
