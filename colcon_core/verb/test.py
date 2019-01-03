@@ -5,9 +5,11 @@ from collections import OrderedDict
 import copy
 import logging
 import os
+import types
 
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
+from colcon_core.event.test import TestFailure
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
@@ -168,6 +170,10 @@ class TestVerb(VerbExtensionPoint):
             action='store_true',
             help='Abort after the first package with any errors (failing '
                  'tests are not considered errors in this context)')
+        parser.add_argument(
+            '--return-code-on-test-failure',
+            action='store_true',
+            help='Use a non-zero return code to indicate any test failure')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -196,9 +202,35 @@ class TestVerb(VerbExtensionPoint):
             os.getcwd(), context.args.install_base))
         jobs = self._get_jobs(context.args, decorators, install_base)
 
+        if context.args.return_code_on_test_failure:
+            # watch published events on all jobs to detect any test failures
+            any_test_failures = False
+
+            def check_for_test_failures(put_event_into_queue):
+                nonlocal any_test_failures
+
+                def put_event_into_queue_(self, event):
+                    nonlocal any_test_failures
+                    nonlocal put_event_into_queue
+                    if isinstance(event, TestFailure):
+                        any_test_failures = True
+                    return put_event_into_queue(event)
+
+                return put_event_into_queue_
+
+            for job in jobs.values():
+                job.put_event_into_queue = types.MethodType(
+                    check_for_test_failures(job.put_event_into_queue), job)
+
         on_error = OnError.continue_ \
             if not context.args.abort_on_error else OnError.interrupt
-        return execute_jobs(context, jobs, on_error=on_error)
+        rc = execute_jobs(context, jobs, on_error=on_error)
+
+        if context.args.return_code_on_test_failure:
+            if not rc and any_test_failures:
+                return 1
+
+        return rc
 
     def _get_jobs(self, args, decorators, install_base):
         jobs = OrderedDict()
