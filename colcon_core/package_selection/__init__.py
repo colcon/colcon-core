@@ -63,7 +63,7 @@ class PackageSelectionExtensionPoint:
         This method must be overridden in a subclass.
 
         :param args: The parsed command line arguments
-        :param list decorators: The package decorators
+        :param list decorators: The package decorators in topological order
         """
         raise NotImplementedError()
 
@@ -214,7 +214,7 @@ def select_package_decorators(args, decorators):
     The `selected` attribute of each decorator is updated by this function.
 
     :param args: The parsed command line arguments
-    :param list decorators: The package decorators
+    :param list decorators: The package decorators in topological order
     """
     # filtering must happen after the topological ordering since otherwise
     # packages in the middle of the dependency graph might be missing
