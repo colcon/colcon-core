@@ -1,6 +1,8 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import copy
+import logging
 import os
 from pathlib import Path
 
@@ -120,3 +122,65 @@ def check_and_mark_install_layout(install_base, *, merge_install):
                 .format_map(locals()))
 
     marker_path.write_text(this_install_layout + '\n')
+
+
+def update_object(
+    object_, key, value, package_name, argument_type, value_source
+):
+    """
+    Set or update an attribute of an object.
+
+    If the attribute exists and the passed value as well as the current value
+    of the attribute are dictionaries then the current values are being updated
+    with the passed values.
+
+    If the attribute exists and the passed value as well as the current value
+    of the attribute are lists then the passed values are being appended to the
+    current values.
+
+    Otherwise the attribute is being set to the passed value potentially
+    overwriting an existing value.
+
+    :param key: The name of the attributes
+    :param value: The value used to set or update the attribute
+    :param str package_name: The package name, only used for log messages
+    :param str argument_type: The argument type, only used in log messages
+    :param str value_source: The source of the value, only used for log
+      messages
+    """
+    if not hasattr(object_, key):
+        logger.log(
+            5, "set package '{package_name}' {argument_type} argument '{key}' "
+            "from {value_source} to '{value}'".format_map(locals()))
+        # add value to the object
+        # copy value to avoid changes to either of them to affect each other
+        setattr(object_, key, copy.deepcopy(value))
+        return
+
+    old_value = getattr(object_, key)
+    if isinstance(old_value, dict) and isinstance(value, dict):
+        logger.log(
+            5, "update package '{package_name}' {argument_type} argument "
+            "'{key}' from {value_source} with '{value}'".format_map(locals()))
+        # update dictionary
+        old_value.update(value)
+        return
+
+    if isinstance(old_value, list) and isinstance(value, list):
+        logger.log(
+            5, "extend package '{package_name}' {argument_type} argument "
+            "'{key}' from {value_source} with '{value}'".format_map(locals()))
+        # extend list
+        old_value += value
+        return
+
+    severity = 5 \
+        if old_value is None or type(old_value) == type(value) \
+        else logging.WARNING
+    logger.log(
+        severity, "overwrite package '{package_name}' {argument_type} "
+        "argument '{key}' from {value_source} with '{value}' (before: "
+        "'{old_value}')".format_map(locals()))
+    # overwrite existing value
+    # copy value to avoid changes to either of them to affect each other
+    setattr(object_, key, copy.deepcopy(value))

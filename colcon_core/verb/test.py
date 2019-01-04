@@ -2,8 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import OrderedDict
-import copy
-import logging
 import os
 import types
 
@@ -25,6 +23,7 @@ from colcon_core.task import get_task_extension
 from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
+from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
 
 logger = colcon_logger.getChild(__name__)
@@ -56,75 +55,18 @@ class TestPackageArguments:
             os.getcwd(), args.test_result_base, pkg.name)) \
             if args.test_result_base else None
 
-        # set additional arguments from the command line or package metadata
+        # set additional arguments
         for dest in (additional_destinations or []):
+            # from the command line
             if hasattr(args, dest):
                 update_object(
                     self, dest, getattr(args, dest),
-                    pkg.name, 'command line')
+                    pkg.name, 'test', 'command line')
+            # from the package metadata
             if dest in pkg.metadata:
                 update_object(
                     self, dest, pkg.metadata[dest],
-                    pkg.name, 'package metadata')
-
-
-def update_object(object_, key, value, package_name, value_source):
-    """
-    Set or update an attribute of an object.
-
-    If the attribute exists and the passed value as well as the current value
-    of the attribute are dictionaries then the current values are being updated
-    with the passed values.
-
-    If the attribute exists and the passed value as well as the current value
-    of the attribute are lists then the passed values are being appended to the
-    current values.
-
-    Otherwise the attribute is being set to the passed value potentially
-    overwriting an existing value.
-
-    :param key: The name of the attributes
-    :param value: The value used to set or update the attribute
-    :param str package_name: The package name, only used for log messages
-    :param str value_source: The source of the value, only used for log
-      messages
-    """
-    if not hasattr(object_, key):
-        logger.log(
-            5, "set package '{package_name}' test argument '{key}' from "
-            "{value_source} to '{value}'".format_map(locals()))
-        # add value to the object
-        # copy value to avoid changes to either of them to affect each other
-        setattr(object_, key, copy.deepcopy(value))
-        return
-
-    old_value = getattr(object_, key)
-    if isinstance(old_value, dict) and isinstance(value, dict):
-        logger.log(
-            5, "update package '{package_name}' test argument '{key}' from "
-            "{value_source} with '{value}'".format_map(locals()))
-        # update dictionary
-        old_value.update(value)
-        return
-
-    if isinstance(old_value, list) and isinstance(value, list):
-        logger.log(
-            5, "extend package '{package_name}' test argument '{key}' from "
-            "{value_source} with '{value}'".format_map(locals()))
-        # extend list
-        old_value += value
-        return
-
-    severity = 5 \
-        if old_value is None or type(old_value) == type(value) \
-        else logging.WARNING
-    logger.log(
-        severity, "overwrite package '{package_name}' test argument '{key}' "
-        "from {value_source} with '{value}' (before: '{old_value}')"
-        .format_map(locals()))
-    # overwrite existing value
-    # copy value to avoid changes to either of them to affect each other
-    setattr(object_, key, copy.deepcopy(value))
+                    pkg.name, 'test', 'package metadata')
 
 
 class TestVerb(VerbExtensionPoint):
