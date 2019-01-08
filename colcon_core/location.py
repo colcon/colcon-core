@@ -1,8 +1,9 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 import os
 from pathlib import Path
+import re
 import uuid
 
 from colcon_core.logging import colcon_logger
@@ -76,6 +77,41 @@ def get_log_path():
         path = _log_base_path
     path /= _log_subdirectory
     return path
+
+
+def get_previous_log_path(path):
+    """
+    Get the base path for logging for the previous invocation of the same verb.
+
+    The function relies on the fact that the previous invocation used the same
+    logging configuration and the subdirectory uses a timestamp suffix.
+
+    :param path: The reference log path
+    :returns: The base path for logging of the previous invocation or None
+    :rtype: Path
+    """
+    if not re.match(r'^.+_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}$', path.name):
+        # the subdirectory is not ending with a timestamp
+        return None
+
+    suffix_length = 20
+    previous_path = None
+    for p in path.parent.iterdir():
+        # only consider directories
+        if not p.is_dir():
+            continue
+        # the name before the timestamp must be the same
+        if path.name[:-suffix_length] != p.name[:-suffix_length]:
+            continue
+        # the timestamp must be older
+        if p.name >= path.name:
+            continue
+        # the timestamp must the newer than previously found candidates
+        if previous_path is not None and p.name < previous_path.name:
+            continue
+        previous_path = p
+
+    return previous_path
 
 
 def set_default_log_path(*, base_path, env_var=None, subdirectory=None):
