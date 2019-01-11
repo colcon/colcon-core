@@ -106,6 +106,14 @@ $_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setu
 )"
 unset _colcon_python_executable
 
+# zsh must be handled explicitly in order to support bootstrapping with zsh
+if test -n "$ZSH_VERSION"; then
+  if [[ ! -o shwordsplit ]]; then
+    _colcon_prefix_sh_ZSH_SETOPT_SHWORDSPLIT=1
+    setopt shwordsplit
+  fi
+fi
+
 # source package specific scripts in topological order
 for _colcon_package_name in $_colcon_ordered_packages; do
   # setting COLCON_CURRENT_PREFIX avoids relying on the build time prefix of the sourced script
@@ -113,6 +121,12 @@ for _colcon_package_name in $_colcon_ordered_packages; do
   _colcon_prefix_sh_source_script "$COLCON_CURRENT_PREFIX/share/${_colcon_package_name}/@(package_script_no_ext).sh"
 done
 unset _colcon_package_name
+if test -n "$ZSH_VERSION"; then
+  if test -n "$_colcon_prefix_sh_ZSH_SETOPT_SHWORDSPLIT"; then
+    unsetopt shwordsplit
+  fi
+  unset _colcon_prefix_sh_ZSH_SETOPT_SHWORDSPLIT
+fi
 unset _colcon_prefix_sh_source_script
 unset _colcon_ordered_packages
 
