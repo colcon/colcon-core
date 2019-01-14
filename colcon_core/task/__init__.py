@@ -259,11 +259,12 @@ def install(args, rel_src, rel_dst):
             os.unlink(dst)
         shutil.copy(src, dst)
     else:
-        if os.path.exists(dst):
-            if not os.path.islink(dst) or not os.path.samefile(src, dst):
-                if os.path.isfile(dst):
-                    os.remove(dst)
-                if os.path.isdir(dst):
-                    shutil.rmtree(dst)
+        if os.path.islink(dst):
+            if not os.path.exists(dst) or not os.path.samefile(src, dst):
+                os.unlink(dst)
+        elif os.path.isfile(dst):
+                os.remove(dst)
+        elif os.path.isdir(dst):
+                shutil.rmtree(dst)
         if not os.path.exists(dst):
             os.symlink(src, dst)
