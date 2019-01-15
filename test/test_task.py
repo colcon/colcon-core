@@ -250,3 +250,11 @@ def test_install():
         assert path.is_symlink()
         assert path.samefile(os.path.join(args.path, 'source.txt'))
         assert path.read_text() == 'content'
+
+        # symlink exists, but to a not existing location
+        os.remove(os.path.join(args.path, 'source.txt'))
+        install(args, 'source2.txt', 'destination.txt')
+        path = Path(base_path) / 'install' / 'destination.txt'
+        assert path.is_file()
+        assert path.is_symlink()
+        assert path.samefile(os.path.join(args.path, 'source2.txt'))

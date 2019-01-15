@@ -272,12 +272,13 @@ class PythonBuildTask(TaskExtensionPoint):
             src = os.path.join(args.path, item)
             dst = os.path.join(args.build_base, item)
             os.makedirs(os.path.dirname(dst), exist_ok=True)
-            if os.path.exists(dst):
-                if not os.path.islink(dst) or not os.path.samefile(src, dst):
-                    if os.path.isfile(dst):
-                        os.remove(dst)
-                    elif os.path.isdir(dst):
-                        shutil.rmtree(dst)
+            if os.path.islink(dst):
+                if not os.path.exists(dst) or not os.path.samefile(src, dst):
+                    os.unlink(dst)
+            elif os.path.isfile(dst):
+                    os.remove(dst)
+            elif os.path.isdir(dst):
+                    shutil.rmtree(dst)
             if not os.path.exists(dst):
                 os.symlink(src, dst)
 
