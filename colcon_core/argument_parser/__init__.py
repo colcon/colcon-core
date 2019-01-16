@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import traceback
+import types
 
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
@@ -194,3 +195,41 @@ class ArgumentParserDecorator:
             self._parser.add_subparsers(*args, **kwargs))
         self._nested_decorators.append(subparser)
         return subparser
+
+
+class SuppressUsageOutput:
+    """Context manager to suppress help action during `parse_known_args`."""
+
+    def __init__(self, parsers):
+        """
+        Constructor.
+
+        :param parsers: The parsers
+        """
+        self._parsers = parsers
+        self._callbacks = {}
+
+    def __enter__(self):  # noqa: D105
+        for p in self._parsers:
+            self._callbacks[p] = p.print_help, p.exit
+            # temporary prevent printing usage early if help is requested
+            p.print_help = lambda: None
+            # temporary prevent help action to exit early,
+            # but keep exiting on invalid arguments
+            p.exit = types.MethodType(_ignore_zero_exit(p.exit), p)
+
+        return self
+
+    def __exit__(self, *args):  # noqa: D105
+        for p, callbacks in self._callbacks.items():
+            p.print_help, p.exit = callbacks
+
+
+def _ignore_zero_exit(original_exit_handler):
+    def exit_(self, status=0, message=None):
+        nonlocal original_exit_handler
+        if status == 0:
+            return
+        return original_exit_handler(status=status, message=message)
+
+    return exit_
