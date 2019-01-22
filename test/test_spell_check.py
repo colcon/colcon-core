@@ -4,11 +4,9 @@
 from pathlib import Path
 
 import pytest
-import scspell
-from scspell import CorporaFile
-from scspell import find_dict_file
+from scspell import Report
 from scspell import SCSPELL_BUILTIN_DICT
-from scspell import spell_check_file
+from scspell import spell_check
 
 
 spell_check_words_path = Path(__file__).parent / 'spell_check.words'
@@ -25,58 +23,21 @@ def test_spell_check(known_words):
         list((Path(__file__).parents[1] / 'colcon-core').glob('**/*.py')) + \
         list((Path(__file__).parents[1] / 'test').glob('**/*.py'))
 
-    found_known_words = set()
-    unknown_words = set()
-
-    # intercept failed check handling
-    report_failed_check = scspell.report_failed_check
-
-    def custom_report_failed_check(match_desc, filename, unmatched_subtokens):
-        nonlocal found_known_words
-        nonlocal known_words
-        nonlocal report_failed_check
-        nonlocal unknown_words
-        for subtoken in list(unmatched_subtokens):
-            if subtoken in known_words:
-                found_known_words.add(subtoken)
-                unmatched_subtokens.remove(subtoken)
-                continue
-        unknown_words |= set(unmatched_subtokens)
-
-        if unmatched_subtokens:
-            # call original function to report unmatched subtokens
-            return report_failed_check(
-                match_desc, filename, unmatched_subtokens)
-        # otherwise just make the caller of the function happy
-        return (
-            match_desc.get_string(),
-            match_desc.get_ofs() + len(match_desc.get_token()))
-
-    scspell.report_failed_check = custom_report_failed_check
-
     # check all files
-    with CorporaFile(
-        find_dict_file(None), [SCSPELL_BUILTIN_DICT], None
-    ) as dicts:
-        dicts.register_extension('', 'Python')
-        for source_path in source_filenames:
-            ignores = set()
-            report_only = True
-            c_escapes = True
-            # can't rely on the return value of the function
-            # with the custom handling in place
-            spell_check_file(
-                str(source_path), dicts, ignores, report_only, c_escapes)
+    report = Report(known_words)
+    spell_check(
+        [str(p) for p in source_filenames], base_dicts=[SCSPELL_BUILTIN_DICT],
+        report_only=report, additional_extensions=[('', 'Python')])
 
-    unknown_word_count = len(unknown_words)
+    unknown_word_count = len(report.unknown_words)
     assert unknown_word_count == 0, \
         'Found {unknown_word_count} unknown words: '.format_map(locals()) + \
-        ', '.join(sorted(unknown_words))
+        ', '.join(sorted(report.unknown_words))
 
-    unused_known_words = set(known_words) - found_known_words
+    unused_known_words = set(known_words) - report.found_known_words
     unused_known_word_count = len(unused_known_words)
     assert unused_known_word_count == 0, \
-        '{unused_known_word_count} words in the work list are not used: ' \
+        '{unused_known_word_count} words in the word list are not used: ' \
         .format_map(locals()) + ', '.join(sorted(unused_known_words))
 
 
