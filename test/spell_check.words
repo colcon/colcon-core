@@ -18,7 +18,6 @@ licence
 lstrip
 mkdtemp
 nargs
-nonlocal
 noop
 noqa
 pathlib
