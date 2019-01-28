@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 from pathlib import Path
