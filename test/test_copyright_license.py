@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 
-def test_copyright_licence():
+def test_copyright_license():
     missing = check_files([
         Path(__file__).parents[1],
         Path(__file__).parents[1] / 'bin' / 'colcon',
