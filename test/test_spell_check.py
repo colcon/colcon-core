@@ -23,6 +23,9 @@ def test_spell_check(known_words):
         list((Path(__file__).parents[1] / 'colcon-core').glob('**/*.py')) + \
         list((Path(__file__).parents[1] / 'test').glob('**/*.py'))
 
+    for source_filename in sorted(source_filenames):
+        print('Spell checking:', source_filename)
+
     # check all files
     report = Report(known_words)
     spell_check(
