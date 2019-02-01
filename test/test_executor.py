@@ -63,14 +63,14 @@ def test_job():
 
     # successful task
     rc = run_until_complete(job())
-    assert rc is 0
+    assert rc == 0
     assert len(events) == 3
     assert isinstance(events[-2][0], JobStarted)
     assert events[-2][0].identifier == 'name'
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
     assert events[-1][0].identifier == 'name'
-    assert events[-1][0].rc is 0
+    assert events[-1][0].rc == 0
     assert events[-1][1] == job
 
     # canceled task
@@ -101,21 +101,21 @@ def test_job():
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
     assert events[-1][0].identifier == 'name'
-    assert events[-1][0].rc is 1
+    assert events[-1][0].rc == 1
     assert events[-1][1] == job
 
     # override task return code
     job.returncode = 2
     task.return_value = 0
     rc = run_until_complete(job())
-    assert rc is 2
+    assert rc == 2
     assert len(events) == 10
     assert isinstance(events[-2][0], JobStarted)
     assert events[-2][0].identifier == 'name'
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
     assert events[-1][0].identifier == 'name'
-    assert events[-1][0].rc is 2
+    assert events[-1][0].rc == 2
     assert events[-1][1] == job
 
 
@@ -208,7 +208,7 @@ def test_execute_jobs():
             context.args.executor = 'extension2'
             with patch('colcon_core.executor.logger.error') as error:
                 rc = execute_jobs(context, jobs)
-            assert rc is 1
+            assert rc == 1
             assert error.call_count == 1
             assert len(error.call_args[0]) == 1
             assert error.call_args[0][0].startswith(
@@ -228,7 +228,7 @@ def test_execute_jobs():
             extensions[110]['extension2'].execute = \
                 lambda args, jobs, on_error: 0
             rc = execute_jobs(context, jobs, on_error=OnError.interrupt)
-            assert rc is 0
+            assert rc == 0
             assert event_reactor.get_queue().put.call_count == 1
             assert isinstance(
                 event_reactor.get_queue().put.call_args[0][0][0], JobQueued)
