@@ -77,11 +77,28 @@ def create_environment_scripts(
       by :function:`create_environment_hooks` are used
     :param list additional_hooks: Any additional hooks which should be
       referenced by the generated scripts
-    :returns: iterable of the generated hook paths
-    :rtype: Iterable
     """
-    logger.log(1, 'create_environment_scripts()')
     prefix_path = Path(args.install_base)
+    create_environment_scripts_only(
+        prefix_path, pkg, default_hooks=default_hooks,
+        additional_hooks=additional_hooks)
+    create_file_with_runtime_dependencies(prefix_path, pkg)
+
+
+def create_environment_scripts_only(
+    prefix_path, pkg, *, default_hooks=None, additional_hooks=None
+):
+    """
+    Create the environment scripts for a package.
+
+    :param prefix_path: The prefix path
+    :param pkg: The package descriptor
+    :param list default_hooks: If none are parsed explicitly the hooks provided
+      by :function:`create_environment_hooks` are used
+    :param list additional_hooks: Any additional hooks which should be
+      referenced by the generated scripts
+    """
+    logger.log(1, 'create_environment_scripts_only(%s)', pkg.name)
 
     hooks = []
     if default_hooks is None:
@@ -123,8 +140,19 @@ def create_environment_scripts(
                     '{e}\n{exc}'.format_map(locals()))
                 # skip failing extension, continue with next one
 
-    # create file containing the runtime dependencies
+
+def create_file_with_runtime_dependencies(prefix_path, pkg):
+    """
+    Create a file with the runtime dependencies of the package.
+
+    It can be used by the prefix scripts to source all packages in topological
+    order.
+
+    :param prefix_path: The prefix path
+    :param pkg: The package descriptor
+    """
     path = prefix_path / get_relative_package_index_path() / pkg.name
+    logger.log(1, 'create_file_with_runtime_dependencies(%s)', path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         os.pathsep.join(sorted(pkg.dependencies.get('run', set()))))
