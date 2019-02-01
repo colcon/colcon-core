@@ -276,9 +276,9 @@ class PythonBuildTask(TaskExtensionPoint):
                 if not os.path.exists(dst) or not os.path.samefile(src, dst):
                     os.unlink(dst)
             elif os.path.isfile(dst):
-                    os.remove(dst)
+                os.remove(dst)
             elif os.path.isdir(dst):
-                    shutil.rmtree(dst)
+                shutil.rmtree(dst)
             if not os.path.exists(dst):
                 os.symlink(src, dst)
 

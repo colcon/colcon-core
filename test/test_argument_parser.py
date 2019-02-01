@@ -129,5 +129,5 @@ def test_argument_parser_decorator():
     args = parser.parse_args(['ARG1', '--arg2', 'do', 'ARG3'])
     assert args.arg1 == 'ARG1'
     assert args.arg2 is True
-    assert args.verb is 'do'
-    assert args.arg3 is 'ARG3'
+    assert args.verb == 'do'
+    assert args.arg3 == 'ARG3'
