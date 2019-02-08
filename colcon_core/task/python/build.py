@@ -4,6 +4,7 @@
 import asyncio
 from distutils.sysconfig import get_python_lib
 import os
+from pathlib import Path
 import re
 import shutil
 import sys
@@ -13,6 +14,7 @@ from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
 from colcon_core.task import check_call
 from colcon_core.task import TaskExtensionPoint
@@ -144,6 +146,17 @@ class PythonBuildTask(TaskExtensionPoint):
                     self.context, cmd, cwd=args.build_base, env=env)
             if rc and rc.returncode:
                 return rc.returncode
+
+            # explicitly add the build directory to the PYTHONPATH
+            # to maintain the desired order
+            # otherwise the path from the easy-install.pth (which is the build
+            # directory) will be added to the PYTHONPATH implicitly
+            # but behind potentially other directories from the PYTHONPATH
+            if additional_hooks is None:
+                additional_hooks = []
+            additional_hooks += create_environment_hook(
+                'pythonpath_develop', Path(args.build_base), pkg.name,
+                'PYTHONPATH', args.build_base, mode='prepend')
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
