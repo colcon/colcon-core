@@ -201,46 +201,48 @@ def test_create_environment_hook():
 
 
 def test_get_colcon_prefix_path():
-    # empty environment variable
-    with EnvironmentContext(COLCON_PREFIX_PATH=''):
-        prefix_path = get_colcon_prefix_path()
-        assert prefix_path == []
-
-    # extra path separator
-    with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep):
-        prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
-        assert prefix_path == []
-
-    with TemporaryDirectory(prefix='test_colcon_') as basepath:
-        basepath = Path(basepath)
-        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
-            [str(basepath), str(basepath)]
-        )):
-            # multiple results
-            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
-            assert prefix_path == [str(basepath), str(basepath)]
-
-            # skipping results
-            prefix_path = get_colcon_prefix_path(skip=str(basepath))
+    # ignore deprecation warning
+    with patch('colcon_core.shell.warnings.warn') as warn:
+        # empty environment variable
+        with EnvironmentContext(COLCON_PREFIX_PATH=''):
+            prefix_path = get_colcon_prefix_path()
             assert prefix_path == []
 
-        # skipping non-existing results
-        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
-            [str(basepath), str(basepath / 'non-existing-sub')]
-        )):
-            with patch('colcon_core.shell.logger.warning') as warn:
-                prefix_path = get_colcon_prefix_path()
-            assert prefix_path == [str(basepath)]
-            assert warn.call_count == 1
-            assert len(warn.call_args[0]) == 1
-            assert warn.call_args[0][0].endswith(
-                "non-existing-sub' in the environment variable "
-                "COLCON_PREFIX_PATH doesn't exist")
-            # suppress duplicate warning
-            with patch('colcon_core.shell.logger.warning') as warn:
-                prefix_path = get_colcon_prefix_path()
-            assert prefix_path == [str(basepath)]
-            assert warn.call_count == 0
+        # extra path separator
+        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep):
+            prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+            assert prefix_path == []
+
+        with TemporaryDirectory(prefix='test_colcon_') as basepath:
+            basepath = Path(basepath)
+            with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
+                [str(basepath), str(basepath)]
+            )):
+                # multiple results
+                prefix_path = get_colcon_prefix_path(skip='/path/to/skip')
+                assert prefix_path == [str(basepath), str(basepath)]
+
+                # skipping results
+                prefix_path = get_colcon_prefix_path(skip=str(basepath))
+                assert prefix_path == []
+
+            # skipping non-existing results
+            with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
+                [str(basepath), str(basepath / 'non-existing-sub')]
+            )):
+                with patch('colcon_core.shell.logger.warning') as warn:
+                    prefix_path = get_colcon_prefix_path()
+                assert prefix_path == [str(basepath)]
+                assert warn.call_count == 1
+                assert len(warn.call_args[0]) == 1
+                assert warn.call_args[0][0].endswith(
+                    "non-existing-sub' in the environment variable "
+                    "COLCON_PREFIX_PATH doesn't exist")
+                # suppress duplicate warning
+                with patch('colcon_core.shell.logger.warning') as warn:
+                    prefix_path = get_colcon_prefix_path()
+                assert prefix_path == [str(basepath)]
+                assert warn.call_count == 0
 
 
 def test_check_dependency_availability():
@@ -298,7 +300,7 @@ def test_find_installed_packages_in_environment():
         prefix_path2 = prefix_path / 'two'
 
         with patch(
-            'colcon_core.shell.get_colcon_prefix_path',
+            'colcon_core.shell.get_chained_prefix_path',
             return_value=[prefix_path1, prefix_path2]
         ):
             # not used prefixes result debug messages

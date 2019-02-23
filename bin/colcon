@@ -58,6 +58,7 @@ from colcon_core.package_identification.ignore \
     import IgnorePackageIdentification  # noqa: E402
 from colcon_core.package_identification.python \
     import PythonPackageIdentification  # noqa: E402
+from colcon_core.prefix_path.colcon import ColconPrefixPath  # noqa: E402
 from colcon_core.shell import ALL_SHELLS_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.shell.bat import BatShell  # noqa: E402
 from colcon_core.shell.sh import ShShell  # noqa: E402
@@ -106,6 +107,9 @@ custom_entry_points.update({
         'python': PythonPackageIdentification,
     },
     'colcon_core.package_selection': {},
+    'colcon_core.prefix_path': {
+        'colcon': ColconPrefixPath,
+    },
     'colcon_core.python_testing': {
         'pytest': PytestPythonTestingStep,
         'setuppy_test': SetuppyPythonTestingStep,
