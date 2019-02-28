@@ -4,10 +4,10 @@
 :: This script extends the environment with the environment of other prefix
 :: paths which were sourced when this file was generated as well as all
 :: packages contained in this prefix path.
-@[if colcon_prefix_path]@
+@[if chained_prefix_path]@
 
 :: source chained prefixes
-@[  for prefix in reversed(colcon_prefix_path)]@
+@[  for prefix in reversed(chained_prefix_path)]@
 call:_colcon_prefix_chain_bat_call_script "@(prefix)\@(prefix_script_no_ext).bat"
 @[  end for]@
 @[end if]@

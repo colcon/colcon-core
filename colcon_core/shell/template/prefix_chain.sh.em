@@ -28,10 +28,10 @@ _colcon_prefix_chain_sh_source_script() {
     echo "not found: \"$1\"" 1>&2
   fi
 }
-@[if colcon_prefix_path]@
+@[if chained_prefix_path]@
 
 # source chained prefixes
-@[  for prefix in reversed(colcon_prefix_path)]@
+@[  for prefix in reversed(chained_prefix_path)]@
 # setting COLCON_CURRENT_PREFIX avoids relying on the build time prefix of the sourced script
 COLCON_CURRENT_PREFIX="@(prefix)"
 _colcon_prefix_chain_sh_source_script "$COLCON_CURRENT_PREFIX/@(prefix_script_no_ext).sh"

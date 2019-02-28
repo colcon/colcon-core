@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import traceback
+import warnings
 
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.location import get_relative_package_index_path
@@ -15,6 +16,7 @@ from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_grouped_by_priority
 from colcon_core.plugin_system import SkipExtensionException
+from colcon_core.prefix_path import get_chained_prefix_path
 from colcon_core.subprocess import check_output
 
 logger = colcon_logger.getChild(__name__)
@@ -367,6 +369,10 @@ def get_colcon_prefix_path(*, skip=None):
     :returns: The list of prefix paths
     :rtype: list
     """
+    warnings.warn(
+        "'colcon_core.shell.get_colcon_prefix_path()' has been deprecated, "
+        "use 'colcon_core.prefix_path.get_chained_prefix_path() instead",
+        stacklevel=2)
     global _get_colcon_prefix_path_warnings
     prefix_path = []
     colcon_prefix_path = os.environ.get('COLCON_PREFIX_PATH', '')
@@ -383,6 +389,7 @@ def get_colcon_prefix_path(*, skip=None):
             _get_colcon_prefix_path_warnings.add(path)
             continue
         prefix_path.append(path)
+
     return prefix_path
 
 
@@ -450,7 +457,7 @@ def find_installed_packages_in_environment():
     :rtype: OrderedDict
     """
     packages = OrderedDict()
-    for prefix_path in get_colcon_prefix_path():
+    for prefix_path in get_chained_prefix_path():
         prefix_path = Path(prefix_path)
         pkgs = find_installed_packages(prefix_path)
         if pkgs is None:
