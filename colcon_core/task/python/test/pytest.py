@@ -97,7 +97,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                     ]
                 else:
                     logger.warning(
-                        'Test coverage wil be produced but will not contain '
+                        'Test coverage will be produced but will not contain '
                         'branch coverage information because the pytest '
                         "extension 'cov' does not support it (need 2.5.0, "
                         'have {pytest_cov_version})'.format_map(locals()))
