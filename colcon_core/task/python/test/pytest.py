@@ -95,6 +95,12 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                     args += [
                         '--cov-branch',
                     ]
+                else:
+                    logger.warning(
+                        'Test coverage wil be produced but will not contain '
+                        'branch coverage information because the pytest '
+                        "extension 'cov' does not support it (need 2.5.0, "
+                        'have {pytest_cov_version})'.format_map(locals()))
                 env['COVERAGE_FILE'] = os.path.join(
                     context.args.build_base, '.coverage')
 
