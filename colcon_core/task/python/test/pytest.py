@@ -71,23 +71,38 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         env = dict(env)
 
         if has_test_dependency(setup_py_data, 'pytest-cov'):
-            args += [
-                '--cov=' + str(PurePosixPath(
-                    *(Path(context.args.path).parts))),
-                '--cov-report=html:' + str(PurePosixPath(
-                    *(Path(context.args.build_base).parts)) / 'coverage.html'),
-                '--cov-report=xml:' + str(PurePosixPath(
-                    *(Path(context.args.build_base).parts)) / 'coverage.xml'),
-            ]
-            # use --cov-branch option only when available
-            # https://github.com/pytest-dev/pytest-cov/blob/v2.5.0/CHANGELOG.rst
-            from pytest_cov import __version__ as pytest_cov_version
-            if parse_version(pytest_cov_version) >= parse_version('2.5.0'):
+            try:
+                from pytest_cov import __version__ as pytest_cov_version
+            except ImportError:
+                logger.warning(
+                    'Test coverage will not be produced for package '
+                    "'{context.pkg.name}' since the pytest extension 'cov' "
+                    'was not found'.format_map(locals()))
+            else:
                 args += [
-                    '--cov-branch',
+                    '--cov=' + str(PurePosixPath(
+                        *(Path(context.args.path).parts))),
+                    '--cov-report=html:' + str(PurePosixPath(
+                        *(Path(context.args.build_base).parts)) /
+                        'coverage.html'),
+                    '--cov-report=xml:' + str(PurePosixPath(
+                        *(Path(context.args.build_base).parts)) /
+                        'coverage.xml'),
                 ]
-            env['COVERAGE_FILE'] = os.path.join(
-                context.args.build_base, '.coverage')
+                # use --cov-branch option only when available
+                # https://github.com/pytest-dev/pytest-cov/blob/v2.5.0/CHANGELOG.rst
+                if parse_version(pytest_cov_version) >= parse_version('2.5.0'):
+                    args += [
+                        '--cov-branch',
+                    ]
+                else:
+                    logger.warning(
+                        'Test coverage will be produced but will not contain '
+                        'branch coverage information because the pytest '
+                        "extension 'cov' does not support it (need 2.5.0, "
+                        'have {pytest_cov_version})'.format_map(locals()))
+                env['COVERAGE_FILE'] = os.path.join(
+                    context.args.build_base, '.coverage')
 
         if context.args.retest_until_fail:
             try:
