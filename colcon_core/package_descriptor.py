@@ -74,7 +74,8 @@ class PackageDescriptor:
             "The package '{self.name}' has a dependency with the same name" \
             .format_map(locals())
         return {
-            (DependencyDescriptor(d) if d is str else d)
+            (DependencyDescriptor(d)
+                if not isinstance(d, DependencyDescriptor) else d)
             for d in dependencies}
 
     def get_recursive_dependencies(
@@ -100,16 +101,16 @@ class PackageDescriptor:
         dependencies = set()
         while queue:
             # pick one dependency from the queue
-            name = queue.pop()
+            dep = queue.pop()
             # ignore redundant dependencies
-            if name in dependencies:
+            if dep in dependencies:
                 continue
             # ignore circular dependencies
-            if name == self.name:
+            if dep == self.name:
                 continue
             # ignore unknown dependencies
             # explicitly allow multiple packages with the same name
-            descs = [desc for desc in descriptors if desc.name == name]
+            descs = [desc for desc in descriptors if desc.name == dep]
             if not descs:
                 continue
             # recursing into the same function of the dependency descriptor
@@ -117,7 +118,7 @@ class PackageDescriptor:
             for d in descs:
                 queue |= d.get_dependencies(categories=recursive_categories)
             # add dependency to result set
-            dependencies.add(name)
+            dependencies.add(dep)
         return dependencies
 
     def __hash__(self):  # noqa: D105
