@@ -62,12 +62,13 @@ def topological_order_packages(
 
     # create ordered list of package decorators
     decorators = []
+    ordered_keys = [descriptor.name for descriptor in ordered.keys()]
     for descriptor, recursive_dependencies in ordered.items():
         decorator = PackageDecorator(descriptor)
         # reorder recursive dependencies according to the topological ordering
-        decorator.recursive_dependencies = [
-            desc.name for desc in ordered.keys()
-            if desc.name in recursive_dependencies]
+        decorator.recursive_dependencies = sorted(
+            (d for d in recursive_dependencies if d in ordered_keys),
+            key=ordered_keys.index)
         decorators.append(decorator)
 
     return decorators
