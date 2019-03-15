@@ -109,7 +109,7 @@ class PackageDescriptor:
                 continue
             # ignore unknown dependencies
             # explicitly allow multiple packages with the same name
-            descs = list(filter(lambda desc: desc.name == name, descriptors))
+            descs = [desc for desc in descriptors if desc.name == name]
             if not descs:
                 continue
             # recursing into the same function of the dependency descriptor
