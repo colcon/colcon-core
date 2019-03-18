@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
@@ -99,26 +100,31 @@ class PackageDescriptor:
         """
         queue = self.get_dependencies(categories=direct_categories)
         dependencies = set()
+        depth = 0
         while queue:
-            # pick one dependency from the queue
-            dep = queue.pop()
             # ignore redundant dependencies
-            if dep in dependencies:
-                continue
-            # ignore circular dependencies
-            if dep == self.name:
-                continue
-            # ignore unknown dependencies
-            # explicitly allow multiple packages with the same name
-            descs = [desc for desc in descriptors if desc.name == dep]
-            if not descs:
-                continue
-            # recursing into the same function of the dependency descriptor
-            # queue recursive dependencies
-            for d in descs:
-                queue |= d.get_dependencies(categories=recursive_categories)
-            # add dependency to result set
-            dependencies.add(dep)
+            level_queue = queue - dependencies
+            queue.clear()
+            depth += 1
+            for dep in level_queue:
+                # ignore circular dependencies
+                if dep == self.name:
+                    continue
+                # ignore unknown dependencies
+                # explicitly allow multiple packages with the same name
+                descs = [desc for desc in descriptors if desc.name == dep]
+                if not descs:
+                    continue
+                # recursing into the same function of the dependency descriptor
+                # queue recursive dependencies
+                for d in descs:
+                    queue |= d.get_dependencies(
+                        categories=recursive_categories)
+                # duplicate the descriptor and metadata and add the depth
+                dep = deepcopy(dep)
+                dep.metadata['depth'] = depth
+                # add dependency to result set
+                dependencies.add(dep)
         return dependencies
 
     def __hash__(self):  # noqa: D105
