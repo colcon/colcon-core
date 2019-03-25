@@ -68,12 +68,12 @@ def add_event_handler_arguments(parser):
     group = parser.add_argument_group(title='Event handler arguments')
     extensions = get_event_handler_extensions(context=None)
 
-    choices = []
+    completions = []
     defaults = []
     descriptions = ''
     for key in sorted(extensions.keys()):
-        # only offer the non-default choice
-        choices.append(key + ('-' if extensions[key].enabled else '+'))
+        # only offer completion for non-default choices
+        completions.append(key + ('-' if extensions[key].enabled else '+'))
         defaults.append(key + ('+' if extensions[key].enabled else '-'))
         extension = extensions[key]
         desc = get_first_line_doc(extension)
@@ -83,11 +83,18 @@ def add_event_handler_arguments(parser):
             # it requires a custom formatter to maintain the newline
             descriptions += '\n* {key}: {desc}'.format_map(locals())
 
-    group.add_argument(
+    argument = group.add_argument(
         '--event-handlers',
-        nargs='*', choices=choices, metavar=('name1+', 'name2-'),
+        nargs='*', choices=completions + defaults,
+        metavar=('name1+', 'name2-'),
         help='Enable (+) or disable (-) event handlers (default: %s)%s' %
              (' '.join(defaults), descriptions))
+
+    def choices_completer(prefix, **kwargs):
+        nonlocal completions
+        return (c for c in completions if c.startswith(prefix))
+
+    argument.completer = choices_completer
 
 
 def apply_event_handler_arguments(extensions, args):
