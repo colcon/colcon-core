@@ -29,6 +29,10 @@ def test_get_packages():
     with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
         prefix_path = Path(prefix_path)
 
+        # mock no packages in not merged install layout
+        packages = get_packages(prefix_path, False)
+        assert packages == {}
+
         # mock packages in not merged install layout
         subdirectory = get_relative_package_index_path()
         for pkg_name in ('pkgA', 'pkgB'):
@@ -38,6 +42,10 @@ def test_get_packages():
         (prefix_path / 'dummy_dir').mkdir()
         (prefix_path / '.hidden_dir').mkdir()
         (prefix_path / 'dummy_file').write_text('')
+
+        # mock no packages in merged install layout
+        packages = get_packages(prefix_path, True)
+        assert packages == {}
 
         # mock packages in merged install layout
         (prefix_path / subdirectory).mkdir(parents=True)
