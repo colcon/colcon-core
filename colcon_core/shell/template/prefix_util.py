@@ -38,6 +38,9 @@ def get_packages(prefix_path, merged_install):
     # must match colcon_core.location.get_relative_package_index_path()
     subdirectory = 'share/colcon-core/packages'
     if merged_install:
+        # return if workspace is empty
+        if not (prefix_path / subdirectory).is_dir():
+            return packages
         # find all files in the subdirectory
         for p in (prefix_path / subdirectory).iterdir():
             if not p.is_file():
