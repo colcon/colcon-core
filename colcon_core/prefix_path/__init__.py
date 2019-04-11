@@ -60,6 +60,7 @@ def get_chained_prefix_path(*, skip=None):
     Get the chained prefix paths.
 
     The items are ordered from higher to lower priority paths.
+    Repeated paths are skipped.
 
     :param skip: The current prefix path to be skipped and not be included in
       the return value
@@ -83,6 +84,11 @@ def get_chained_prefix_path(*, skip=None):
                     "'{extension.PREFIX_PATH_NAME}': {e}\n{exc}"
                     .format_map(locals()))
                 # skip failing extension, continue with next one
-    return [
-        p for p in chained_prefix_path
-        if skip is None or str(p) != str(skip)]
+    unique_prefix_path = []
+    for p in chained_prefix_path:
+        if skip is not None and str(p) == str(skip):
+            continue
+        if p in unique_prefix_path:
+            continue
+        unique_prefix_path.append(p)
+    return unique_prefix_path

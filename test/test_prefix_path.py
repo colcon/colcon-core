@@ -62,9 +62,9 @@ def test_get_chained_prefix_path():
             with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
                 [str(basepath), str(basepath)]
             )):
-                # multiple results
+                # multiple results, duplicates being skipped
                 prefix_path = get_chained_prefix_path(skip='/path/to/skip')
-                assert prefix_path == [str(basepath), str(basepath)]
+                assert prefix_path == [str(basepath)]
 
                 # skipping results
                 prefix_path = get_chained_prefix_path(skip=str(basepath))
