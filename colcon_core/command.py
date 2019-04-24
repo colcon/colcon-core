@@ -40,6 +40,11 @@ LOG_PATH_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_LOG_PATH',
     'Set the log directory (default: $COLCON_HOME/log)')
 
+"""Environment variable to set the python executable"""
+PYTHON_EXECUTABLE_ENVIRONMENT_VARIABLE = EnvironmentVariable(
+    'COLCON_PYTHON_EXECUTABLE',
+    'Set the python executable (default: {})'.format(sys.executable))
+
 
 def main(*, command_name='colcon', argv=None):
     """
