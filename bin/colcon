@@ -38,8 +38,6 @@ entry_point.load_entry_points = custom_load_entry_points
 from colcon_core.command import HOME_ENVIRONMENT_VARIABLE  # noqa: E402 I202
 from colcon_core.command import LOG_LEVEL_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.command import LOG_PATH_ENVIRONMENT_VARIABLE  # noqa: E402
-from colcon_core.command \
-    import PYTHON_EXECUTABLE_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.entry_point \
     import EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.environment.path import PathEnvironment  # noqa: E402
@@ -72,6 +70,8 @@ from colcon_core.task.python.test.setuppy_test \
     import SetuppyPythonTestingStep  # noqa: E402
 from colcon_core.verb.build import BuildVerb  # noqa: E402
 from colcon_core.verb.test import TestVerb  # noqa: E402
+from colcon_core.which_python \
+    import PYTHON_EXECUTABLE_ENVIRONMENT_VARIABLE  # noqa: E402
 
 
 custom_entry_points.update({

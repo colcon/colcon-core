@@ -133,7 +133,7 @@ def create_dependency_descriptor(requirement_string):
         else:
             logger.warn(
                 "Ignoring unknown symbol '{symbol}' in '{requirement}'"
-                .format(locals()))
+                .format_map(locals()))
     return DependencyDescriptor(requirement.name, metadata=metadata)
 
 

@@ -14,6 +14,7 @@ from colcon_core.shell import get_environment_variables
 from colcon_core.shell import logger
 from colcon_core.shell import ShellExtensionPoint
 from colcon_core.shell.template import expand_template
+from colcon_core.which_python import which_python
 
 
 class BatShell(ShellExtensionPoint):
@@ -35,7 +36,7 @@ class BatShell(ShellExtensionPoint):
             Path(__file__).parent / 'template' / 'prefix.bat.em',
             prefix_env_path,
             {
-                'python_executable': sys.executable,
+                'python_executable': which_python(),
                 'merge_install': merge_install,
                 'package_script_no_ext': 'package',
             })

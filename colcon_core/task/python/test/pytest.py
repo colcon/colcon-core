@@ -13,6 +13,7 @@ from colcon_core.task import check_call
 from colcon_core.task.python.test import has_test_dependency
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
+from colcon_core.which_python import which_python
 from pkg_resources import iter_entry_points
 from pkg_resources import parse_version
 
@@ -46,7 +47,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
 
     async def step(self, context, env, setup_py_data):  # noqa: D102
         cmd = [
-            sys.executable,
+            which_python(),
             'setup.py', 'pytest',
             'egg_info', '--egg-base', context.args.build_base,
         ]
