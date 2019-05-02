@@ -1,4 +1,5 @@
 # Copyright 2019 Dan Rose, no rights reserved
+# Licensed under the Apache License, Version 2.0
 
 # This module exists for multi-python environments
 # so the user can invoke colcon as `python -m colcon`
