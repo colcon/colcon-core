@@ -91,7 +91,12 @@ class SequentialExecutor(ExecutorExtensionPoint):
                                 del jobs[pending_name]
 
         finally:
-            for task in asyncio.Task.all_tasks():
+            try:
+                # new in Python 3.7
+                all_tasks = asyncio.all_tasks
+            except AttributeError:
+                all_tasks = asyncio.Task.all_tasks
+            for task in all_tasks():
                 if not task.done():
                     logger.error("Task '{task}' not done".format_map(locals()))
             # HACK on Windows closing the event loop seems to hang after Ctrl-C
