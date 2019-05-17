@@ -4,6 +4,7 @@
 import argparse
 import datetime
 import logging
+import os
 from pathlib import Path
 import signal
 import sys
@@ -164,7 +165,12 @@ def create_parser(environment_variables_group_name):
             return result
 
     # top level parser
+    prog = sys.argv[0]
+    if os.path.basename(prog) == '__main__.py':
+        # use the module name in case the script was invoked with python -m ...
+        prog = os.path.basename(os.path.dirname(prog))
     parser = CustomArgumentParser(
+        prog=prog,
         formatter_class=CustomFormatter,
         epilog=get_environment_variables_epilog(
             environment_variables_group_name))
