@@ -3,6 +3,7 @@
 
 import shutil
 import signal
+import sys
 from tempfile import mkdtemp
 
 from colcon_core.command import CommandContext
@@ -90,6 +91,13 @@ def test_create_parser():
 
     args = parser.parse_args(['--foo', '--bar', ' --baz'])
     assert args.foo == ['--bar', '--baz']
+
+    argv = sys.argv
+    sys.argv = ['/some/path/prog_name/__main__.py'] + sys.argv[1:]
+    with EntryPointContext():
+        parser = create_parser('colcon_core.environment_variable')
+    sys.argv = argv
+    assert parser.prog == 'prog_name'
 
 
 class Object(object):
