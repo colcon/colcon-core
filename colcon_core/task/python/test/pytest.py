@@ -154,12 +154,22 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest
-        from _pytest.main import EXIT_TESTSFAILED
+        try:
+            from _pytest.main import EXIT_TESTSFAILED
+        except ImportError:
+            # Support pytest 5.0.0 and above exit codes
+            from _pytest.main import ExitCode
+            EXIT_TESTSFAILED = ExitCode.TESTS_FAILED
         if rc and rc.returncode == EXIT_TESTSFAILED:
             context.put_event_into_queue(
                 TestFailure(context.pkg.name))
 
-        from _pytest.main import EXIT_NOTESTSCOLLECTED
+        try:
+            from _pytest.main import EXIT_NOTESTSCOLLECTED
+        except ImportError:
+            # Support pytest 5.0.0 and above exit codes
+            from _pytest.main import ExitCode
+            EXIT_NOTESTSCOLLECTED = ExitCode.NO_TESTS_COLLECTED
         if rc and rc.returncode not in (
             EXIT_NOTESTSCOLLECTED, EXIT_TESTSFAILED
         ):
