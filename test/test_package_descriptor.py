@@ -45,7 +45,7 @@ def test_get_dependencies():
 
     with pytest.raises(AssertionError) as e:
         d1.get_dependencies()
-    assert "'self'" in str(e)
+    assert "'self'" in str(e.value)
 
 
 def test_get_recursive_dependencies():

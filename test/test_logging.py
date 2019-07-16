@@ -48,11 +48,11 @@ def test_get_numeric_log_level():
     # invalid string
     with pytest.raises(ValueError) as e:
         get_numeric_log_level('invalid')
-    assert str(e).endswith(
+    assert str(e.value).endswith(
         'valid names are: CRITICAL, ERROR, WARNING, INFO, DEBUG '
         '(case-insensitive)')
 
     # negative numeric
     with pytest.raises(ValueError) as e:
         get_numeric_log_level('-1')
-    assert str(e).endswith('numeric log levels must be positive')
+    assert str(e.value).endswith('numeric log levels must be positive')

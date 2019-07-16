@@ -47,7 +47,8 @@ def test_identify():
         desc.name = 'other-name'
         with pytest.raises(RuntimeError) as e:
             extension.identify(desc)
-        assert str(e).endswith('Package name already set to different value')
+        assert str(e.value).endswith(
+            'Package name already set to different value')
 
         (basepath / 'setup.cfg').write_text(
             '[metadata]\n'

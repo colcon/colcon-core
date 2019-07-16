@@ -155,13 +155,13 @@ def test_satisfies_version():
 
     with pytest.raises(RuntimeError) as e:
         satisfies_version('1.0.3', '^1.1')
-    assert 'too old' in str(e)
+    assert 'too old' in str(e.value)
 
     with pytest.raises(RuntimeError) as e:
         satisfies_version('2.0.0', '^1.2')
-    assert 'newer' in str(e)
+    assert 'newer' in str(e.value)
 
     # different semantic for version numbers before 1.0
     with pytest.raises(RuntimeError) as e:
         satisfies_version('0.2.3', '^0.1')
-    assert 'newer' in str(e)
+    assert 'newer' in str(e.value)
