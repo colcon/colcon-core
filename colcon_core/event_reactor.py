@@ -49,7 +49,7 @@ class EventReactor(Thread):
         """
         while True:
             # send timer events in regular interval
-            now = time.time()
+            now = time.monotonic()
             time_since_last_timer_event = now - self._last_timer_event
             if time_since_last_timer_event >= self.TIMER_INTERVAL:
                 self._notify_observers((TimerEvent(), None))
