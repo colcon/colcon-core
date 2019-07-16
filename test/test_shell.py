@@ -78,7 +78,7 @@ def test_get_command_environment():
                 with pytest.raises(RuntimeError) as e:
                     run_until_complete(coroutine)
         assert 'Could not find a shell extension for the command environment' \
-            in str(e)
+            in str(e.value)
         assert extensions[90]['extension1'].generate_command_environment \
             .call_count == 1
         # the raised exceptions are catched and result in a debug/info message
@@ -98,7 +98,7 @@ def test_get_command_environment():
         coroutine = get_command_environment(None, '/build/base', None)
         with pytest.raises(RuntimeError) as e:
             run_until_complete(coroutine)
-        assert str(e).endswith(': custom exception')
+        assert str(e.value) == 'custom exception'
         assert extensions[90]['extension1'].generate_command_environment \
             .call_count == 0
 
@@ -167,7 +167,7 @@ def test_create_environment_hook():
         # no primary shell extension
         with pytest.raises(RuntimeError) as e:
             create_environment_hook(None, None, None, None, None)
-        assert str(e).endswith(
+        assert str(e.value).endswith(
             'Could not find a primary shell extension for creating an '
             'environment hook')
 

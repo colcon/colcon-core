@@ -148,13 +148,14 @@ def test_add_executor_arguments():
     ):
         with pytest.raises(AssertionError) as e:
             add_executor_arguments(parser)
-        assert 'Executor extensions must have unique priorities' in str(e)
+        assert 'Executor extensions must have unique priorities' in \
+            str(e.value)
 
     # no extensions
     with EntryPointContext():
         with pytest.raises(AssertionError) as e:
             add_executor_arguments(parser)
-        assert 'No executor extensions found' in str(e)
+        assert 'No executor extensions found' in str(e.value)
 
     # choose executor by environment variable
     with EntryPointContext(extension1=Extension1, extension2=Extension2):

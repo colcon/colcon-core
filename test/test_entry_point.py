@@ -117,7 +117,7 @@ def test_entry_point_blacklist():
         with pytest.raises(RuntimeError) as e:
             load_entry_point(entry_point)
         assert 'The entry point group name is listed in the environment ' \
-            'variable' in str(e)
+            'variable' in str(e.value)
     assert entry_point.load.call_count == 0
 
     # entry point listed in the blacklist can't be loaded
@@ -127,7 +127,7 @@ def test_entry_point_blacklist():
         with pytest.raises(RuntimeError) as e:
             load_entry_point(entry_point)
         assert 'The entry point name is listed in the environment variable' \
-            in str(e)
+            in str(e.value)
     assert entry_point.load.call_count == 0
 
 

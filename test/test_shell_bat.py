@@ -63,7 +63,7 @@ def _test_extension(prefix_path):
             coroutine = extension.generate_command_environment(
                 'task_name', prefix_path, {})
             run_until_complete(coroutine)
-        assert str(e).endswith('Not usable on non-Windows systems')
+        assert str(e.value).endswith('Not usable on non-Windows systems')
     else:
         # dependency script missing
         with pytest.raises(RuntimeError) as e:

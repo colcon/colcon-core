@@ -154,13 +154,25 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest
-        from _pytest.main import EXIT_TESTSFAILED
-        if rc and rc.returncode == EXIT_TESTSFAILED:
+        try:
+            from _pytest.main import ExitCode
+            EXIT_CODE_TESTS_FAILED = ExitCode.TESTS_FAILED  # noqa: N806
+        except ImportError:
+            # support pytest < 5.0
+            from _pytest.main import EXIT_TESTSFAILED
+            EXIT_CODE_TESTS_FAILED = EXIT_TESTSFAILED  # noqa: N806
+        if rc and rc.returncode == EXIT_CODE_TESTS_FAILED:
             context.put_event_into_queue(
                 TestFailure(context.pkg.name))
 
-        from _pytest.main import EXIT_NOTESTSCOLLECTED
+        try:
+            from _pytest.main import ExitCode
+            EXIT_CODE_NO_TESTS = ExitCode.NO_TESTS_COLLECTED  # noqa: N806
+        except ImportError:
+            # support pytest < 5.0
+            from _pytest.main import EXIT_NOTESTSCOLLECTED
+            EXIT_CODE_NO_TESTS = EXIT_NOTESTSCOLLECTED  # noqa: N806
         if rc and rc.returncode not in (
-            EXIT_NOTESTSCOLLECTED, EXIT_TESTSFAILED
+            EXIT_CODE_NO_TESTS, EXIT_CODE_TESTS_FAILED
         ):
             return rc.returncode
