@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
@@ -56,6 +56,9 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
             logger.error(msg)
             raise RuntimeError(msg)
         desc.name = name
+
+        version = config.get('metadata', {}).get('version')
+        desc.metadata['version'] = version
 
         options = config.get('options', {})
         dependencies = extract_dependencies(options)
