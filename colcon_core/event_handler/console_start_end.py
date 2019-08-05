@@ -45,7 +45,8 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
 
         elif isinstance(data, JobEnded):
             if not data.rc:
-                duration = time.monotonic() - self._start_times[data.identifier]
+                duration = \
+                    time.monotonic() - self._start_times[data.identifier]
                 duration_string = format_duration(duration)
                 msg = 'Finished <<< {data.identifier} [{duration_string}]' \
                     .format_map(locals())
