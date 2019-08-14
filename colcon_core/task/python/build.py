@@ -51,11 +51,13 @@ class PythonBuildTask(TaskExtensionPoint):
             # `setup.py develop|install` requires the python lib path to exist
             python_lib = os.path.join(
                 args.install_base, self._get_python_lib(args))
-            # os.makedirs(python_lib, exist_ok=True)
 
-            # and being in the  PYTHONPATH
+            os.makedirs(python_lib, exist_ok=True)
+
+            # and being in the PYTHONPATH
             env = dict(env)
-            env['PYTHONPATH'] = python_lib + os.pathsep + sys.path.get('PYTHONPATH', '')
+
+            env['PYTHONPATH'] = python_lib + os.pathsep + env.get('PYTHONPATH', '')
             cmdargs = ['pip', 'install', '--editable', 'file:' + args.build_base, '--upgrade',
                        '--prefix', args.install_base, '--no-deps']
             await check_call(self.context, cmdargs, cwd=args.build_base, env=env)
