@@ -1,15 +1,37 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 import argparse
+from collections import OrderedDict
 import os
 from pathlib import Path
 import sys
 
 
+@{assert shell_extension.FORMAT_STR_COMMENT_LINE is not None}@
+FORMAT_STR_COMMENT_LINE = '@(shell_extension.FORMAT_STR_COMMENT_LINE)'
+@{assert shell_extension.FORMAT_STR_SET_ENV_VAR is not None}@
+FORMAT_STR_SET_ENV_VAR = '@(shell_extension.FORMAT_STR_SET_ENV_VAR)'
+@{assert shell_extension.FORMAT_STR_USE_ENV_VAR is not None}@
+FORMAT_STR_USE_ENV_VAR = '@(shell_extension.FORMAT_STR_USE_ENV_VAR)'
+@{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
+FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
+
+DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
+DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
+DSV_TYPE_SOURCE = 'source'
+
+
 def main(argv=sys.argv[1:]):  # noqa: D103
     parser = argparse.ArgumentParser(
-        description='Output found packages in topological order')
+        description='Output shell commands for the packages in topological '
+                    'order')
+    parser.add_argument(
+        'primary_extension',
+        help='The file extension of the primary shell')
+    parser.add_argument(
+        'additional_extension', nargs='?',
+        help='The additional file extension to be considered')
     parser.add_argument(
         '--merged-install', action='store_true',
         help='All install prefixes are merged into a single location')
@@ -17,8 +39,20 @@ def main(argv=sys.argv[1:]):  # noqa: D103
 
     packages = get_packages(Path(__file__).parent, args.merged_install)
 
-    for pkg_name in order_packages(packages):
-        print(pkg_name)
+    ordered_packages = order_packages(packages)
+    for pkg_name in ordered_packages:
+        if _include_comments():
+            print(
+                FORMAT_STR_COMMENT_LINE.format_map(
+                    {'comment': 'Package: ' + pkg_name}))
+        prefix = os.path.abspath(os.path.dirname(__file__))
+        if not args.merged_install:
+            prefix = os.path.join(prefix, pkg_name)
+        for line in get_commands(
+            pkg_name, prefix, args.primary_extension,
+            args.additional_extension
+        ):
+            print(line)
 
 
 def get_packages(prefix_path, merged_install):
@@ -134,6 +168,137 @@ def reduce_cycle_set(packages):
                 return packages.keys()
         # otherwise reduce again
         last_depended = depended
+
+
+def _include_comments():
+    # skipping comment lines when COLCON_TRACE is not set speeds up the
+    # processing especially on Windows
+    return bool(os.environ.get('COLCON_TRACE'))
+
+
+def get_commands(pkg_name, prefix, primary_extension, additional_extension):
+    commands = []
+    package_dsv_path = os.path.join(prefix, 'share', pkg_name, 'package.dsv')
+    if os.path.exists(package_dsv_path):
+        commands += process_dsv_file(
+            package_dsv_path, prefix, primary_extension, additional_extension)
+    return commands
+
+
+def process_dsv_file(
+    dsv_path, prefix, primary_extension=None, additional_extension=None
+):
+    commands = []
+    if _include_comments():
+        commands.append(FORMAT_STR_COMMENT_LINE.format_map({'comment': dsv_path}))
+    with open(dsv_path, 'r') as h:
+        content = h.read()
+    lines = content.splitlines()
+
+    basenames = OrderedDict()
+    for line in lines:
+        type_, remainder = line.split(';', 1)
+        if type_ != DSV_TYPE_SOURCE:
+            # handle non-source lines
+            commands += handle_dsv_types_except_source(
+                type_, remainder, prefix)
+        else:
+            # group remaining source lines by basename
+            path_without_ext, ext = os.path.splitext(remainder)
+            assert ext.startswith('.')
+            ext = ext[1:]
+            if ext in (primary_extension, additional_extension):
+                if path_without_ext not in basenames:
+                    basenames[path_without_ext] = set()
+                basenames[path_without_ext].add(ext)
+
+    # source primary-only files
+    if primary_extension:
+        for basename, extensions in basenames.items():
+            if len(extensions) == 1 and primary_extension in extensions:
+                commands += handle_dsv_type_source(
+                    basename + '.' + primary_extension, prefix,
+                    primary_extension, is_primary=True)
+
+    # source non-primary files
+    if additional_extension:
+        for basename, extensions in basenames.items():
+            if additional_extension in extensions:
+                commands += handle_dsv_type_source(
+                    basename + '.' + additional_extension, prefix,
+                    additional_extension, is_primary=False)
+
+    return commands
+
+
+def handle_dsv_types_except_source(type_, remainder, prefix):
+    commands = []
+    if type_ in (
+        DSV_TYPE_PREPEND_NON_DUPLICATE,
+        DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS
+    ):
+        env_name, value = remainder.split(';', 1)
+        if not value:
+            value = prefix
+        elif not os.path.isabs(value):
+            value = os.path.join(prefix, value)
+        if (
+            type_ == DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS and
+            not os.path.exists(value)
+        ):
+            comment = 'skip extending {env_name} with not existing path: ' \
+                '{value}'.format_map(locals())
+            if _include_comments():
+                commands.append(
+                    FORMAT_STR_COMMENT_LINE.format_map({'comment': comment}))
+        else:
+            commands += _prepend_unique_value(env_name, value)
+    else:
+        assert False, 'Unknown environment hook type: ' + type_
+    return commands
+
+
+def handle_dsv_type_source(script_path, prefix, extension, is_primary=False):
+    commands = []
+    if not os.path.isabs(script_path):
+        script_path = os.path.join(prefix, script_path)
+    script_path_no_ext = os.path.splitext(script_path)[0]
+    dsv_path = script_path_no_ext + '.dsv'
+    if os.path.exists(dsv_path):
+        if is_primary:
+            commands += process_dsv_file(
+                dsv_path, prefix, primary_extension=extension)
+    else:
+        commands += [
+            FORMAT_STR_INVOKE_SCRIPT.format_map(
+                {'prefix': prefix, 'script_path': script_path})]
+    return commands
+
+
+env_state = {}
+
+
+def _prepend_unique_value(name, value):
+    global env_state
+    if name not in env_state:
+        if name not in os.environ:
+            env_state[name] = set()
+        if os.environ.get(name):
+            env_state[name] = set(os.environ[name].split(os.pathsep))
+    if not env_state[name]:
+        extend = ''
+    else:
+        extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map(
+            {'name': name})
+    line = FORMAT_STR_SET_ENV_VAR.format_map(
+        {'name': name, 'value': value + extend})
+    if value not in env_state[name]:
+        env_state[name].add(value)
+    else:
+        if not _include_comments():
+            return []
+        line = FORMAT_STR_COMMENT_LINE.format_map({'comment': line})
+    return [line]
 
 
 if __name__ == '__main__':  # pragma: no cover
