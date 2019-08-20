@@ -97,38 +97,23 @@ _colcon_prefix_sh_source_script() {
   fi
 }
 
-# get all packages in topological order
-_colcon_ordered_packages="$(@
-$_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setup_util.py"@
+# get all commands in topological order
+_colcon_ordered_commands="$(@
+$_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setup_util_sh.py" sh@
 @[if merge_install]@
  --merged-install@
 @[end if]@
 )"
 unset _colcon_python_executable
-
-# zsh must be handled explicitly in order to support bootstrapping with zsh
-if test -n "$ZSH_VERSION"; then
-  if [[ ! -o shwordsplit ]]; then
-    _colcon_prefix_sh_ZSH_SETOPT_SHWORDSPLIT=1
-    setopt shwordsplit
-  fi
+if [ -n "$COLCON_TRACE" ]; then
+  echo "Execute generated script:"
+  echo "<<<"
+  echo "${_colcon_ordered_commands}"
+  echo ">>>"
 fi
+eval "${_colcon_ordered_commands}"
+unset _colcon_ordered_commands
 
-# source package specific scripts in topological order
-for _colcon_package_name in $_colcon_ordered_packages; do
-  # setting COLCON_CURRENT_PREFIX avoids relying on the build time prefix of the sourced script
-  COLCON_CURRENT_PREFIX="${_colcon_prefix_sh_COLCON_CURRENT_PREFIX}@('' if merge_install else '/${_colcon_package_name}')"
-  _colcon_prefix_sh_source_script "$COLCON_CURRENT_PREFIX/share/${_colcon_package_name}/@(package_script_no_ext).sh"
-done
-unset _colcon_package_name
-if test -n "$ZSH_VERSION"; then
-  if test -n "$_colcon_prefix_sh_ZSH_SETOPT_SHWORDSPLIT"; then
-    unsetopt shwordsplit
-  fi
-  unset _colcon_prefix_sh_ZSH_SETOPT_SHWORDSPLIT
-fi
 unset _colcon_prefix_sh_source_script
-unset _colcon_ordered_packages
 
-unset COLCON_CURRENT_PREFIX
 unset _colcon_prefix_sh_COLCON_CURRENT_PREFIX

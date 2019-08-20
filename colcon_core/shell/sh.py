@@ -1,8 +1,7 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 from pathlib import Path
-import shutil
 import sys
 
 from colcon_core import shell
@@ -22,9 +21,15 @@ class ShShell(ShellExtensionPoint):
     # the priority needs to be higher than the default for primary shells
     PRIORITY = 200
 
+    FORMAT_STR_COMMENT_LINE = '# {comment}'
+    FORMAT_STR_SET_ENV_VAR = 'export {name}="{value}"'
+    FORMAT_STR_USE_ENV_VAR = '${name}'
+    FORMAT_STR_INVOKE_SCRIPT = 'COLCON_CURRENT_PREFIX="{prefix}" ' \
+        '_colcon_prefix_sh_source_script "{script_path}"'
+
     def __init__(self):  # noqa: D107
         super().__init__()
-        satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^2.0')
+        satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^2.1')
         if sys.platform == 'win32' and not shell.use_all_shell_extensions:
             raise SkipExtensionException('Not used on Windows systems')
 
@@ -40,9 +45,12 @@ class ShShell(ShellExtensionPoint):
                 'merge_install': merge_install,
                 'package_script_no_ext': 'package',
             })
-        shutil.copy(
-            str(self._get_prefix_util_path()),
-            str(prefix_path / '_local_setup_util.py'))
+
+        prefix_util_path = prefix_path / '_local_setup_util_sh.py'
+        logger.info("Creating prefix util module '%s'" % prefix_util_path)
+        expand_template(
+            self._get_prefix_util_template_path(),
+            prefix_util_path, {'shell_extension': self})
 
         prefix_chain_env_path = prefix_path / 'setup.sh'
         logger.info(

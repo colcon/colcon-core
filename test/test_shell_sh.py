@@ -38,7 +38,7 @@ def _test_extension(prefix_path):
     # create_prefix_script
     extension.create_prefix_script(prefix_path, False)
     assert (prefix_path / 'local_setup.sh').exists()
-    assert (prefix_path / '_local_setup_util.py').exists()
+    assert (prefix_path / '_local_setup_util_sh.py').exists()
 
     # create_package_script
     extension.create_package_script(
