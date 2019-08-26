@@ -84,7 +84,6 @@ def order_packages(packages):
     """
     Order packages topologically.
 
-    :param Path path: The resource file containing the runtime dependencies
     :param dict packages: A mapping from package name to the set of runtime
       dependencies
     :returns: The package names
