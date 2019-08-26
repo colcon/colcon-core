@@ -61,6 +61,7 @@ from colcon_core.package_identification.python \
 from colcon_core.prefix_path.colcon import ColconPrefixPath  # noqa: E402
 from colcon_core.shell import ALL_SHELLS_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.shell.bat import BatShell  # noqa: E402
+from colcon_core.shell.dsv import DsvShell  # noqa: E402
 from colcon_core.shell.sh import ShShell  # noqa: E402
 from colcon_core.task.python.build import PythonBuildTask  # noqa: E402
 from colcon_core.task.python.test import PythonTestTask  # noqa: E402
@@ -116,6 +117,7 @@ custom_entry_points.update({
     },
     'colcon_core.shell': {
         'bat': BatShell,
+        'dsv': DsvShell,
         'sh': ShShell,
     },
     'colcon_core.task.build': {

@@ -7,16 +7,8 @@
 :: add this prefix to the COLCON_PREFIX_PATH
 call:_colcon_prefix_bat_prepend_unique_value COLCON_PREFIX_PATH "%%~dp0"
 
-:: get all packages in topological order
-call:_colcon_get_ordered_packages _ordered_packages "%~dp0"
-
-:: source packages
-if "%_ordered_packages%" NEQ "" (
-  for %%p in ("%_ordered_packages:;=";"%") do (
-    call:_colcon_prefix_bat_call_script "%~dp0@('' if merge_install else '%%~p\\')share\%%~p\@(package_script_no_ext).bat"
-  )
-  set "_ordered_packages="
-)
+:: get and run all commands in topological order
+call:_colcon_run_ordered_commands "%~dp0"
 
 goto:eof
 
@@ -57,13 +49,9 @@ goto:eof
 goto:eof
 
 
-:: Get the package names in topological order
-:: using semicolons as separators and avoiding leading separators.
-:: first argument: the name of the result variable
-:: second argument: the base path to look for packages
-:_colcon_get_ordered_packages
-  setlocal enabledelayedexpansion
-
+:: Run the commands in topological order
+:: first argument: the base path to look for packages
+:_colcon_run_ordered_commands
   :: check environment variable for custom Python executable
   if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
     if not exist "%COLCON_PYTHON_EXECUTABLE%" (
@@ -85,19 +73,21 @@ goto:eof
     )
   )
 
-  set "_colcon_ordered_packages="
-  for /f %%p in ('""%_colcon_python_executable%" "%~dp0_local_setup_util.py"@
+  for /f "delims=" %%c in ('""%_colcon_python_executable%" "%~1_local_setup_util_bat.py" bat@
 @[if merge_install]@
  --merged-install@
 @[end if]@
 "') do (
-    if "!_colcon_ordered_packages!" NEQ "" set "_colcon_ordered_packages=!_colcon_ordered_packages!;"
-    set "_colcon_ordered_packages=!_colcon_ordered_packages!%%p"
+    if "%COLCON_TRACE%" NEQ "" (
+      echo %%c
+    )
+    :: only invoke non-comment lines
+    echo %%c | findstr /r "^::" >nul 2>&1
+    if errorlevel 1 (
+      call %%c
+    )
   )
-  endlocal & (
-    :: set result variable in parent scope
-    set "%~1=%_colcon_ordered_packages%"
-  )
+  set _colcon_python_executable=
 goto:eof
 
 

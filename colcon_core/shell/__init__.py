@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 from collections import OrderedDict
@@ -41,7 +41,7 @@ class ShellExtensionPoint:
     """
 
     """The version of the shell extension interface."""
-    EXTENSION_POINT_VERSION = '2.0'
+    EXTENSION_POINT_VERSION = '2.1'
 
     """
     The default priority of shell extensions.
@@ -58,6 +58,35 @@ class ShellExtensionPoint:
     than the default.
     """
     PRIORITY = 100
+
+    """
+    The format string for a comment line.
+
+    It must have the placeholder {comment}.
+    This attribute must be defined in a subclass.
+    """
+    FORMAT_STR_COMMENT_LINE = None
+    """
+    The format string to set an environment variable.
+
+    It must have the placeholder {name} and {value}.
+    This attribute must be defined in a subclass.
+    """
+    FORMAT_STR_SET_ENV_VAR = None
+    """
+    The format string to use an environment variable.
+
+    It must have the placeholder {name}.
+    This attribute must be defined in a subclass.
+    """
+    FORMAT_STR_USE_ENV_VAR = None
+    """
+    The format string to invoke a script file.
+
+    It must have the placeholder {prefix} and {script_path}.
+    This attribute must be defined in a subclass.
+    """
+    FORMAT_STR_INVOKE_SCRIPT = None
 
     def get_file_extensions(self):
         """
@@ -92,7 +121,19 @@ class ShellExtensionPoint:
         :returns: The path of the module file
         :rtype: Path
         """
+        warnings.warn(
+            'colcon_core.shell._get_prefix_util_path() will be removed in the '
+            'future', DeprecationWarning, stacklevel=2)
         return Path(__file__).parent / 'template' / 'prefix_util.py'
+
+    def _get_prefix_util_template_path(self):
+        """
+        Get the absolute path of the `prefix_util.py.em` module template.
+
+        :returns: The path of the module file
+        :rtype: Path
+        """
+        return Path(__file__).parent / 'template' / 'prefix_util.py.em'
 
     def create_package_script(self, prefix_path, pkg_name, hooks):
         """
