@@ -47,7 +47,7 @@ def get_packages(prefix_path, merged_install):
                 continue
             if p.name.startswith('.'):
                 continue
-            add_package(p, packages)
+            add_package_runtime_dependencies(p, packages)
     else:
         # for each subdirectory look for the package specific file
         for p in prefix_path.iterdir():
@@ -57,7 +57,7 @@ def get_packages(prefix_path, merged_install):
                 continue
             p = p / subdirectory / p.name
             if p.is_file():
-                add_package(p, packages)
+                add_package_runtime_dependencies(p, packages)
 
     # remove unknown dependencies
     pkg_names = set(packages.keys())
@@ -67,7 +67,7 @@ def get_packages(prefix_path, merged_install):
     return packages
 
 
-def add_package(path, packages):
+def add_package_runtime_dependencies(path, packages):
     """
     Check the path and if it exists extract the packages runtime dependencies.
 
@@ -84,7 +84,6 @@ def order_packages(packages):
     """
     Order packages topologically.
 
-    :param Path path: The resource file containing the runtime dependencies
     :param dict packages: A mapping from package name to the set of runtime
       dependencies
     :returns: The package names
