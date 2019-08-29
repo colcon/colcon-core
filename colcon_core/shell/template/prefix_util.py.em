@@ -211,21 +211,33 @@ def process_dsv_file(
                     basenames[path_without_ext] = set()
                 basenames[path_without_ext].add(ext)
 
-    # source primary-only files
-    if primary_extension:
-        for basename, extensions in basenames.items():
-            if len(extensions) == 1 and primary_extension in extensions:
-                commands += handle_dsv_type_source(
-                    basename + '.' + primary_extension, prefix,
-                    primary_extension, is_primary=True)
+    # add the dsv extension to each basename if the file exists
+    for basename, extensions in basenames.items():
+        if not os.path.isabs(basename):
+            basename = os.path.join(prefix, basename)
+        if os.path.exists(basename + '.dsv'):
+            extensions.add('dsv')
 
-    # source non-primary files
-    if additional_extension:
-        for basename, extensions in basenames.items():
-            if additional_extension in extensions:
-                commands += handle_dsv_type_source(
-                    basename + '.' + additional_extension, prefix,
-                    additional_extension, is_primary=False)
+    for basename, extensions in basenames.items():
+        if not os.path.isabs(basename):
+            basename = os.path.join(prefix, basename)
+        if 'dsv' in extensions:
+            # process dsv files recursively
+            commands += process_dsv_file(
+                basename + '.dsv', prefix, primary_extension=primary_extension,
+                additional_extension=additional_extension)
+        elif primary_extension in extensions and len(extensions) == 1:
+            # source primary-only files
+            commands += [
+                FORMAT_STR_INVOKE_SCRIPT.format_map({
+                    'prefix': prefix,
+                    'script_path': basename + '.' + primary_extension})]
+        elif additional_extension in extensions:
+            # source non-primary files
+            commands += [
+                FORMAT_STR_INVOKE_SCRIPT.format_map({
+                    'prefix': prefix,
+                    'script_path': basename + '.' + additional_extension})]
 
     return commands
 
@@ -254,23 +266,6 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
             commands += _prepend_unique_value(env_name, value)
     else:
         assert False, 'Unknown environment hook type: ' + type_
-    return commands
-
-
-def handle_dsv_type_source(script_path, prefix, extension, is_primary=False):
-    commands = []
-    if not os.path.isabs(script_path):
-        script_path = os.path.join(prefix, script_path)
-    script_path_no_ext = os.path.splitext(script_path)[0]
-    dsv_path = script_path_no_ext + '.dsv'
-    if os.path.exists(dsv_path):
-        if is_primary:
-            commands += process_dsv_file(
-                dsv_path, prefix, primary_extension=extension)
-    else:
-        commands += [
-            FORMAT_STR_INVOKE_SCRIPT.format_map(
-                {'prefix': prefix, 'script_path': script_path})]
     return commands
 
 
