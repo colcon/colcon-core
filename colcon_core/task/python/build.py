@@ -136,6 +136,7 @@ class PythonBuildTask(TaskExtensionPoint):
             cmd = [
                 executable, 'setup.py',
                 'develop', '--prefix', args.install_base,
+                '--editable', '--build-directory', '_build',
                 '--no-deps',
             ]
             if setup_py_data.get('data_files', []):
