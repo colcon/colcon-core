@@ -1,11 +1,9 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-import asyncio
 from distutils.sysconfig import get_python_lib
 import os
 from pathlib import Path
-import re
 import shutil
 import sys
 from sys import executable
@@ -22,50 +20,6 @@ from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
 
 logger = colcon_logger.getChild(__name__)
-
-_easy_install_pth_lock = None
-
-
-class _EasyInstallPthLockAsyncContext:
-    """
-    A context manager to access the easy-install.pth file exclusively.
-
-    The locking is only necessary when using --merge-install.
-    """
-
-    def __init__(self, pkg, args):
-        self._pkg_name = pkg.name
-        self._merge_install = args.merge_install
-
-    async def __aenter__(self):
-        global _easy_install_pth_lock
-        # since the command modifies the easy-install.pth file
-        # the invocation for multiple Python packages needs to happen
-        # sequentially when using --merge-install
-        if self._merge_install and _easy_install_pth_lock is None:
-            try:
-                # only available as of Python 3.7
-                loop = asyncio.get_running_loop()
-            except AttributeError:
-                loop = asyncio.get_event_loop()
-            _easy_install_pth_lock = asyncio.Lock(loop=loop)
-
-        if _easy_install_pth_lock:
-            logger.debug(
-                "Acquiring lock for package '{self._pkg_name}' to access "
-                'easy_install.pth'.format_map(locals()))
-            await _easy_install_pth_lock.acquire()
-            logger.debug(
-                "Acquired lock for package '{self._pkg_name}' to access "
-                'easy_install.pth'.format_map(locals()))
-
-    async def __aexit__(self, *_):
-        global _easy_install_pth_lock
-        if _easy_install_pth_lock:
-            logger.debug(
-                "Releasing lock for package '{self._pkg_name}' to access "
-                'easy_install.pth'.format_map(locals()))
-            _easy_install_pth_lock.release()
 
 
 class PythonBuildTask(TaskExtensionPoint):
@@ -133,6 +87,9 @@ class PythonBuildTask(TaskExtensionPoint):
 
             # invoke `setup.py develop` step in build space
             # to avoid placing any files in the source space
+
+            # --editable causes this to skip creating/editing the
+            # easy-install.pth file
             cmd = [
                 executable, 'setup.py',
                 'develop', '--prefix', args.install_base,
@@ -142,17 +99,13 @@ class PythonBuildTask(TaskExtensionPoint):
             if setup_py_data.get('data_files', []):
                 cmd += ['install_data', '--install-dir', args.install_base]
             self._append_install_layout(args, cmd)
-            async with _EasyInstallPthLockAsyncContext(pkg, args):
-                rc = await check_call(
-                    self.context, cmd, cwd=args.build_base, env=env)
+            rc = await check_call(
+                self.context, cmd, cwd=args.build_base, env=env)
             if rc and rc.returncode:
                 return rc.returncode
 
             # explicitly add the build directory to the PYTHONPATH
-            # to maintain the desired order
-            # otherwise the path from the easy-install.pth (which is the build
-            # directory) will be added to the PYTHONPATH implicitly
-            # but behind potentially other directories from the PYTHONPATH
+            # to maintain the desired order.
             if additional_hooks is None:
                 additional_hooks = []
             additional_hooks += create_environment_hook(
@@ -172,11 +125,10 @@ class PythonBuildTask(TaskExtensionPoint):
             cmd = [
                 executable, 'setup.py',
                 'develop', '--prefix', args.install_base,
-                '--uninstall',
+                '--uninstall', '--editable', '--build-directory', '_build',
             ]
-            async with _EasyInstallPthLockAsyncContext(pkg, args):
-                rc = await check_call(
-                    self.context, cmd, cwd=args.build_base, env=env)
+            rc = await check_call(
+                self.context, cmd, cwd=args.build_base, env=env)
             if rc:
                 return rc
 
@@ -224,26 +176,6 @@ class PythonBuildTask(TaskExtensionPoint):
             except OSError:
                 pass
         os.remove(install_log)
-
-        # remove entry from easy-install.pth file
-        easy_install = os.path.join(
-            args.install_base, self._get_python_lib(args),
-            'easy-install.pth')
-        if not os.path.exists(easy_install):
-            return
-
-        with open(easy_install, 'r') as h:
-            content = h.read()
-        pattern = r'^\./%s-\d.+\.egg\n' % re.escape(pkg.name)
-        matches = re.findall(pattern, content, re.MULTILINE)
-        if not matches:
-            return
-
-        assert len(matches) == 1, \
-            "Multiple matching entries in '%s'" % easy_install
-        content = content.replace(matches[0], '')
-        with open(easy_install, 'w') as h:
-            h.write(content)
 
     def _symlinks_in_build(self, args, setup_py_data):
         items = ['setup.py']
