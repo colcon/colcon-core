@@ -270,7 +270,7 @@ class PythonBuildTask(TaskExtensionPoint):
                 if not os.path.exists(os.path.join(args.path, py_module)):
                     raise RuntimeError(
                         "Provided py_modules '{py_module}' does not exist"
-                        .format__map(locals()))
+                        .format_map(locals()))
             items += py_modules_list
         data_files = get_data_files_mapping(
             setup_py_data.get('data_files', []))
