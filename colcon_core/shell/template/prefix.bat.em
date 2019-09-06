@@ -63,7 +63,7 @@ goto:eof
     :: use the Python executable known at configure time
     set "_colcon_python_executable=@(python_executable)"
     :: if it doesn't exist try a fall back
-    if not exist "!_colcon_python_executable!" (
+    if not exist "%_colcon_python_executable%" (
       python --version > NUL 2> NUL
       if errorlevel 1 (
         echo error: unable to find python executable
