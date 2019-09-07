@@ -27,7 +27,6 @@ def unchanged_empty_descriptor(package_descriptor):
     assert package_descriptor.type is None
 
 
-@pytest.mark.xfail
 def test_error_in_setup_py(unchanged_empty_descriptor):
     setup_py = unchanged_empty_descriptor.path / 'setup.py'
     error_text = 'My hovercraft is full of eels'
@@ -51,7 +50,6 @@ def test_missing_setup_py(unchanged_empty_descriptor):
     extension.identify(unchanged_empty_descriptor)
 
 
-@pytest.mark.xfail
 def test_empty_setup_py(unchanged_empty_descriptor):
     extension = PythonPackageIdentification()
     (unchanged_empty_descriptor.path / 'setup.py').write_text('')
@@ -91,7 +89,6 @@ def test_re_identify_python_if_same_python_package(package_descriptor):
     assert package_descriptor.type == 'python'
 
 
-@pytest.mark.xfail
 def test_re_identify_python_if_different_python_package(package_descriptor):
     package_descriptor.name = 'other-package'
     package_descriptor.type = 'python'
@@ -182,7 +179,6 @@ def test_metadata_options(package_descriptor):
     assert options['packages'] == ['my_module']
 
 
-@pytest.mark.xfail
 def test_metadata_options_dynamic(package_descriptor):
     (package_descriptor.path / 'setup.py').write_text(
         'import setuptools; setuptools.setup()')
