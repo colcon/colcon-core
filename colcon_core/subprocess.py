@@ -19,16 +19,14 @@ import subprocess
 import sys
 from typing import Callable
 from typing import Mapping
+from typing import Optional
 from typing import Sequence
-from typing import TypeVar
 
 from colcon_core.logging import colcon_logger
 
 SIGINT_RESULT = 'SIGINT'
 
 logger = colcon_logger.getChild(__name__)
-
-UsePtyType = TypeVar('UsePtyType', None, bool)
 
 
 def new_event_loop():
@@ -52,7 +50,7 @@ async def run(
     cwd: str = None,
     env: Mapping[str, str] = None,
     shell: bool = False,
-    use_pty: UsePtyType = None
+    use_pty: Optional[bool] = None
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
