@@ -4,7 +4,7 @@
 import copy
 import traceback
 from typing import Dict
-from typing import TypeVar
+from typing import Union
 
 from colcon_core.logging import colcon_logger
 from colcon_core.package_descriptor import PackageDescriptor
@@ -79,16 +79,13 @@ def get_package_identification_extensions():
     return order_extensions_grouped_by_priority(extensions)
 
 
-ReturnType = TypeVar('ReturnType', None, bool, PackageDescriptor)
-
-
 def identify(
     extensions: Dict[  # actually an OrderedDict
         int,  # priority
         Dict[str, PackageIdentificationExtensionPoint],  # an OrderedDict
     ],
     path: str,
-) -> ReturnType:
+) -> Union[None, bool, PackageDescriptor]:
     """
     Identify the package in the given path.
 
