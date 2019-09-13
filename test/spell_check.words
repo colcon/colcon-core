@@ -16,6 +16,7 @@ deps
 descs
 getpid
 iterdir
+localhost
 lstrip
 mkdtemp
 monkeypatch
