@@ -93,7 +93,8 @@ class PythonBuildTask(TaskExtensionPoint):
             cmd = [
                 executable, 'setup.py',
                 'develop', '--prefix', args.install_base,
-                '--editable', '--build-directory', '_build',
+                '--editable',
+                '--build-directory', os.path.join(args.build_base, 'build'),
                 '--no-deps',
             ]
             if setup_py_data.get('data_files', []):
@@ -125,7 +126,8 @@ class PythonBuildTask(TaskExtensionPoint):
             cmd = [
                 executable, 'setup.py',
                 'develop', '--prefix', args.install_base,
-                '--uninstall', '--editable', '--build-directory', '_build',
+                '--uninstall', '--editable',
+                '--build-directory', os.path.join(args.build_base, 'build')
             ]
             rc = await check_call(
                 self.context, cmd, cwd=args.build_base, env=env)
