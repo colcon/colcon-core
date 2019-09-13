@@ -21,11 +21,12 @@ def monkey_patch_get_shell_extensions(monkeypatch):
     for shell_extension_class in [ShShell, BatShell]:
         try:
             a_shell = shell_extension_class()
+            break
         except SkipExtensionException:
             pass
 
     if a_shell is None:
-        pytest.skip()
+        pytest.fail('No valid shell extension found.')
 
     monkeypatch.setattr(
         colcon_core.shell,
@@ -54,11 +55,9 @@ def python_build_task(tmp_path):
         pkg=package,
         args=SimpleNamespace(
             path=str(tmp_path / 'src'),
-            symlink_install=False,
             build_base=str(tmp_path / 'build'),
             install_base=str(tmp_path / 'install'),
-            merge_install=False,
-            test_result_base=str(tmp_path / 'test'),
+            symlink_install=False,
         ),
         dependencies={}
     )
@@ -102,4 +101,4 @@ def test_build_package(python_build_task: PythonBuildTask, event_loop):
     assert 1 == len(list(install_base.rglob('my_module/__init__.py')))
 
     pkg_info, = install_base.rglob('PKG-INFO')
-    assert 'Name: test-package' in pkg_info.read_text()
+    assert 'Name: test-package' in pkg_info.read_text().splitlines()
