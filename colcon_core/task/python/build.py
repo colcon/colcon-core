@@ -73,10 +73,6 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--single-version-externally-managed',
             ]
             self._append_install_layout(args, cmd)
-            cmd += [
-                'bdist_egg', '--dist-dir', os.path.join(
-                    args.build_base, 'dist'),
-            ]
             rc = await check_call(self.context, cmd, cwd=args.path, env=env)
             if rc and rc.returncode:
                 return rc.returncode
