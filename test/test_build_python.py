@@ -4,9 +4,9 @@ import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 
-import colcon_core.shell
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.plugin_system import SkipExtensionException
+import colcon_core.shell
 from colcon_core.shell.bat import BatShell
 from colcon_core.shell.sh import ShShell
 from colcon_core.subprocess import new_event_loop
