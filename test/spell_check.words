@@ -18,6 +18,7 @@ getpid
 iterdir
 lstrip
 mkdtemp
+monkeypatch
 nargs
 noop
 noqa
@@ -31,6 +32,7 @@ pytest
 pythonpath
 readouterr
 returncode
+rglob
 rmtree
 rstrip
 samefile
