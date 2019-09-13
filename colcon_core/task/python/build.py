@@ -106,7 +106,7 @@ class PythonBuildTask(TaskExtensionPoint):
                 return rc.returncode
 
             # explicitly add the build directory to the PYTHONPATH
-            # to maintain the desired order.
+            # to maintain the desired order
             if additional_hooks is None:
                 additional_hooks = []
             additional_hooks += create_environment_hook(
