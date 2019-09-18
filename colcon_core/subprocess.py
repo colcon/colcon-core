@@ -231,6 +231,7 @@ def _blocking_fd2callback(stream, callback):
             # this is how the fd signals the EOF
             break
         callback(line.encode())
+    stream.close()
 
 
 async def _pipe2callback(stream, callback, other_stream=None):
