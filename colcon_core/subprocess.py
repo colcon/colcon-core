@@ -140,11 +140,9 @@ async def _async_check_call(
     callbacks = []
     if use_pty:
         if callable(stdout_callback):
-            stdout_master_fd = os.fdopen(stdout_master)
-            callbacks.append(_fd2callback(stdout_master_fd, stdout_callback))
+            callbacks.append(_fd2callback(stdout_master, stdout_callback))
         if callable(stderr_callback):
-            stderr_master_fd = os.fdopen(stderr_master)
-            callbacks.append(_fd2callback(stderr_master_fd, stderr_callback))
+            callbacks.append(_fd2callback(stderr_master, stderr_callback))
     else:
         if callable(stdout_callback):
             callbacks.append(_pipe2callback(
@@ -215,22 +213,23 @@ def escape_shell_argument(arg):
     return quoted
 
 
-async def _fd2callback(stream, callback):
+async def _fd2callback(descriptor, callback):
     """Coroutine reading from fd and invoking the callback for each line."""
-    func = partial(_blocking_fd2callback, stream, callback)
+    func = partial(_blocking_fd2callback, descriptor, callback)
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, func)
 
 
-def _blocking_fd2callback(stream, callback):
+def _blocking_fd2callback(descriptor, callback):
     """Read all lines from the stream invoke the callback for each line."""
-    while True:
-        try:
-            line = stream.readline()
-        except IOError:
-            # this is how the fd signals the EOF
-            break
-        callback(line.encode())
+    with os.fdopen(descriptor) as stream:
+        while True:
+            try:
+                line = stream.readline()
+            except IOError:
+                # this is how the fd signals the EOF
+                break
+            callback(line.encode())
 
 
 async def _pipe2callback(stream, callback, other_stream=None):
