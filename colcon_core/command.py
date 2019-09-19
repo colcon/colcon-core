@@ -10,20 +10,57 @@ import signal
 import sys
 import traceback
 
-from colcon_core.argument_parser import decorate_argument_parser
-from colcon_core.argument_parser import SuppressUsageOutput
-from colcon_core.entry_point import load_entry_points
 from colcon_core.environment_variable import EnvironmentVariable
-from colcon_core.location import create_log_path
-from colcon_core.location import get_log_path
-from colcon_core.location import set_default_config_path
-from colcon_core.location import set_default_log_path
-from colcon_core.logging import add_file_handler
-from colcon_core.logging import colcon_logger  # noqa: F401
-from colcon_core.logging import get_numeric_log_level
-from colcon_core.logging import set_logger_level_from_env
-from colcon_core.plugin_system import get_first_line_doc
-from colcon_core.verb import get_verb_extensions
+
+# a custom environment variable is necessary since PYTHONWARNINGS doesn't
+# support passing a regular expression for the module entry
+# see https://bugs.python.org/issue34624
+"""Environment variable to set the warnings filter for colcon modules"""
+WARNINGS_ENVIRONMENT_VARIABLE = EnvironmentVariable(
+    'COLCON_WARNINGS',
+    'Set the warnings filter similar to PYTHONWARNINGS except that the module '
+    "entry is implicitly set to 'colcon.*'")
+
+warnings_filters = os.environ.get(WARNINGS_ENVIRONMENT_VARIABLE.name)
+if warnings_filters:
+    import warnings
+    # filters are separated by commas
+    for f in warnings_filters.split(','):
+        # fields are separated by colons
+        fields = f.split(':', 4)
+        if len(fields) < 5:
+            fields += [''] * (5 - len(fields))
+        action, message, category, module, line = fields
+        try:
+            category = warnings._getcategory(category)
+        except Exception:
+            print(
+                "The category field '{category}' must be a valid warnings "
+                'class name'.format_map(locals()), file=sys.stderr)
+            sys.exit(1)
+        if module:
+            print(
+                'The module field of the {WARNINGS_ENVIRONMENT_VARIABLE.name} '
+                'filter should be empty, otherwise use PYTHONWARNINGS instead'
+                .format_map(locals()), file=sys.stderr)
+            sys.exit(1)
+        warnings.filterwarnings(
+            action, message=message, category=category or Warning,
+            module='colcon.*', lineno=line if line else 0)
+
+from colcon_core.argument_parser import decorate_argument_parser  # noqa: E402 E501 I100 I202
+from colcon_core.argument_parser import SuppressUsageOutput  # noqa: E402
+from colcon_core.entry_point import load_entry_points  # noqa: E402
+from colcon_core.location import create_log_path  # noqa: E402
+from colcon_core.location import get_log_path  # noqa: E402
+from colcon_core.location import set_default_config_path  # noqa: E402
+from colcon_core.location import set_default_log_path  # noqa: E402
+from colcon_core.logging import add_file_handler  # noqa: E402
+from colcon_core.logging import colcon_logger  # noqa: E402
+from colcon_core.logging import get_numeric_log_level  # noqa: E402
+from colcon_core.logging import set_logger_level_from_env  # noqa: E402
+from colcon_core.plugin_system import get_first_line_doc  # noqa: E402
+from colcon_core.verb import get_verb_extensions  # noqa: E402
 
 """Environment variable to set the log level"""
 LOG_LEVEL_ENVIRONMENT_VARIABLE = EnvironmentVariable(
