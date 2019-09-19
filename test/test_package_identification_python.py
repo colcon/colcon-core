@@ -58,7 +58,6 @@ def test_empty_setup_py(unchanged_empty_descriptor):
     assert e.match('not a Distutils setup script')
 
 
-@pytest.mark.xfail
 def test_setup_py_no_name(unchanged_empty_descriptor):
     extension = PythonPackageIdentification()
     (unchanged_empty_descriptor.path / 'setup.py').write_text(
