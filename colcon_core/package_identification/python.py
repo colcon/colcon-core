@@ -2,6 +2,7 @@
 # Copyright 2019 Rover Robotics
 # Licensed under the Apache License, Version 2.0
 
+import distutils.core
 import multiprocessing
 import os
 from typing import Optional
@@ -36,7 +37,16 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
         # after this point, we are convinced this is a Python package,
         # so we should fail with an Exception instead of silently
 
-        config = get_setup_result(setup_py, env=None)
+        if os.path.realpath(__file__).startswith(
+            os.path.realpath(str(desc.path))
+        ):
+            # Bootstrapping colcon.
+            # todo: is this really necessary?
+            get_setup_fn = get_setup_result_in_process
+        else:
+            get_setup_fn = get_setup_result
+
+        config = get_setup_fn(setup_py, env=None)
 
         name = config['metadata'].name
         if not name:
@@ -64,8 +74,8 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
                 for d in config[option_name] or ()}
 
         def getter(env):
-            nonlocal setup_py
-            return get_setup_result(setup_py, env=env)
+            nonlocal setup_py, get_setup_fn
+            return get_setup_fn(setup_py, env=env)
 
         desc.metadata['get_python_setup_options'] = getter
 
@@ -134,7 +144,6 @@ def _get_setup_result_target(setup_py: str, env: dict, conn_send):
     :param conn_send: Connection to send the result as either a dict or an
         error string
     """
-    import distutils.core
     import traceback
     try:
         # need to be in setup.py's parent dir to detect any setup.cfg
@@ -146,23 +155,55 @@ def _get_setup_result_target(setup_py: str, env: dict, conn_send):
         result = distutils.core.run_setup(
             str(setup_py), ('--dry-run',), stop_after='config')
 
-        # could just return all attrs in result.__dict__, but we take this
-        # opportunity to filter a few things that don't need to be there
-        conn_send.send({
-            attr: value for attr, value in result.__dict__.items()
-            if (
-                # These *seem* useful but always have the value 0.
-                # Look for their values in the 'metadata' object instead.
-                attr not in result.display_option_names
-                # Getter methods
-                and not callable(value)
-                # Private properties
-                and not attr.startswith('_')
-                # Objects that are generally not picklable
-                and attr not in ('cmdclass', 'distclass', 'ext_modules')
-            )})
+        conn_send.send(_distribution_to_dict(result))
     except BaseException:
         conn_send.send(traceback.format_exc())
+
+
+def get_setup_result_in_process(setup_py, *, env: Optional[dict]):
+    """
+    Run setup.py in this process.
+
+    Prefer get_setup_result, since it provides process isolation is
+    threadsafe, and returns predictable errors.
+    :param setup_py: Path to a setup.py script
+    :param env: Environment variables to set before running setup.py
+    :return: Dictionary of data describing the package.
+    :raise: RuntimeError if the script doesn't appear to be a setup script.
+            Any exception raised in the setup.py script.
+    """
+    save_env = os.environ.copy()
+    save_cwd = os.getcwd()
+
+    try:
+        if env is not None:
+            os.environ.update(env)
+        os.chdir(str(setup_py.parent))
+        dist = distutils.core.run_setup(
+            'setup.py', ('--dry-run',), stop_after='config')
+    finally:
+        if env is not None:
+            os.environ.clear()
+            os.environ.update(save_env)
+        os.chdir(save_cwd)
+    return _distribution_to_dict(dist)
+
+
+def _distribution_to_dict(distribution_object) -> dict:
+    """Turn a distribution into a dict, discarding unpicklable attributes."""
+    return {
+        attr: value for attr, value in distribution_object.__dict__.items()
+        if (
+            # These *seem* useful but always have the value 0.
+            # Look for their values in the 'metadata' object instead.
+            attr not in distribution_object.display_option_names
+            # Getter methods
+            and not callable(value)
+            # Private properties
+            and not attr.startswith('_')
+            # Objects that are generally not picklable
+            and attr not in ('cmdclass', 'distclass', 'ext_modules')
+        )}
 
 
 def create_dependency_descriptor(requirement_string):
