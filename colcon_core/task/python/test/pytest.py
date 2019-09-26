@@ -156,7 +156,8 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
 </testsuite>
 """.format_map(locals()))  # noqa: E501
 
-        rc = await check_call(context, cmd, cwd=context.args.path, env=env)
+        completed = await check_call(
+            context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest
         try:
@@ -166,7 +167,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             # support pytest < 5.0
             from _pytest.main import EXIT_TESTSFAILED
             EXIT_CODE_TESTS_FAILED = EXIT_TESTSFAILED  # noqa: N806
-        if rc and rc.returncode == EXIT_CODE_TESTS_FAILED:
+        if completed.returncode == EXIT_CODE_TESTS_FAILED:
             context.put_event_into_queue(
                 TestFailure(context.pkg.name))
 
@@ -177,7 +178,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             # support pytest < 5.0
             from _pytest.main import EXIT_NOTESTSCOLLECTED
             EXIT_CODE_NO_TESTS = EXIT_NOTESTSCOLLECTED  # noqa: N806
-        if rc and rc.returncode not in (
+        if completed.returncode not in (
             EXIT_CODE_NO_TESTS, EXIT_CODE_TESTS_FAILED
         ):
-            return rc.returncode
+            return completed.returncode
