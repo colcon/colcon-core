@@ -1,11 +1,15 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 import os
 from pathlib import Path
 from pathlib import PurePosixPath
 import sys
+import traceback
+import types
 
+from colcon_core.event.output import StderrLine
+from colcon_core.event.output import StdoutLine
 from colcon_core.event.test import TestFailure
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
@@ -151,7 +155,47 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
 </testsuite>
 """.format_map(locals()))  # noqa: E501
 
-        rc = await check_call(context, cmd, cwd=context.args.path, env=env)
+        # redirect the warnings summary to stderr to make it visible by default
+        def redirect_warnings_summary_to_stderr(put_event_into_queue):
+            within_warnings_summary = False
+
+            def put_event_into_queue_(self, event):
+                nonlocal put_event_into_queue
+                nonlocal within_warnings_summary
+                if isinstance(event, StdoutLine):
+                    try:
+                        str_line = str(event.line, errors='replace')
+                        if '=== warnings summary ===' in str_line:
+                            within_warnings_summary = True
+                        if within_warnings_summary:
+                            event = StderrLine(event.line)
+                            if (
+                                str_line.startswith('-- Docs: ') and
+                                '/warnings.html' in str_line
+                            ):
+                                within_warnings_summary = False
+                    except Exception as e:  # noqa: F841
+                        # otherwise the actual exception is not visible and
+                        # only 'error: [Errno 5] Input/output error' is shown
+                        exc = traceback.format_exc()
+                        logger.error(
+                            'Exception within '
+                            "'redirect_warnings_summary_to_stderr': {e}\n{exc}"
+                            .format_map(locals()))
+                        raise
+                return put_event_into_queue(event)
+
+            return put_event_into_queue_
+
+        # override 'put_event_into_queue' and restore after the call
+        put_event_into_queue = context.put_event_into_queue
+        context.put_event_into_queue = types.MethodType(
+                redirect_warnings_summary_to_stderr(
+                    context.put_event_into_queue), context)
+        try:
+            rc = await check_call(context, cmd, cwd=context.args.path, env=env)
+        finally:
+            context.put_event_into_queue = put_event_into_queue
 
         # use local import to avoid a dependency on pytest
         try:
