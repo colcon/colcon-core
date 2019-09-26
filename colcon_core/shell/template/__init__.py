@@ -38,6 +38,10 @@ def expand_template(template_path, destination_path, data):
         raise
     else:
         os.makedirs(str(destination_path.parent), exist_ok=True)
+        # if the destination_path is a symlink remove the symlink
+        # to avoid writing to the symlink destination
+        if destination_path.is_symlink():
+            destination_path.unlink()
         with destination_path.open('w') as h:
             h.write(output)
     finally:
