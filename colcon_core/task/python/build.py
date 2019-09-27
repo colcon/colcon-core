@@ -73,9 +73,10 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--single-version-externally-managed',
             ]
             self._append_install_layout(args, cmd)
-            rc = await check_call(self.context, cmd, cwd=args.path, env=env)
-            if rc and rc.returncode:
-                return rc.returncode
+            completed_process = await check_call(self.context, cmd,
+                cwd=args.path, env=env)
+            if completed_process.returncode:
+                return completed_process.returncode
 
         else:
             self._undo_install(pkg, args, setup_py_data, python_lib)
@@ -83,6 +84,28 @@ class PythonBuildTask(TaskExtensionPoint):
 
             # invoke `setup.py develop` step in build space
             # to avoid placing any files in the source space
+
+            for filename in os.listdir(args.build_base):
+                path = os.path.join(args.build_base, filename)
+                try:
+                    os.unlink(path)
+                except IsADirectoryError:
+                    shutil.rmtree(path)
+                except FileNotFoundError:
+                    pass
+
+            for path in os.listdir(args.path):
+                src = os.path.join(args.path, path)
+                dst = os.path.join(args.build_base, path)
+
+                try:
+                    os.remove(dst)
+                except IsADirectoryError:
+                    shutil.rmtree(dst)
+                except FileNotFoundError:
+                    pass
+
+                os.symlink(src, dst, os.path.isdir(src))
 
             # --editable causes this to skip creating/editing the
             # easy-install.pth file
@@ -101,13 +124,28 @@ class PythonBuildTask(TaskExtensionPoint):
             if rc and rc.returncode:
                 return rc.returncode
 
-            # explicitly add the build directory to the PYTHONPATH
-            # to maintain the desired order
-            if additional_hooks is None:
-                additional_hooks = []
-            additional_hooks += create_environment_hook(
-                'pythonpath_develop', Path(args.build_base), pkg.name,
-                'PYTHONPATH', args.build_base, mode='prepend')
+            Path(args.build_base,
+                pkg.name.replace('-', '_') + '.egg-info').rename(
+                Path(args.build_base, 'EGG-INFO'))
+
+            meta = Path(args.build_base, 'EGG-INFO').read_text()
+
+            mkli
+            egg_link = os.path.join(
+                python_lib, pkg.name + '.egg-link')
+            assert Path(egg_link).exists()
+
+            link_target = Path(Path(egg_link).read_text().splitlines()[0])
+
+            link_source = Path(python_lib, pkg.name + '.egg')
+            try:
+                link_source.unlink()
+            except IsADirectoryError:
+                link_source.rmdir()
+            except FileNotFoundError:
+                pass
+
+            link_source.symlink_to(link_target, target_is_directory=True)
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
@@ -174,57 +212,6 @@ class PythonBuildTask(TaskExtensionPoint):
             except OSError:
                 pass
         os.remove(install_log)
-
-    def _symlinks_in_build(self, args, setup_py_data):
-        items = ['setup.py']
-        # add setup.cfg if available
-        if os.path.exists(os.path.join(args.path, 'setup.cfg')):
-            items.append('setup.cfg')
-        # add all first level packages
-        package_dir = setup_py_data.get('package_dir') or {}
-        for package in setup_py_data.get('packages') or []:
-            if '.' in package:
-                continue
-            if package in package_dir:
-                items.append(package_dir[package])
-            elif '' in package_dir:
-                items.append(os.path.join(package_dir[''], package))
-            else:
-                items.append(package)
-        # relative python-ish paths are allowed as entries in py_modules, see:
-        # https://docs.python.org/3.5/distutils/setupscript.html#listing-individual-modules
-        py_modules = setup_py_data.get('py_modules') or []
-        if py_modules:
-            py_modules_list = [
-                p.replace('.', os.path.sep) + '.py' for p in py_modules]
-            for py_module in py_modules_list:
-                if not os.path.exists(os.path.join(args.path, py_module)):
-                    raise RuntimeError(
-                        "Provided py_modules '{py_module}' does not exist"
-                        .format_map(locals()))
-            items += py_modules_list
-        data_files = get_data_files_mapping(
-            setup_py_data.get('data_files') or [])
-        for source in data_files.keys():
-            # work around data files incorrectly defined as not relative
-            if os.path.isabs(source):
-                source = os.path.relpath(source, args.path)
-            items.append(source)
-
-        # symlink files / directories from source space into build space
-        for item in items:
-            src = os.path.join(args.path, item)
-            dst = os.path.join(args.build_base, item)
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-            if os.path.islink(dst):
-                if not os.path.exists(dst) or not os.path.samefile(src, dst):
-                    os.unlink(dst)
-            elif os.path.isfile(dst):
-                os.remove(dst)
-            elif os.path.isdir(dst):
-                shutil.rmtree(dst)
-            if not os.path.exists(dst):
-                os.symlink(src, dst)
 
     def _get_python_lib(self, args):
         path = get_python_lib(prefix=args.install_base)
