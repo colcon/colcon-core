@@ -12,11 +12,9 @@ from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
-from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
 from colcon_core.task import check_call
 from colcon_core.task import TaskExtensionPoint
-from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
 
 logger = colcon_logger.getChild(__name__)
@@ -44,22 +42,17 @@ class PythonBuildTask(TaskExtensionPoint):
             return 1
         setup_py_data = get_setup_data(self.context.pkg, env)
 
+        shutil.rmtree(args.build_base)
         # `setup.py egg_info` requires the --egg-base to exist
         os.makedirs(args.build_base, exist_ok=True)
-        # `setup.py develop|install` requires the python lib path to exist
+        # `setup.py` requires the python lib path to exist
         python_lib = os.path.join(
             args.install_base, self._get_python_lib(args))
         os.makedirs(python_lib, exist_ok=True)
-        # and being in the  PYTHONPATH
-        env = dict(env)
-        env['PYTHONPATH'] = python_lib + os.pathsep + \
-            env.get('PYTHONPATH', '')
+
+        self._undo_install(pkg, args, setup_py_data, python_lib)
 
         if not args.symlink_install:
-            rc = await self._undo_develop(pkg, args, env)
-            if rc and rc.returncode:
-                return rc.returncode
-
             # invoke `setup.py install` step with lots of arguments
             # to avoid placing any files in the source space
             cmd = [
@@ -73,26 +66,14 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--single-version-externally-managed',
             ]
             self._append_install_layout(args, cmd)
-            completed_process = await check_call(self.context, cmd,
-                cwd=args.path, env=env)
+            completed_process = await check_call(
+                self.context, cmd, cwd=args.path, env=env)
             if completed_process.returncode:
                 return completed_process.returncode
 
         else:
-            self._undo_install(pkg, args, setup_py_data, python_lib)
-            self._symlinks_in_build(args, setup_py_data)
-
-            # invoke `setup.py develop` step in build space
+            # invoke `setup.py` step in build space
             # to avoid placing any files in the source space
-
-            for filename in os.listdir(args.build_base):
-                path = os.path.join(args.build_base, filename)
-                try:
-                    os.unlink(path)
-                except IsADirectoryError:
-                    shutil.rmtree(path)
-                except FileNotFoundError:
-                    pass
 
             for path in os.listdir(args.path):
                 src = os.path.join(args.path, path)
@@ -111,62 +92,43 @@ class PythonBuildTask(TaskExtensionPoint):
             # easy-install.pth file
             cmd = [
                 executable, 'setup.py',
-                'develop', '--prefix', args.install_base,
-                '--editable',
-                '--build-directory', os.path.join(args.build_base, 'build'),
-                '--no-deps',
+                'build_py', '--build-lib', '.',
+                # ^todo: does this present a problem with modules under
+                #  weird subdirectories?
+                'egg_info',
+                'build_ext', '--inplace'
             ]
             if setup_py_data.get('data_files'):
                 cmd += ['install_data', '--install-dir', args.install_base]
+
             self._append_install_layout(args, cmd)
             rc = await check_call(
                 self.context, cmd, cwd=args.build_base, env=env)
             if rc and rc.returncode:
                 return rc.returncode
 
-            Path(args.build_base,
-                pkg.name.replace('-', '_') + '.egg-info').rename(
-                Path(args.build_base, 'EGG-INFO'))
+            install_log = []
+            # Install the built files via symlink.
+            # todo: I think we're copying too many things.
+            #       How does `setup.py install` choose what to copy?
+            for path in os.listdir(args.build_base):
+                dst = os.path.join(python_lib, path)
+                src = Path(args.build_base, path).resolve()
 
-            meta = Path(args.build_base, 'EGG-INFO').read_text()
-
-            mkli
-            egg_link = os.path.join(
-                python_lib, pkg.name + '.egg-link')
-            assert Path(egg_link).exists()
-
-            link_target = Path(Path(egg_link).read_text().splitlines()[0])
-
-            link_source = Path(python_lib, pkg.name + '.egg')
-            try:
-                link_source.unlink()
-            except IsADirectoryError:
-                link_source.rmdir()
-            except FileNotFoundError:
-                pass
-
-            link_source.symlink_to(link_target, target_is_directory=True)
+                install_log.append(dst)
+                if str(src).startswith(args.build_base):
+                    try:
+                        shutil.copy(src, dst)
+                    except IsADirectoryError:
+                        shutil.copytree(src, dst)
+                else:
+                    os.symlink(src, dst, os.path.isdir(src))
+            Path(args.build_base, 'install.log').write_text(
+                '\n'.join(install_log))
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
             pkg, args, default_hooks=hooks, additional_hooks=additional_hooks)
-
-    async def _undo_develop(self, pkg, args, env):
-        # undo previous develop if .egg-info is found and develop symlinks
-        egg_info = os.path.join(
-            args.build_base, '%s.egg-info' % pkg.name.replace('-', '_'))
-        setup_py_build_space = os.path.join(args.build_base, 'setup.py')
-        if os.path.exists(egg_info) and os.path.islink(setup_py_build_space):
-            cmd = [
-                executable, 'setup.py',
-                'develop', '--prefix', args.install_base,
-                '--uninstall', '--editable',
-                '--build-directory', os.path.join(args.build_base, 'build')
-            ]
-            rc = await check_call(
-                self.context, cmd, cwd=args.build_base, env=env)
-            if rc:
-                return rc
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
         # undo previous install if install.log is found
