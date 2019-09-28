@@ -1,9 +1,10 @@
 # Copyright 2016-2019 Dirk Thomas
-# Copyright 2019 Rover Robotics
+# Copyright 2019 Rover Robotics via Dan Rose
 # Licensed under the Apache License, Version 2.0
 
 import multiprocessing
 import os
+from traceback import format_exc
 from typing import Optional
 import warnings
 
@@ -12,8 +13,11 @@ from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.run_setup_py import run_setup_py
 from distlib.util import parse_requirement
 from distlib.version import NormalizedVersion
+
+_process_pool = multiprocessing.Pool()
 
 
 class PythonPackageIdentification(PackageIdentificationExtensionPoint):
@@ -104,65 +108,20 @@ def get_setup_result(setup_py, *, env: Optional[dict]):
     if env is not None:
         env_copy.update(env)
 
-    conn_recv, conn_send = multiprocessing.Pipe(duplex=False)
-    with conn_send:
-        p = multiprocessing.Process(
-            target=_get_setup_result_target,
-            args=(os.path.abspath(str(setup_py)), env_copy, conn_send),
-        )
-        p.start()
-        p.join()
-    with conn_recv:
-        result_or_exception_string = conn_recv.recv()
-
-    if isinstance(result_or_exception_string, dict):
-        return result_or_exception_string
-    raise RuntimeError(
-        'Failure when trying to run setup script {}:\n{}'
-        .format(setup_py, result_or_exception_string))
-
-
-def _get_setup_result_target(setup_py: str, env: dict, conn_send):
-    """
-    Run setup.py in a modified environment.
-
-    Helper function for get_setup_metadata. The resulting dict or error
-    will be sent via conn_send instead of returned or thrown.
-
-    :param setup_py: Absolute path to a setup.py script
-    :param env: Environment variables to set before running setup.py
-    :param conn_send: Connection to send the result as either a dict or an
-        error string
-    """
-    import distutils.core
-    import traceback
     try:
-        # need to be in setup.py's parent dir to detect any setup.cfg
-        os.chdir(os.path.dirname(setup_py))
-
-        os.environ.clear()
-        os.environ.update(env)
-
-        result = distutils.core.run_setup(
-            str(setup_py), ('--dry-run',), stop_after='config')
-
-        # could just return all attrs in result.__dict__, but we take this
-        # opportunity to filter a few things that don't need to be there
-        conn_send.send({
-            attr: value for attr, value in result.__dict__.items()
-            if (
-                # These *seem* useful but always have the value 0.
-                # Look for their values in the 'metadata' object instead.
-                attr not in result.display_option_names
-                # Getter methods
-                and not callable(value)
-                # Private properties
-                and not attr.startswith('_')
-                # Objects that are generally not picklable
-                and attr not in ('cmdclass', 'distclass', 'ext_modules')
-            )})
-    except BaseException:
-        conn_send.send(traceback.format_exc())
+        return _process_pool.apply(
+            run_setup_py,
+            kwds={
+                'cwd': os.path.abspath(str(setup_py.parent)),
+                'env': env_copy,
+                'script_args': ('--dry-run',),
+                'stop_after': 'config'
+            }
+        )
+    except Exception as e:
+        raise RuntimeError(
+            'Failure when trying to run setup script {}: {}'
+            .format(setup_py, format_exc())) from e
 
 
 def create_dependency_descriptor(requirement_string):
