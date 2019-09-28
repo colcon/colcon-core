@@ -76,7 +76,8 @@ HOME_ENVIRONMENT_VARIABLE = EnvironmentVariable(
 """Environment variable to set the log directory"""
 LOG_PATH_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_LOG_PATH',
-    'Set the log directory (default: $COLCON_HOME/log)')
+    'Set the log directory (default: $COLCON_HOME/log, to disable: '
+    '{os.devnull})'.format_map(locals()))
 
 
 def main(*, command_name='colcon', argv=None):
@@ -154,22 +155,24 @@ def main(*, command_name='colcon', argv=None):
         env_var='{command_name}_LOG_PATH'.format_map(locals()).upper(),
         subdirectory='{args.verb_name}_{now_str}'.format_map(locals()))
 
-    # add a file handler writing all levels
-    create_log_path(args.verb_name)
-    handler = add_file_handler(
-        colcon_logger, get_log_path() / 'logger_all.log')
-    # write previous log messages to the file handler
-    log_record = colcon_logger.makeRecord(
-        colcon_logger.name, logging.DEBUG, __file__, 0,
-        'Command line arguments: {argv}'
-        .format(argv=argv if argv is not None else sys.argv),
-        None, None)
-    handler.handle(log_record)
-    log_record = colcon_logger.makeRecord(
-        colcon_logger.name, logging.DEBUG, __file__, 0,
-        'Parsed command line arguments: {args}'.format_map(locals()),
-        None, None)
-    handler.handle(log_record)
+    # add a file handler writing all levels if logging isn't disabled
+    log_path = get_log_path()
+    if log_path is not None:
+        create_log_path(args.verb_name)
+        handler = add_file_handler(
+            colcon_logger, log_path / 'logger_all.log')
+        # write previous log messages to the file handler
+        log_record = colcon_logger.makeRecord(
+            colcon_logger.name, logging.DEBUG, __file__, 0,
+            'Command line arguments: {argv}'
+            .format(argv=argv if argv is not None else sys.argv),
+            None, None)
+        handler.handle(log_record)
+        log_record = colcon_logger.makeRecord(
+            colcon_logger.name, logging.DEBUG, __file__, 0,
+            'Parsed command line arguments: {args}'.format_map(locals()),
+            None, None)
+        handler.handle(log_record)
 
     # invoke verb
     return verb_main(context, colcon_logger)
@@ -262,7 +265,8 @@ def add_log_level_argument(parser):
     parser.add_argument(
         '--log-base',
         default='log',
-        help='The base path for all log directories (default: log)')
+        help='The base path for all log directories (default: log, to '
+             'disable: {os.devnull})'.format_map(globals()))
     parser.add_argument(
         '--log-level', action=LogLevelAction,
         help='Set log level for the console output, either by numeric or '

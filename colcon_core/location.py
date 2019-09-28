@@ -61,13 +61,15 @@ def get_log_path():
 
     :function:`set_default_log_path` must have been called before.
 
-    :returns: The base path for logging
-    :rtype: Path
+    :returns: The base path for logging or None if logging is disabled
+    :rtype: Path or None
     """
     global _log_base_path_env_var
     path = None
     if _log_base_path_env_var is not None:
         path = os.environ.get(_log_base_path_env_var)
+        if path == os.devnull:
+            return None
         if path:
             path = Path(str(path))
     global _log_base_path
