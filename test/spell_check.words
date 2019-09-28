@@ -17,6 +17,7 @@ descs
 getpid
 importlib
 iterdir
+localhost
 lstrip
 mkdtemp
 monkeypatch
