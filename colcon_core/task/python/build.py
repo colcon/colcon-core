@@ -1,6 +1,5 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
-
 from distutils.sysconfig import get_python_lib
 import os
 from pathlib import Path
@@ -11,6 +10,7 @@ from sys import executable
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
+from colcon_core.package_identification.python import get_setup_result
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import get_command_environment
 from colcon_core.task import check_call
@@ -42,7 +42,11 @@ class PythonBuildTask(TaskExtensionPoint):
             return 1
         setup_py_data = get_setup_data(self.context.pkg, env)
 
-        shutil.rmtree(args.build_base)
+        try:
+            shutil.rmtree(args.build_base)
+        except FileNotFoundError:
+            pass
+
         # `setup.py egg_info` requires the --egg-base to exist
         os.makedirs(args.build_base, exist_ok=True)
         # `setup.py` requires the python lib path to exist
@@ -75,56 +79,55 @@ class PythonBuildTask(TaskExtensionPoint):
             # invoke `setup.py` step in build space
             # to avoid placing any files in the source space
 
-            for path in os.listdir(args.path):
-                src = os.path.join(args.path, path)
-                dst = os.path.join(args.build_base, path)
+            # symlink *everything* from source space to build space
+            for src_path in Path(args.path).iterdir():
+                dst_path = Path(args.build_base, src_path.name)
+                _clear_path(dst_path)
+                dst_path.symlink_to(
+                    src_path, target_is_directory=src_path.is_dir())
 
-                try:
-                    os.remove(dst)
-                except IsADirectoryError:
-                    shutil.rmtree(dst)
-                except FileNotFoundError:
-                    pass
-
-                os.symlink(src, dst, os.path.isdir(src))
-
-            # --editable causes this to skip creating/editing the
-            # easy-install.pth file
             cmd = [
                 executable, 'setup.py',
                 'build_py', '--build-lib', '.',
-                # ^todo: does this present a problem with modules under
-                #  weird subdirectories?
                 'egg_info',
                 'build_ext', '--inplace'
             ]
             if setup_py_data.get('data_files'):
                 cmd += ['install_data', '--install-dir', args.install_base]
 
-            self._append_install_layout(args, cmd)
+            # todo: We just ran setup.py. get_setup_result runs it again.
+            #       We should use distutils.core.run_setup to get access to the
+            #       distribution object
+            setup_result = get_setup_result(
+                Path(args.build_base, 'setup.py'), env=None)
+            package_dir = Path(setup_result['package_dir'] or args.build_base)
+
             rc = await check_call(
                 self.context, cmd, cwd=args.build_base, env=env)
             if rc and rc.returncode:
                 return rc.returncode
 
             install_log = []
-            # Install the built files via symlink.
-            # todo: I think we're copying too many things.
-            #       How does `setup.py install` choose what to copy?
-            for path in os.listdir(args.build_base):
-                dst = os.path.join(python_lib, path)
-                src = Path(args.build_base, path).resolve()
 
-                install_log.append(dst)
-                if str(src).startswith(args.build_base):
-                    try:
-                        shutil.copy(src, dst)
-                    except IsADirectoryError:
-                        shutil.copytree(src, dst)
-                else:
-                    os.symlink(src, dst, os.path.isdir(src))
-            Path(args.build_base, 'install.log').write_text(
-                '\n'.join(install_log))
+            # symlink *just Python modules* from build space to install space
+            try:
+                for src_path in _iter_modules(package_dir):
+                    # Every package will have a top-level setup.py
+                    # No need to install it.
+                    if src_path == package_dir / 'setup.py':
+                        continue
+                    rel_path = src_path.relative_to(package_dir)
+                    dst_path = Path(python_lib, rel_path)
+                    if dst_path.exists():
+                        logger.warning('Overwriting existing file at '
+                                       + dst_path)
+                        _clear_path(dst_path)
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    dst_path.symlink_to(src_path.resolve())
+                    install_log.append(str(dst_path))
+            finally:
+                Path(args.build_base, 'install.log') \
+                    .write_text('\n'.join(install_log))
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
@@ -182,3 +185,26 @@ class PythonBuildTask(TaskExtensionPoint):
     def _append_install_layout(self, args, cmd):
         if 'dist-packages' in self._get_python_lib(args):
             cmd += ['--install-layout', 'deb']
+
+
+def _clear_path(path):
+    """Remove any file or directory at the given path."""
+    try:
+        os.unlink(str(path))
+    except IsADirectoryError:
+        shutil.rmtree(str(path))
+    except FileNotFoundError:
+        pass
+
+
+def _iter_modules(base_path: Path):
+    """Find all top-level modules (*/__init__.py or *.py) below base_path."""
+    if (base_path / '__init__.py').resolve().is_file():
+        yield base_path
+        return
+
+    for child in base_path.iterdir():
+        if child.resolve().is_file() and child.suffix in ('.py', '.pyc'):
+            yield child
+        if child.resolve().is_dir():
+            yield from _iter_modules(child)
