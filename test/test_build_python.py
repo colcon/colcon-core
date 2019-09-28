@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import asyncio
+from distutils.sysconfig import get_python_lib
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -14,6 +15,7 @@ from colcon_core.subprocess import new_event_loop
 from colcon_core.task import TaskContext
 from colcon_core.task.python.build import PythonBuildTask
 import pytest
+import importlib
 
 
 @pytest.fixture(autouse=True)
@@ -45,8 +47,8 @@ def monkey_patch_put_event_into_queue(monkeypatch):
     )
 
 
-@pytest.fixture
-def python_build_task(tmp_path):
+@pytest.fixture(params=('symlink', 'copy'))
+def python_build_task(tmp_path, request):
     task = PythonBuildTask()
     package = PackageDescriptor(tmp_path / 'src')
     package.name = 'test_package'
@@ -58,7 +60,7 @@ def python_build_task(tmp_path):
             path=str(tmp_path / 'src'),
             build_base=str(tmp_path / 'build'),
             install_base=str(tmp_path / 'install'),
-            symlink_install=False,
+            symlink_install=(request.param == 'symlink'),
         ),
         dependencies={}
     )
@@ -74,7 +76,9 @@ def event_loop():
     loop.close()
 
 
-def test_build_package(python_build_task: PythonBuildTask, event_loop):
+def test_build_package(
+    python_build_task: PythonBuildTask, event_loop, monkeypatch
+):
     pkg = python_build_task.context.pkg
 
     pkg.path.mkdir()
@@ -96,10 +100,11 @@ def test_build_package(python_build_task: PythonBuildTask, event_loop):
     assert source_files_before == source_files_after
 
     build_base = Path(python_build_task.context.args.build_base)
-    assert 1 == len(list(build_base.rglob('my_module/__init__.py')))
+    assert 1 >= len(list(build_base.rglob('my_module/__init__.py')))
 
     install_base = Path(python_build_task.context.args.install_base)
-    assert 1 == len(list(install_base.rglob('my_module/__init__.py')))
 
-    pkg_info, = install_base.rglob('PKG-INFO')
-    assert 'Name: test-package' in pkg_info.read_text().splitlines()
+    assert importlib.util.find_spec('my_module') is None
+    importlib.invalidate_caches()
+    monkeypatch.syspath_prepend(get_python_lib(prefix=str(install_base)))
+    assert importlib.util.find_spec('my_module') is not None
