@@ -15,6 +15,7 @@ decos
 deps
 descs
 getpid
+importlib
 iterdir
 lstrip
 mkdtemp
@@ -45,6 +46,7 @@ stdeb
 subparsers
 symlink
 sysconfig
+syspath
 tempfile
 thomas
 todo
