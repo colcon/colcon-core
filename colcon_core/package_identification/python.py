@@ -1,31 +1,27 @@
 # Copyright 2016-2019 Dirk Thomas
+# Copyright 2019 Rover Robotics via Dan Rose
 # Licensed under the Apache License, Version 2.0
+
+import multiprocessing
+import os
+from traceback import format_exc
+from typing import Optional
+import warnings
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.run_setup_py import run_setup_py
 from distlib.util import parse_requirement
 from distlib.version import NormalizedVersion
-try:
-    from setuptools.config import read_configuration
-except ImportError as e:
-    from pkg_resources import get_distribution
-    from pkg_resources import parse_version
-    setuptools_version = get_distribution('setuptools').version
-    minimum_version = '30.3.0'
-    if parse_version(setuptools_version) < parse_version(minimum_version):
-        e.msg += ', ' \
-            "'setuptools' needs to be at least version {minimum_version}, if" \
-            ' a newer version is not available from the package manager use ' \
-            "'pip3 install -U setuptools' to update to the latest version" \
-            .format_map(locals())
-    raise
+
+_process_pool = multiprocessing.Pool()
 
 
 class PythonPackageIdentification(PackageIdentificationExtensionPoint):
-    """Identify Python packages with `setup.cfg` files."""
+    """Identify Python packages with `setup.py` and opt. `setup.cfg` files."""
 
     def __init__(self):  # noqa: D107
         super().__init__()
@@ -41,69 +37,91 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
         if not setup_py.is_file():
             return
 
-        setup_cfg = desc.path / 'setup.cfg'
-        if not setup_cfg.is_file():
-            return
+        # after this point, we are convinced this is a Python package,
+        # so we should fail with an Exception instead of silently
 
-        config = get_configuration(setup_cfg)
-        name = config.get('metadata', {}).get('name')
+        config = get_setup_result(setup_py, env=None)
+
+        name = config['metadata'].name
         if not name:
-            return
+            raise RuntimeError(
+                "The Python package in '{setup_py.parent}' has an invalid "
+                'package name'.format_map(locals()))
 
         desc.type = 'python'
         if desc.name is not None and desc.name != name:
-            msg = 'Package name already set to different value'
-            logger.error(msg)
-            raise RuntimeError(msg)
+            raise RuntimeError(
+                "The Python package in '{setup_py.parent}' has the name "
+                "'{name}' which is different from the already set package "
+                "name '{desc.name}'".format_map(locals()))
         desc.name = name
 
-        version = config.get('metadata', {}).get('version')
-        desc.metadata['version'] = version
+        desc.metadata['version'] = config['metadata'].version
 
-        options = config.get('options', {})
-        dependencies = extract_dependencies(options)
-        for k, v in dependencies.items():
-            desc.dependencies[k] |= v
+        for dependency_type, option_name in [
+            ('build', 'setup_requires'),
+            ('run', 'install_requires'),
+            ('test', 'tests_require')
+        ]:
+            desc.dependencies[dependency_type] = {
+                create_dependency_descriptor(d)
+                for d in config[option_name] or ()}
 
         def getter(env):
-            nonlocal options
-            return options
+            nonlocal setup_py
+            return get_setup_result(setup_py, env=env)
 
         desc.metadata['get_python_setup_options'] = getter
 
 
 def get_configuration(setup_cfg):
     """
-    Read the setup.cfg file.
+    Return the configuration values defined in the setup.cfg file.
+
+    The function exists for backward compatibility with older versions of
+    colcon-ros.
 
     :param setup_cfg: The path of the setup.cfg file
     :returns: The configuration data
     :rtype: dict
     """
-    return read_configuration(str(setup_cfg))
-
-
-def extract_dependencies(options):
-    """
-    Get the dependencies of the package.
-
-    :param options: The dictionary from the options section of the setup.cfg
-      file
-    :returns: The dependencies
-    :rtype: dict(string, set(DependencyDescriptor))
-    """
-    mapping = {
-        'setup_requires': 'build',
-        'install_requires': 'run',
-        'tests_require': 'test',
+    warnings.warn(
+        'colcon_core.package_identification.python.get_configuration() will '
+        'be removed in the future', DeprecationWarning, stacklevel=2)
+    config = get_setup_result(setup_cfg.parent / 'setup.py', env=None)
+    return {
+        'metadata': {'name': config['metadata'].name},
+        'options': config
     }
-    dependencies = {}
-    for option_name, dependency_type in mapping.items():
-        dependencies[dependency_type] = set()
-        for dep in options.get(option_name, []):
-            dependencies[dependency_type].add(
-                create_dependency_descriptor(dep))
-    return dependencies
+
+
+def get_setup_result(setup_py, *, env: Optional[dict]):
+    """
+    Spin up a subprocess to run setup.py, with the given environment.
+
+    :param setup_py: Path to a setup.py script
+    :param env: Environment variables to set before running setup.py
+    :return: Dictionary of data describing the package.
+    :raise: RuntimeError if the setup script encountered an error
+    """
+    env_copy = os.environ.copy()
+    if env is not None:
+        env_copy.update(env)
+
+    try:
+        return _process_pool.apply(
+            run_setup_py,
+            kwds={
+                'cwd': os.path.abspath(str(setup_py.parent)),
+                'env': env_copy,
+                'script_args': ('--dry-run',),
+                'stop_after': 'config'
+            }
+        )
+    except Exception as e:
+        raise RuntimeError(
+            'Failure when trying to run setup script {}: {}'
+            .format(setup_py, format_exc())) from e
 
 
 def create_dependency_descriptor(requirement_string):
