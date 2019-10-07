@@ -19,6 +19,7 @@ FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
 
 DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
+DSV_TYPE_SET = 'set'
 DSV_TYPE_SOURCE = 'source'
 
 
@@ -244,7 +245,14 @@ def process_dsv_file(
 
 def handle_dsv_types_except_source(type_, remainder, prefix):
     commands = []
-    if type_ in (
+    if type_ == DSV_TYPE_SET:
+        env_name, value = remainder.split(';', 1)
+        try_prefixed_value = os.path.join(prefix, value) if value else prefix
+        if os.path.exists(try_prefixed_value):
+            value = try_prefixed_value
+        commands.append(FORMAT_STR_SET_ENV_VAR.format_map(
+            {'name': env_name, 'value': value}))
+    elif type_ in (
         DSV_TYPE_PREPEND_NON_DUPLICATE,
         DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS
     ):
