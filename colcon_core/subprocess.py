@@ -9,8 +9,6 @@ to maintain the original order as closely as possible.
 """
 
 import asyncio
-from concurrent.futures import ALL_COMPLETED
-from concurrent.futures import CancelledError
 from functools import partial
 import os
 import platform
