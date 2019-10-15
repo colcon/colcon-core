@@ -172,16 +172,7 @@ async def _async_check_call(
                 process,
                 # pseudo terminals need to be closed explicitly
                 stdout if use_pty else None, stderr if use_pty else None))
-        try:
-            done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
-        except CancelledError:
-            # finish the communication with the subprocess
-            done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
-            raise
-        finally:
-            # read potential exceptions to avoid asyncio errors
-            for task in done:
-                _ = task.exception()  # noqa: F841
+        await asyncio.gather(*callbacks)
 
     return process.returncode, output[0], output[1]
 
