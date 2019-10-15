@@ -205,11 +205,11 @@ def process_dsv_file(
         else:
             # group remaining source lines by basename
             path_without_ext, ext = os.path.splitext(remainder)
+            if path_without_ext not in basenames:
+                basenames[path_without_ext] = set()
             assert ext.startswith('.')
             ext = ext[1:]
             if ext in (primary_extension, additional_extension):
-                if path_without_ext not in basenames:
-                    basenames[path_without_ext] = set()
                 basenames[path_without_ext].add(ext)
 
     # add the dsv extension to each basename if the file exists
