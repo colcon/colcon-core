@@ -47,10 +47,17 @@ def monkey_patch_put_event_into_queue(monkeypatch):
 
 
 @pytest.fixture
-def python_build_task():
+def event_loop():
+    loop = new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
+
+
+def test_build_package(event_loop):
     with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
         tmp_path = Path(tmp_path_str)
-        task = PythonBuildTask()
+        python_build_task = PythonBuildTask()
         package = PackageDescriptor(tmp_path / 'src')
         package.name = 'test_package'
         package.type = 'python'
@@ -65,44 +72,33 @@ def python_build_task():
             ),
             dependencies={}
         )
-        task.set_context(context=context)
-        yield task
+        python_build_task.set_context(context=context)
 
+        pkg = python_build_task.context.pkg
 
-@pytest.fixture
-def event_loop():
-    loop = new_event_loop()
-    asyncio.set_event_loop(loop)
-    yield loop
-    loop.close()
+        pkg.path.mkdir()
+        (pkg.path / 'setup.py').write_text(
+            'from setuptools import setup\n'
+            'setup(\n'
+            '    name="test_package",\n'
+            '    packages=["my_module"],\n'
+            ')\n'
+        )
+        (pkg.path / 'my_module').mkdir()
+        (pkg.path / 'my_module' / '__init__.py').touch()
 
+        src_base = Path(python_build_task.context.args.path)
 
-def test_build_package(python_build_task: PythonBuildTask, event_loop):
-    pkg = python_build_task.context.pkg
+        source_files_before = set(src_base.rglob('*'))
+        event_loop.run_until_complete(python_build_task.build())
+        source_files_after = set(src_base.rglob('*'))
+        assert source_files_before == source_files_after
 
-    pkg.path.mkdir()
-    (pkg.path / 'setup.py').write_text(
-        'from setuptools import setup\n'
-        'setup(\n'
-        '    name="test_package",\n'
-        '    packages=["my_module"],\n'
-        ')\n'
-    )
-    (pkg.path / 'my_module').mkdir()
-    (pkg.path / 'my_module' / '__init__.py').touch()
+        build_base = Path(python_build_task.context.args.build_base)
+        assert 1 == len(list(build_base.rglob('my_module/__init__.py')))
 
-    src_base = Path(python_build_task.context.args.path)
+        install_base = Path(python_build_task.context.args.install_base)
+        assert 1 == len(list(install_base.rglob('my_module/__init__.py')))
 
-    source_files_before = set(src_base.rglob('*'))
-    event_loop.run_until_complete(python_build_task.build())
-    source_files_after = set(src_base.rglob('*'))
-    assert source_files_before == source_files_after
-
-    build_base = Path(python_build_task.context.args.build_base)
-    assert 1 == len(list(build_base.rglob('my_module/__init__.py')))
-
-    install_base = Path(python_build_task.context.args.install_base)
-    assert 1 == len(list(install_base.rglob('my_module/__init__.py')))
-
-    pkg_info, = install_base.rglob('PKG-INFO')
-    assert 'Name: test-package' in pkg_info.read_text().splitlines()
+        pkg_info, = install_base.rglob('PKG-INFO')
+        assert 'Name: test-package' in pkg_info.read_text().splitlines()
