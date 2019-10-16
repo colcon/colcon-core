@@ -3,6 +3,7 @@
 
 import asyncio
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 from colcon_core.package_descriptor import PackageDescriptor
@@ -46,24 +47,26 @@ def monkey_patch_put_event_into_queue(monkeypatch):
 
 
 @pytest.fixture
-def python_build_task(tmp_path):
-    task = PythonBuildTask()
-    package = PackageDescriptor(tmp_path / 'src')
-    package.name = 'test_package'
-    package.type = 'python'
+def python_build_task():
+    with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
+        tmp_path = Path(tmp_path_str)
+        task = PythonBuildTask()
+        package = PackageDescriptor(tmp_path / 'src')
+        package.name = 'test_package'
+        package.type = 'python'
 
-    context = TaskContext(
-        pkg=package,
-        args=SimpleNamespace(
-            path=str(tmp_path / 'src'),
-            build_base=str(tmp_path / 'build'),
-            install_base=str(tmp_path / 'install'),
-            symlink_install=False,
-        ),
-        dependencies={}
-    )
-    task.set_context(context=context)
-    yield task
+        context = TaskContext(
+            pkg=package,
+            args=SimpleNamespace(
+                path=str(tmp_path / 'src'),
+                build_base=str(tmp_path / 'build'),
+                install_base=str(tmp_path / 'install'),
+                symlink_install=False,
+            ),
+            dependencies={}
+        )
+        task.set_context(context=context)
+        yield task
 
 
 @pytest.fixture
