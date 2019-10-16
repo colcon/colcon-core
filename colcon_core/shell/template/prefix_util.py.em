@@ -256,22 +256,25 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
         DSV_TYPE_PREPEND_NON_DUPLICATE,
         DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS
     ):
-        env_name, value = remainder.split(';', 1)
-        if not value:
-            value = prefix
-        elif not os.path.isabs(value):
-            value = os.path.join(prefix, value)
-        if (
-            type_ == DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS and
-            not os.path.exists(value)
-        ):
-            comment = 'skip extending {env_name} with not existing path: ' \
-                '{value}'.format_map(locals())
-            if _include_comments():
-                commands.append(
-                    FORMAT_STR_COMMENT_LINE.format_map({'comment': comment}))
-        else:
-            commands += _prepend_unique_value(env_name, value)
+        env_name_and_values = remainder.split(';')
+        env_name = env_name_and_values[0]
+        values = env_name_and_values[1:]
+        if 0 == len(values):
+            values.append(prefix)
+        for value in values:
+            if not os.path.isabs(value):
+                value = os.path.join(prefix, value)
+            if (
+                type_ == DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS and
+                not os.path.exists(value)
+            ):
+                comment = 'skip extending {env_name} with not existing path: ' \
+                    '{value}'.format_map(locals())
+                if _include_comments():
+                    commands.append(
+                        FORMAT_STR_COMMENT_LINE.format_map({'comment': comment}))
+            else:
+                commands += _prepend_unique_value(env_name, value)
     else:
         assert False, 'Unknown environment hook type: ' + type_
     return commands
