@@ -258,11 +258,11 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
     ):
         env_name_and_values = remainder.split(';')
         env_name = env_name_and_values[0]
-        values = list(filter(None, env_name_and_values[1:]))
-        if 0 == len(values):
-            values.append(prefix)
+        values = env_name_and_values[1:]
         for value in values:
-            if not os.path.isabs(value):
+            if not value:
+                value = prefix
+            elif not os.path.isabs(value):
                 value = os.path.join(prefix, value)
             if (
                 type_ == DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS and
