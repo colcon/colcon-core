@@ -258,7 +258,7 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
     ):
         env_name_and_values = remainder.split(';')
         env_name = env_name_and_values[0]
-        values = env_name_and_values[1:]
+        values = list(filter(None, env_name_and_values[1:]))
         if 0 == len(values):
             values.append(prefix)
         for value in values:
