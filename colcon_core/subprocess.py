@@ -170,7 +170,7 @@ async def _async_check_call(
                 process,
                 # pseudo terminals need to be closed explicitly
                 stdout if use_pty else None, stderr if use_pty else None))
-        await asyncio.gather(*callbacks)
+        await asyncio.gather(*callbacks, return_exceptions=True)
 
     return process.returncode, output[0], output[1]
 
