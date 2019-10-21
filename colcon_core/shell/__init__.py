@@ -7,6 +7,7 @@ import locale
 import os
 from pathlib import Path
 import re
+import sys
 import traceback
 import warnings
 
@@ -325,7 +326,13 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
                 "encoding '{encoding}': {line_replaced}".format_map(locals()))
             continue
         parts = line.split('=', 1)
-        if len(parts) == 2 and re.match('^[a-zA-Z0-9_%]+$', parts[0]):
+        if sys.platform != 'win32':
+            regex = '^[a-zA-Z_][a-zA-Z0-9_]*$'
+        else:
+            regex = '^[a-zA-Z0-9%_' + ''.join(
+                '\\' + c for c in r'(){}[]$*+-\/"#\',;.@!?'
+            ) + ']+$'
+        if len(parts) == 2 and re.match(regex, parts[0]):
             # add new environment variable
             env[parts[0]] = parts[1]
         else:
