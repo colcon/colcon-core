@@ -25,7 +25,12 @@ except ImportError as e:
 
 
 class PythonPackageIdentification(PackageIdentificationExtensionPoint):
-    """Identify Python packages with `setup.cfg` files."""
+    """
+    Identify Python packages with `setup.cfg` files.
+
+    Only packages which pass no arguments (or only a ``cmdclass``) to the
+    ``setup()`` function in their ``setup.py`` file are being considered.
+    """
 
     def __init__(self):  # noqa: D107
         super().__init__()
@@ -43,6 +48,14 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
 
         setup_cfg = desc.path / 'setup.cfg'
         if not setup_cfg.is_file():
+            return
+
+        if not is_reading_cfg_sufficient(setup_py):
+            logger.debug(
+                "Python package in '{desc.path}' passes arguments to the "
+                'setup() function which requires a different identification '
+                "extension than '{self.PACKAGE_IDENTIFICATION_NAME}'"
+                .format_map(locals()))
             return
 
         config = get_configuration(setup_cfg)
@@ -70,6 +83,26 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
             return options
 
         desc.metadata['get_python_setup_options'] = getter
+
+
+def is_reading_cfg_sufficient(setup_py):
+    """
+    Check the content of the setup.py file.
+
+    If the ``setup()`` function is called with no arguments or only a
+    ``cmdclass`` it is sufficient to only read the content of the ``setup.cfg``
+    file.
+
+    :param setup_py: The path of the setup.py file
+    :returns: The flag if reading the setup.cfg file is sufficient
+    :rtype: bool
+    """
+    setup_py_content = setup_py.read_text()
+    # the setup function must be called with no arguments
+    # or only a ``cmdclass``to be considered by this extension otherwise
+    # only reading the content of the setup.cfg file isn't sufficient
+    return 'setup()' in setup_py_content or \
+        'setup(cmdclass=cmdclass)' in setup_py_content
 
 
 def get_configuration(setup_cfg):
