@@ -90,10 +90,10 @@ def is_reading_cfg_sufficient(setup_py):
     Check the content of the setup.py file.
 
     If the ``setup()`` function is called with no arguments or only a
-    ``cmdclass`` is is sufficient to only read the content of the ``setup.cfg``
+    ``cmdclass`` it is sufficient to only read the content of the ``setup.cfg``
     file.
 
-    :param setup_cfg: The path of the setup.py file
+    :param setup_py: The path of the setup.py file
     :returns: The flag if reading the setup.cfg file is sufficient
     :rtype: bool
     """
