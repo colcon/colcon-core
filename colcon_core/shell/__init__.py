@@ -329,8 +329,8 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
         if sys.platform != 'win32':
             regex = '^[a-zA-Z_][a-zA-Z0-9_]*$'
         else:
-            regex = '^[a-zA-Z0-9%' + ''.join(
-                '\\' + c for c in r'_(){}[]$*+-\/"#\',;.@!?'
+            regex = '^[a-zA-Z0-9%_' + ''.join(
+                '\\' + c for c in r'(){}[]$*+-\/"#\',;.@!?'
             ) + ']+$'
         if len(parts) == 2 and re.match(regex, parts[0]):
             # add new environment variable
