@@ -27,7 +27,7 @@ def test_identify():
         assert desc.type is None
 
         basepath = Path(basepath)
-        (basepath / 'setup.py').write_text('')
+        (basepath / 'setup.py').write_text('setup()')
         assert extension.identify(desc) is None
         assert desc.name is None
         assert desc.type is None
