@@ -15,13 +15,13 @@ from colcon_core.logging import colcon_logger
 logger = colcon_logger.getChild(__name__)
 
 
-class EventReactor(Thread):
+class EventReactor:
     """Notify registered observers for events posted to the queue."""
 
     TIMER_INTERVAL = 0.1
 
     def __init__(self):  # noqa: D107
-        super().__init__()
+        self._thread = Thread(target=self._run)
         self._queue = Queue()
         self._observers = []
         self._last_timer_event = 0
@@ -38,7 +38,7 @@ class EventReactor(Thread):
         """
         self._observers.append(observer)
 
-    def run(self):
+    def _run(self):
         """
         Process events and notify all observers.
 
@@ -88,22 +88,35 @@ class EventReactor(Thread):
 
     def flush(self):
         """Wait until the queue is empty."""
-        while self.is_alive():
+        while self._thread.is_alive():
             if self._queue.empty():
                 return
             time.sleep(0.01)
 
-    def join(self, *args, **kwargs):
+    def start(self):
+        """Start the event reactor."""
+        self._thread.start()
+
+    def stop(self):
         """
-        Join the thread.
+        Stop this event reactor and block until done.
 
         An :class:`EventReactorShutdown` event is added to the queue to notify
-        all observers that the event reactor is about to shut down.
+        all observers that the event reactor is shutting down.
         """
-        logger.debug('joining thread')
         self._queue.put((EventReactorShutdown(), None))
-        super().join(*args, **kwargs)
+        logger.debug('joining thread')
+        self._thread.join()
         logger.debug('joined thread')
+
+    def __enter__(self):
+        """Start the event reactor. Returns self."""
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Stop the event reactor."""
+        self.stop()
 
 
 class EventReactorShutdown:

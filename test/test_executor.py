@@ -197,6 +197,8 @@ def test_execute_jobs():
             task_context=task_context)}
 
     event_reactor = Mock()
+    event_reactor.__enter__ = lambda self: self
+    event_reactor.__exit__ = lambda self, *args: None
     with patch(
         'colcon_core.executor.create_event_reactor', return_value=event_reactor
     ):
