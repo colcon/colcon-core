@@ -16,8 +16,12 @@ FORMAT_STR_SET_ENV_VAR = '@(shell_extension.FORMAT_STR_SET_ENV_VAR)'
 FORMAT_STR_USE_ENV_VAR = '@(shell_extension.FORMAT_STR_USE_ENV_VAR)'
 @{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
 FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
-@{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
-FORMAT_STR_CLEANUP_TRAILING_SEPARATORS = '@(shell_extension.FORMAT_STR_CLEANUP_TRAILING_SEPARATORS)'
+
+@[if hasattr(shell_extension, 'FORMAT_STR_REMOVE_TRAILING_SEPARATOR')]@
+FORMAT_STR_REMOVE_TRAILING_SEPARATOR = '@(shell_extension.FORMAT_STR_REMOVE_TRAILING_SEPARATOR)'
+@[else]@
+FORMAT_STR_REMOVE_TRAILING_SEPARATOR = None
+@[end if]@
 
 DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
@@ -44,19 +48,22 @@ def main(argv=sys.argv[1:]):  # noqa: D103
     packages = get_packages(Path(__file__).parent, args.merged_install)
 
     ordered_packages = order_packages(packages)
+    commands = []
     for pkg_name in ordered_packages:
         if _include_comments():
-            print(
-                FORMAT_STR_COMMENT_LINE.format_map(
-                    {'comment': 'Package: ' + pkg_name}))
+            commands += [FORMAT_STR_COMMENT_LINE.format_map(
+                {'comment': 'Package: ' + pkg_name})]
         prefix = os.path.abspath(os.path.dirname(__file__))
         if not args.merged_install:
             prefix = os.path.join(prefix, pkg_name)
-        for line in get_commands(
+        commands += get_commands(
             pkg_name, prefix, args.primary_extension,
-            args.additional_extension
-        ):
-            print(line)
+            args.additional_extension)
+
+    commands += _remove_trailing_separators()
+
+    for line in commands:
+        print(line)
 
 
 def get_packages(prefix_path, merged_install):
@@ -185,6 +192,7 @@ def get_commands(pkg_name, prefix, primary_extension, additional_extension):
     if os.path.exists(package_dsv_path):
         commands += process_dsv_file(
             package_dsv_path, prefix, primary_extension, additional_extension)
+
     return commands
 
 
@@ -243,8 +251,6 @@ def process_dsv_file(
                     'prefix': prefix,
                     'script_path': basename + '.' + additional_extension})]
 
-    commands += _cleanup_trailing_separators()
-
     return commands
 
 
@@ -290,8 +296,6 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
 
 
 env_state = {}
-# map the environment names and the first value prepended
-first_prepend = {}
 
 
 def _prepend_unique_value(name, value):
@@ -304,8 +308,6 @@ def _prepend_unique_value(name, value):
     extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map({'name': name})
     line = FORMAT_STR_SET_ENV_VAR.format_map(
         {'name': name, 'value': value + extend})
-    if not env_state[name]:
-        first_prepend[name] = value
     if value not in env_state[name]:
         env_state[name].add(value)
     else:
@@ -315,13 +317,17 @@ def _prepend_unique_value(name, value):
     return [line]
 
 
-# generate commands for clearing prepended underscores
-def _cleanup_trailing_separators():
-    global first_prepend
+# generate commands for removing prepended underscores
+def _remove_trailing_separators():
+    # do nothing if the shell extension does not implement the logic
+    if FORMAT_STR_REMOVE_TRAILING_SEPARATOR is None:
+        return []
+
+    global env_state
     commands = []
-    for name, value in first_prepend.items():
-        commands += [FORMAT_STR_CLEANUP_TRAILING_SEPARATORS.format_map(
-            {'name': name, 'value': value})]
+    for name in env_state:
+        commands += [FORMAT_STR_REMOVE_TRAILING_SEPARATOR.format_map(
+            {'name': name})]
     return commands
 
 
