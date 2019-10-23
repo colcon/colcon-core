@@ -98,6 +98,10 @@ class PackageDescriptor:
         :rtype: set[DependencyDescriptor]
         :raises AssertionError: if a package lists itself as a dependency
         """
+        # the following variable only exists for faster access within the loop
+        descriptors_by_name = defaultdict(set)
+        for d in descriptors:
+            descriptors_by_name[d.name].add(d)
         queue = self.get_dependencies(categories=direct_categories)
         dependencies = set()
         depth = 0
@@ -112,7 +116,7 @@ class PackageDescriptor:
                     continue
                 # ignore unknown dependencies
                 # explicitly allow multiple packages with the same name
-                descs = [desc for desc in descriptors if desc.name == dep]
+                descs = descriptors_by_name[dep]
                 if not descs:
                     continue
                 # recursing into the same function of the dependency descriptor
