@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import OrderedDict
-import copy
 
 from colcon_core.package_decorator import PackageDecorator
 
@@ -30,7 +29,7 @@ def topological_order_packages(
         d = _PackageDependencies(
             descriptor=descriptor,
             recursive_dependencies=rec_deps,
-            remaining_dependencies=copy.deepcopy(rec_deps),
+            remaining_dependencies={d.name for d in rec_deps},
         )
         queued.add(d)
 
