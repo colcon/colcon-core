@@ -93,7 +93,7 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--build-directory', os.path.join(args.build_base, 'build'),
                 '--no-deps',
             ]
-            if setup_py_data.get('data_files', []):
+            if setup_py_data.get('data_files'):
                 cmd += ['install_data', '--install-dir', args.install_base]
             self._append_install_layout(args, cmd)
             rc = await check_call(
@@ -138,7 +138,7 @@ class PythonBuildTask(TaskExtensionPoint):
         with open(install_log, 'r') as h:
             lines = [l.rstrip() for l in h.readlines()]
 
-        packages = setup_py_data.get('packages', [])
+        packages = setup_py_data.get('packages') or []
         for module_name in packages:
             if module_name in sys.modules:
                 logger.warning(
@@ -181,8 +181,8 @@ class PythonBuildTask(TaskExtensionPoint):
         if os.path.exists(os.path.join(args.path, 'setup.cfg')):
             items.append('setup.cfg')
         # add all first level packages
-        package_dir = setup_py_data.get('package_dir', {})
-        for package in setup_py_data.get('packages', []):
+        package_dir = setup_py_data.get('package_dir') or {}
+        for package in setup_py_data.get('packages') or []:
             if '.' in package:
                 continue
             if package in package_dir:
@@ -204,7 +204,7 @@ class PythonBuildTask(TaskExtensionPoint):
                         .format_map(locals()))
             items += py_modules_list
         data_files = get_data_files_mapping(
-            setup_py_data.get('data_files', []))
+            setup_py_data.get('data_files') or [])
         for source in data_files.keys():
             # work around data files incorrectly defined as not relative
             if os.path.isabs(source):
