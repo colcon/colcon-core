@@ -16,6 +16,8 @@ FORMAT_STR_SET_ENV_VAR = '@(shell_extension.FORMAT_STR_SET_ENV_VAR)'
 FORMAT_STR_USE_ENV_VAR = '@(shell_extension.FORMAT_STR_USE_ENV_VAR)'
 @{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
 FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
+@{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
+FORMAT_STR_CLEANUP_TRAILING_SEPARATORS = '@(shell_extension.FORMAT_STR_CLEANUP_TRAILING_SEPARATORS)'
 
 DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
@@ -241,6 +243,8 @@ def process_dsv_file(
                     'prefix': prefix,
                     'script_path': basename + '.' + additional_extension})]
 
+    commands += _cleanup_trailing_separators()
+
     return commands
 
 
@@ -286,6 +290,8 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
 
 
 env_state = {}
+# map the environment names and the first value prepended
+first_prepend = {}
 
 
 def _prepend_unique_value(name, value):
@@ -295,13 +301,11 @@ def _prepend_unique_value(name, value):
             env_state[name] = set()
         if os.environ.get(name):
             env_state[name] = set(os.environ[name].split(os.pathsep))
-    if not env_state[name]:
-        extend = ''
-    else:
-        extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map(
-            {'name': name})
+    extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map({'name': name})
     line = FORMAT_STR_SET_ENV_VAR.format_map(
         {'name': name, 'value': value + extend})
+    if not env_state[name]:
+        first_prepend[name] = value
     if value not in env_state[name]:
         env_state[name].add(value)
     else:
@@ -309,6 +313,16 @@ def _prepend_unique_value(name, value):
             return []
         line = FORMAT_STR_COMMENT_LINE.format_map({'comment': line})
     return [line]
+
+
+# generate commands for clearing prepended underscores
+def _cleanup_trailing_separators():
+    global first_prepend
+    commands = []
+    for name, value in first_prepend.items():
+        commands += [FORMAT_STR_CLEANUP_TRAILING_SEPARATORS.format_map(
+            {'name': name, 'value': value})]
+    return commands
 
 
 def _set(name, value):
