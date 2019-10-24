@@ -16,6 +16,7 @@ FORMAT_STR_SET_ENV_VAR = '@(shell_extension.FORMAT_STR_SET_ENV_VAR)'
 FORMAT_STR_USE_ENV_VAR = '@(shell_extension.FORMAT_STR_USE_ENV_VAR)'
 @{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
 FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
+FORMAT_STR_REMOVE_TRAILING_SEPARATOR = '@(shell_extension.FORMAT_STR_REMOVE_TRAILING_SEPARATOR)'
 
 DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
@@ -55,6 +56,9 @@ def main(argv=sys.argv[1:]):  # noqa: D103
             args.additional_extension
         ):
             print(line)
+
+    for line in _remove_trailing_separators():
+        print(line)
 
 
 def get_packages(prefix_path, merged_install):
@@ -295,11 +299,10 @@ def _prepend_unique_value(name, value):
             env_state[name] = set()
         if os.environ.get(name):
             env_state[name] = set(os.environ[name].split(os.pathsep))
-    if not env_state[name]:
-        extend = ''
-    else:
-        extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map(
-            {'name': name})
+    # prepend even if the variable has not been set yet, in case a shell script sets the
+    # same variable without the knowledge of this Python script.
+    # later _remove_trailing_separators() will cleanup any unintentional trailing separator
+    extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map({'name': name})
     line = FORMAT_STR_SET_ENV_VAR.format_map(
         {'name': name, 'value': value + extend})
     if value not in env_state[name]:
@@ -309,6 +312,23 @@ def _prepend_unique_value(name, value):
             return []
         line = FORMAT_STR_COMMENT_LINE.format_map({'comment': line})
     return [line]
+
+
+# generate commands for removing prepended underscores
+def _remove_trailing_separators():
+    # do nothing if the shell extension does not implement the logic
+    if FORMAT_STR_REMOVE_TRAILING_SEPARATOR is None:
+        return []
+
+    global env_state
+    commands = []
+    for name in env_state:
+        # skip variables that already had values before this script started prepending
+        if name in os.environ:
+            continue
+        commands += [FORMAT_STR_REMOVE_TRAILING_SEPARATOR.format_map(
+            {'name': name})]
+    return commands
 
 
 def _set(name, value):

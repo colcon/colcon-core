@@ -26,6 +26,8 @@ class BatShell(ShellExtensionPoint):
     FORMAT_STR_USE_ENV_VAR = '%{name}%'
     FORMAT_STR_INVOKE_SCRIPT = 'call:_colcon_prefix_bat_call_script ' \
         '"{script_path}"'
+    FORMAT_STR_REMOVE_TRAILING_SEPARATOR = 'if "%{name}:~-1%==";" ' \
+        'set {name}=%{name}:~0,-1%'
 
     def __init__(self):  # noqa: D107
         super().__init__()
