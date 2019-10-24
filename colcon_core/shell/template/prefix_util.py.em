@@ -299,6 +299,9 @@ def _prepend_unique_value(name, value):
             env_state[name] = set()
         if os.environ.get(name):
             env_state[name] = set(os.environ[name].split(os.pathsep))
+    # prepend even if the variable has not been set yet, in case a shell script sets the
+    # same variable without the knowledge of this Python script.
+    # later _remove_trailing_separators() will cleanup any unintentional trailing separator
     extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map({'name': name})
     line = FORMAT_STR_SET_ENV_VAR.format_map(
         {'name': name, 'value': value + extend})
