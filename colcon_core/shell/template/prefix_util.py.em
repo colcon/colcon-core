@@ -323,6 +323,9 @@ def _remove_trailing_separators():
     global env_state
     commands = []
     for name in env_state:
+        # skip variables that already had values before this script started prepending
+        if name in os.environ:
+            continue
         commands += [FORMAT_STR_REMOVE_TRAILING_SEPARATOR.format_map(
             {'name': name})]
     return commands
