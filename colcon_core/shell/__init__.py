@@ -88,6 +88,13 @@ class ShellExtensionPoint:
     This attribute must be defined in a subclass.
     """
     FORMAT_STR_INVOKE_SCRIPT = None
+    """
+    The format string to remove a trailing separator from an environment variable.
+
+    It must have the placeholder {name} for the environment variable name.
+    This attribute is optionally defined in subclasses.
+    """
+    FORMAT_STR_REMOVE_TRAILING_SEPARATOR = None
 
     def get_file_extensions(self):
         """
