@@ -89,7 +89,11 @@ class ShellExtensionPoint:
     """
     FORMAT_STR_INVOKE_SCRIPT = None
     """
-    The format string to remove a trailing separator from an environment variable.
+    The format string to remove a trailing separator.
+
+    When prepending to an environment variable, a trailing separator will be
+    left behind if the variable was not set previously.
+    This command is used to cleanup the trailing separarator.
 
     It must have the placeholder {name} for the environment variable name.
     This attribute is optionally defined in subclasses.
