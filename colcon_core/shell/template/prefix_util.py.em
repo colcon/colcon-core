@@ -16,12 +16,7 @@ FORMAT_STR_SET_ENV_VAR = '@(shell_extension.FORMAT_STR_SET_ENV_VAR)'
 FORMAT_STR_USE_ENV_VAR = '@(shell_extension.FORMAT_STR_USE_ENV_VAR)'
 @{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
 FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
-
-@[if hasattr(shell_extension, 'FORMAT_STR_REMOVE_TRAILING_SEPARATOR')]@
 FORMAT_STR_REMOVE_TRAILING_SEPARATOR = '@(shell_extension.FORMAT_STR_REMOVE_TRAILING_SEPARATOR)'
-@[else]@
-FORMAT_STR_REMOVE_TRAILING_SEPARATOR = None
-@[end if]@
 
 DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
