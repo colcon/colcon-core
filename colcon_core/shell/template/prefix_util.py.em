@@ -43,21 +43,21 @@ def main(argv=sys.argv[1:]):  # noqa: D103
     packages = get_packages(Path(__file__).parent, args.merged_install)
 
     ordered_packages = order_packages(packages)
-    commands = []
     for pkg_name in ordered_packages:
         if _include_comments():
-            commands += [FORMAT_STR_COMMENT_LINE.format_map(
-                {'comment': 'Package: ' + pkg_name})]
+            print(
+                FORMAT_STR_COMMENT_LINE.format_map(
+                    {'comment': 'Package: ' + pkg_name}))
         prefix = os.path.abspath(os.path.dirname(__file__))
         if not args.merged_install:
             prefix = os.path.join(prefix, pkg_name)
-        commands += get_commands(
+        for line in get_commands(
             pkg_name, prefix, args.primary_extension,
-            args.additional_extension)
+            args.additional_extension
+        ):
+            print(line)
 
-    commands += _remove_trailing_separators()
-
-    for line in commands:
+    for line in _remove_trailing_separators():
         print(line)
 
 
