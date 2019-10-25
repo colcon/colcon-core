@@ -119,17 +119,28 @@ def identify(
     return None
 
 
+# the following variable only exists to avoid repeatedly copying descriptors
+_reused_descriptor_instance = None
+
+
 def _identify(extensions_same_prio, desc):
+    global _reused_descriptor_instance
     logger.log(
         1, '_identify(%s) by extensions %s',
         desc.path, sorted(extensions_same_prio.keys()))
     # collect the optionally modified descriptors from all extensions
     results = {desc}
     for key, extension in extensions_same_prio.items():
-        desc2 = copy.deepcopy(desc)
+        # create copy of the descriptor if the reusable instance is different
+        if (
+            _reused_descriptor_instance is None or
+            not _are_descriptors_equal(desc, _reused_descriptor_instance)
+        ):
+            _reused_descriptor_instance = copy.deepcopy(desc)
+
         logger.log(1, "_identify(%s) by extension '%s'", desc.path, key)
         try:
-            retval = extension.identify(desc2)
+            retval = extension.identify(_reused_descriptor_instance)
             assert retval is None, 'identify() should return None'
         except IgnoreLocationException:
             logger.log(1, '_identify(%s) ignored', desc.path)
@@ -144,7 +155,12 @@ def _identify(extensions_same_prio, desc):
             # skip failing extension, continue with next one
             continue
 
-        results.add(desc2)
+        # only add the descriptor if it is different from the existing result
+        # if it is equal it can be attempted to reuse the instance instead
+        if not _are_descriptors_equal(desc, _reused_descriptor_instance):
+            results.add(_reused_descriptor_instance)
+            # a new copy of the descriptor needs to be created next cycle
+            _reused_descriptor_instance = None
 
     # multiple extensions populated the descriptor with different values
     if len(results) > 2:
@@ -164,3 +180,10 @@ def _identify(extensions_same_prio, desc):
         "Package '{desc.path}' with type '{desc.type}' and name '{desc.name}'"
         .format_map(locals()))
     return desc
+
+
+def _are_descriptors_equal(desc1, desc2):
+    for s in PackageDescriptor.__slots__:
+        if getattr(desc1, s) != getattr(desc2, s):
+            return False
+    return True
