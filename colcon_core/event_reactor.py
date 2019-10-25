@@ -110,7 +110,11 @@ class EventReactor:
         logger.debug('joined thread')
 
     def __enter__(self):
-        """Start the event reactor. Returns self."""
+        """
+        Start the event reactor.
+
+        :returns: self
+        """
         self.start()
         return self
 
