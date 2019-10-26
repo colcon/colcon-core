@@ -51,51 +51,51 @@ def test_create_event_reactor():
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
         event_reactor = create_event_reactor(context)
-    queue = event_reactor.get_queue()
-    assert isinstance(queue, Queue)
 
-    # use larger interval to prevent different timing to effect the results
-    event_reactor.TIMER_INTERVAL = 0.25
+    with event_reactor:
+        queue = event_reactor.get_queue()
+        assert isinstance(queue, Queue)
 
-    # add a few dummy events
-    with patch('colcon_core.event_reactor.logger.error') as error:
-        queue.put(('first', None))
+        # use larger interval to prevent different timing to effect the results
+        event_reactor.TIMER_INTERVAL = 0.25
 
-        event_reactor.start()
-        queue.put(('second', None))
-        queue.put(('third', None))
+        # add a few dummy events
+        with patch('colcon_core.event_reactor.logger.error') as error:
+            queue.put(('first', None))
+            queue.put(('second', None))
+            queue.put(('third', None))
 
-        # check the collected events so far
-        event_reactor.flush()
-    assert len(event_reactor._observers[0].events) == 4
-    assert len(event_reactor._observers[1].events) == 4
-    assert isinstance(event_reactor._observers[0].events[0][0], TimerEvent)
-    assert isinstance(event_reactor._observers[1].events[0][0], TimerEvent)
-    assert event_reactor._observers[0].events[1:] == \
-        [('first', None), ('second', None), ('third', None)]
-    assert event_reactor._observers[1].events[1:] == \
-        [('first', None), ('second', None), ('third', None)]
+            # check the collected events so far
+            event_reactor.flush()
+        assert len(event_reactor._observers[0].events) == 4
+        assert len(event_reactor._observers[1].events) == 4
+        assert isinstance(event_reactor._observers[0].events[0][0], TimerEvent)
+        assert isinstance(event_reactor._observers[1].events[0][0], TimerEvent)
+        assert event_reactor._observers[0].events[1:] == \
+            [('first', None), ('second', None), ('third', None)]
+        assert event_reactor._observers[1].events[1:] == \
+            [('first', None), ('second', None), ('third', None)]
 
-    # the raised exception is catched and results in an error message
-    assert error.call_count == 2
-    assert len(error.call_args_list[0][0]) == 1
-    assert error.call_args_list[0][0][0].startswith(
-        "Exception in event handler extension 'extension3': "
-        'custom exception\n')
-    assert len(error.call_args_list[1][0]) == 1
-    assert error.call_args_list[1][0][0].startswith(
-        "Exception in event handler extension 'extension3': "
-        'custom exception\n')
+        # the raised exception is catched and results in an error message
+        assert error.call_count == 2
+        assert len(error.call_args_list[0][0]) == 1
+        assert error.call_args_list[0][0][0].startswith(
+            "Exception in event handler extension 'extension3': "
+            'custom exception\n')
+        assert len(error.call_args_list[1][0]) == 1
+        assert error.call_args_list[1][0][0].startswith(
+            "Exception in event handler extension 'extension3': "
+            'custom exception\n')
 
-    # wait for another timer event to be generated
-    time.sleep(event_reactor.TIMER_INTERVAL)
-    assert len(event_reactor._observers[0].events) == 5
-    assert len(event_reactor._observers[1].events) == 5
-    assert isinstance(event_reactor._observers[0].events[-1][0], TimerEvent)
-    assert isinstance(event_reactor._observers[1].events[-1][0], TimerEvent)
+        # wait for another timer event to be generated
+        time.sleep(event_reactor.TIMER_INTERVAL)
+        assert len(event_reactor._observers[0].events) == 5
+        assert len(event_reactor._observers[1].events) == 5
+        assert isinstance(
+            event_reactor._observers[0].events[-1][0], TimerEvent)
+        assert isinstance(
+            event_reactor._observers[1].events[-1][0], TimerEvent)
 
-    # signal to stop the thread and wait for it to join
-    event_reactor.join()
     assert len(event_reactor._observers[0].events) == 6
     assert len(event_reactor._observers[1].events) == 6
     assert isinstance(

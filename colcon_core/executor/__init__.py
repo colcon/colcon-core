@@ -298,48 +298,47 @@ def execute_jobs(
     executor = select_executor_extension(context.args)
     assert executor
 
-    # create event reactor with handlers specified by the args
-    event_controller = create_event_reactor(context)
-    executor.set_event_controller(event_controller)
-
-    # pass queue to jobs to publish events
-    for job in jobs.values():
-        job.set_event_queue(event_controller.get_queue())
-
     logger.info("Executing jobs using '%s' executor", executor.EXECUTOR_NAME)
-    event_controller.start()
 
-    func = executor.execute
-    signature = inspect.signature(func)
-    kwargs = {}
-    if 'on_error' in signature.parameters:
-        kwargs['on_error'] = on_error
-    else:
-        # fallback to legacy API
-        assert 'abort_on_error' in signature.parameters
-        warnings.warn(
-            "The ExecutorExtensionPoint '{executor.EXECUTOR_NAME}' uses a "
-            "deprecated signature for the 'execute' method"
-            .format_map(locals()))
-        kwargs['abort_on_error'] = on_error == OnError.interrupt
+    # create event reactor with handlers specified by the args
+    with create_event_reactor(context) as event_controller:
+        executor.set_event_controller(event_controller)
 
-    try:
-        rc = func(context.args, jobs, **kwargs)
-    except Exception as e:  # noqa: F841
-        # catch exceptions raised in executor extension
-        exc = traceback.format_exc()
-        logger.error(
-            "Exception in executor extension '{executor.EXECUTOR_NAME}': "
-            '{e}\n{exc}'.format_map(locals()))
-        rc = 1
-    finally:
-        # generate an event for every skipped job
+        # pass queue to jobs to publish events
         for job in jobs.values():
-            if job.returncode is not None:
-                continue
-            event_controller.get_queue().put((JobSkipped(job.identifier), job))
+            job.set_event_queue(event_controller.get_queue())
 
-        event_controller.join()
+        func = executor.execute
+        signature = inspect.signature(func)
+        kwargs = {}
+        if 'on_error' in signature.parameters:
+            kwargs['on_error'] = on_error
+        else:
+            # fallback to legacy API
+            assert 'abort_on_error' in signature.parameters
+            warnings.warn(
+                "The ExecutorExtensionPoint '{executor.EXECUTOR_NAME}' uses a "
+                "deprecated signature for the 'execute' method"
+                .format_map(locals()))
+            kwargs['abort_on_error'] = on_error == OnError.interrupt
+
+        try:
+            rc = func(context.args, jobs, **kwargs)
+        except Exception as e:  # noqa: F841
+            # catch exceptions raised in executor extension
+            exc = traceback.format_exc()
+            logger.error(
+                "Exception in executor extension '{executor.EXECUTOR_NAME}': "
+                '{e}\n{exc}'.format_map(locals()))
+            rc = 1
+        finally:
+            # generate an event for every skipped job
+            for job in jobs.values():
+                if job.returncode is not None:
+                    continue
+                event_controller.get_queue().put(
+                    (JobSkipped(job.identifier), job))
+
     return rc
 
 
