@@ -76,7 +76,7 @@ HOME_ENVIRONMENT_VARIABLE = EnvironmentVariable(
 """Environment variable to set the log directory"""
 LOG_PATH_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_LOG_PATH',
-    'Set the log directory (default: $COLCON_HOME/log, to disable: '
+    'Set the log directory (default: ./log, to disable: '
     '{os.devnull})'.format_map(locals()))
 
 
@@ -264,8 +264,7 @@ def add_log_level_argument(parser):
     """
     parser.add_argument(
         '--log-base',
-        default='log',
-        help='The base path for all log directories (default: log, to '
+        help='The base path for all log directories (default: ./log, to '
              'disable: {os.devnull})'.format_map(globals()))
     parser.add_argument(
         '--log-level', action=LogLevelAction,

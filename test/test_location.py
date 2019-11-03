@@ -67,9 +67,15 @@ def test_log_path():
         base_path=log_base_path, env_var=log_base_path_env_var)
     assert isinstance(get_log_path(), Path)
     assert str(get_log_path().parent) == log_base_path
+    # use explicitly passed log base path even if environment variable is set
+    with EnvironmentContext(**{log_base_path_env_var: '/not/used'}):
+        assert isinstance(get_log_path(), Path)
+        assert str(get_log_path().parent) == log_base_path
 
-    # use environment variable when set
+    # use environment variable when set and no base path passed
     log_base_path = '/other/path'.replace('/', os.sep)
+    set_default_log_path(
+        base_path=None, env_var=log_base_path_env_var)
     with EnvironmentContext(**{log_base_path_env_var: log_base_path}):
         assert isinstance(get_log_path(), Path)
         assert str(get_log_path().parent) == log_base_path
