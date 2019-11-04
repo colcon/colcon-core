@@ -105,16 +105,15 @@ def main(*, command_name='colcon', argv=None):
     # default log level
     colcon_logger.setLevel(logging.WARN)
     set_logger_level_from_env(
-        colcon_logger, '{command_name}_LOG_LEVEL'.format_map(locals()).upper())
+        colcon_logger, LOG_LEVEL_ENVIRONMENT_VARIABLE.name)
     colcon_logger.debug(
         'Command line arguments: {argv}'
         .format(argv=argv if argv is not None else sys.argv))
 
     # set default locations for config files
     set_default_config_path(
-        path=(
-            Path('~') / '.{command_name}'.format_map(locals())).expanduser(),
-        env_var='{command_name}_HOME'.format_map(locals()).upper())
+        path=Path('~/.colcon').expanduser(),
+        env_var=HOME_ENVIRONMENT_VARIABLE.name)
 
     parser = create_parser('colcon_core.environment_variable')
 
@@ -152,7 +151,7 @@ def main(*, command_name='colcon', argv=None):
     now_str = str(now)[:-7].replace(' ', '_').replace(':', '-')
     set_default_log_path(
         base_path=args.log_base,
-        env_var='{command_name}_LOG_PATH'.format_map(locals()).upper(),
+        env_var=LOG_PATH_ENVIRONMENT_VARIABLE.name,
         subdirectory='{args.verb_name}_{now_str}'.format_map(locals()))
 
     # add a file handler writing all levels if logging isn't disabled
