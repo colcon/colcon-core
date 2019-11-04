@@ -72,7 +72,7 @@ def get_log_path():
         path = _log_base_path
     elif (
         _log_base_path_env_var is not None and
-        _log_base_path_env_var in os.environ
+        os.environ.get(_log_base_path_env_var)
     ):
         path = os.environ.get(_log_base_path_env_var)
     else:
