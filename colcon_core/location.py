@@ -12,6 +12,7 @@ logger = colcon_logger.getChild(__name__)
 _config_path = None
 _config_path_env_var = None
 _log_base_path = None
+_log_base_path_default = None
 _log_base_path_env_var = None
 _log_subdirectory = None
 
@@ -64,23 +65,29 @@ def get_log_path():
     :returns: The base path for logging or None if logging is disabled
     :rtype: Path or None
     """
+    global _log_base_path
     global _log_base_path_env_var
     path = None
-    if _log_base_path_env_var is not None:
-        path = os.environ.get(_log_base_path_env_var)
-        if path == os.devnull:
-            return None
-        if path:
-            path = Path(str(path))
-    global _log_base_path
-    if not path:
-        assert _log_base_path is not None
+    if _log_base_path is not None:
         path = _log_base_path
-    path /= _log_subdirectory
-    return path
+    elif (
+        _log_base_path_env_var is not None and
+        os.environ.get(_log_base_path_env_var)
+    ):
+        path = os.environ.get(_log_base_path_env_var)
+    else:
+        global _log_base_path_default
+        path = _log_base_path_default
+
+    if path == os.devnull:
+        return None
+
+    return Path(str(path)) / _log_subdirectory
 
 
-def set_default_log_path(*, base_path, env_var=None, subdirectory=None):
+def set_default_log_path(
+    *, base_path, env_var=None, subdirectory=None, default='log'
+):
     """
     Set the base path for logging.
 
@@ -93,11 +100,15 @@ def set_default_log_path(*, base_path, env_var=None, subdirectory=None):
     :param str env_var: The name of the environment variable
     :param str subdirectory: The name of the subdirectory, if not provided a
       random uuid will be used instead
+    :param default: The default base path if the passed base path is None and
+      the environment variable is not set
     """
     global _log_base_path
+    global _log_base_path_default
     global _log_base_path_env_var
     global _log_subdirectory
-    _log_base_path = Path(str(base_path))
+    _log_base_path = base_path
+    _log_base_path_default = default
     _log_base_path_env_var = env_var
     assert subdirectory is None or subdirectory
     _log_subdirectory = subdirectory \
