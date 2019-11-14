@@ -5,6 +5,6 @@
 Event classes have no common base class.
 
 They are being pushed to the queue of the
-:py:class:`colcon_core.event_handler.EventReactor` and handled by instances of
+:py:class:`colcon_core.event_reactor.EventReactor` and handled by instances of
 the :py:class:`colcon_core.event_handler.EventHandlerExtensionPoint` interface.
 """
