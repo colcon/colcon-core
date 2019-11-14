@@ -73,12 +73,6 @@ HOME_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_HOME',
     'Set the configuration directory (default: ~/.colcon)')
 
-"""Environment variable to set the log directory"""
-LOG_PATH_ENVIRONMENT_VARIABLE = EnvironmentVariable(
-    'COLCON_LOG_PATH',
-    'Set the log directory (default: ./log, to disable: '
-    '{os.devnull})'.format_map(locals()))
-
 
 def main(*, command_name='colcon', argv=None):
     """
