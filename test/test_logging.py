@@ -42,8 +42,8 @@ def test_get_numeric_log_level():
     assert log_level == logging.INFO
 
     # string with mixed case
-    log_level = get_numeric_log_level('Warn')
-    assert log_level == logging.WARN
+    log_level = get_numeric_log_level('Warning')
+    assert log_level == logging.WARNING
 
     # invalid string
     with pytest.raises(ValueError) as e:

@@ -103,7 +103,7 @@ def main(*, command_name='colcon', argv=None):
     """
     global colcon_logger
     # default log level
-    colcon_logger.setLevel(logging.WARN)
+    colcon_logger.setLevel(logging.WARNING)
     set_logger_level_from_env(
         colcon_logger, '{command_name}_LOG_LEVEL'.format_map(locals()).upper())
     colcon_logger.debug(
@@ -269,7 +269,7 @@ def add_log_level_argument(parser):
     parser.add_argument(
         '--log-level', action=LogLevelAction,
         help='Set log level for the console output, either by numeric or '
-             'string value (default: warn)')
+             'string value (default: warning)')
 
 
 class LogLevelAction(argparse.Action):
