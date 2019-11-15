@@ -50,7 +50,7 @@ class PythonBuildTask(TaskExtensionPoint):
         python_lib = os.path.join(
             args.install_base, self._get_python_lib(args))
         os.makedirs(python_lib, exist_ok=True)
-        # and being in the  PYTHONPATH
+        # and being in the PYTHONPATH
         env = dict(env)
         env['PYTHONPATH'] = python_lib + os.pathsep + \
             env.get('PYTHONPATH', '')
@@ -105,9 +105,15 @@ class PythonBuildTask(TaskExtensionPoint):
             # to maintain the desired order
             if additional_hooks is None:
                 additional_hooks = []
+            base_path = args.build_base
+            # if the Python packages are in a subdirectory
+            # that needs to be appended to the build directory
+            package_dir = setup_py_data.get('package_dir') or {}
+            if '' in package_dir:
+                base_path = os.path.join(base_path, package_dir[''])
             additional_hooks += create_environment_hook(
-                'pythonpath_develop', Path(args.build_base), pkg.name,
-                'PYTHONPATH', args.build_base, mode='prepend')
+                'pythonpath_develop', Path(base_path), pkg.name, 'PYTHONPATH',
+                base_path, mode='prepend')
 
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
