@@ -95,6 +95,13 @@ def main(*, command_name='colcon', argv=None):
     :param list argv: The list of arguments
     :returns: The return code
     """
+    try:
+        return _main(command_name=command_name, argv=argv)
+    except KeyboardInterrupt:
+        return signal.SIGINT
+
+
+def _main(*, command_name, argv):
     global colcon_logger
     # default log level
     colcon_logger.setLevel(logging.WARNING)
@@ -474,8 +481,6 @@ def verb_main(context, logger):
     try:
         # catch exceptions raised in verb extension
         rc = context.args.main(context=context)
-    except KeyboardInterrupt:
-        rc = signal.SIGINT
     except RuntimeError as e:  # noqa: F841
         # only log the error message for "known" exceptions
         logger.error(
