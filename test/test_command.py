@@ -75,6 +75,12 @@ def test_main():
                 # therefore only try to delete the temporary directory
                 shutil.rmtree(log_base, ignore_errors=True)
 
+        # catch KeyboardInterrupt and return SIGINT error code
+        with patch('colcon_core.command._main', return_value=0) as _main:
+            _main.side_effect = KeyboardInterrupt()
+            rc = main()
+            assert rc == signal.SIGINT
+
 
 def test_create_parser():
     with EntryPointContext():
@@ -115,12 +121,6 @@ def test_verb_main():
     context = CommandContext(command_name='command_name', args=args)
     rc = verb_main(context, logger)
     assert rc == args.main.return_value
-    logger.error.assert_not_called()
-
-    # catch KeyboardInterrupt and return SIGINT error code
-    args.main.side_effect = KeyboardInterrupt()
-    rc = verb_main(context, logger)
-    assert rc == signal.SIGINT
     logger.error.assert_not_called()
 
     # catch RuntimeError and output error message
