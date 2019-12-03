@@ -295,10 +295,10 @@ env_state = {}
 def _prepend_unique_value(name, value):
     global env_state
     if name not in env_state:
-        if name not in os.environ:
-            env_state[name] = set()
         if os.environ.get(name):
             env_state[name] = set(os.environ[name].split(os.pathsep))
+        else:
+            env_state[name] = set()
     # prepend even if the variable has not been set yet, in case a shell script sets the
     # same variable without the knowledge of this Python script.
     # later _remove_trailing_separators() will cleanup any unintentional trailing separator
