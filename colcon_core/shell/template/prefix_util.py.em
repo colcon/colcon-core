@@ -202,6 +202,9 @@ def process_dsv_file(
 
     basenames = OrderedDict()
     for line in lines:
+        # skip over empty or whitespace-only lines
+        if not line.strip():
+            continue
         type_, remainder = line.split(';', 1)
         if type_ != DSV_TYPE_SOURCE:
             # handle non-source lines
