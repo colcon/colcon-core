@@ -307,7 +307,8 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
             else:
                 commands += _prepend_unique_value(env_name, value)
     else:
-        assert False, 'Unknown environment hook type: ' + type_
+        raise RuntimeError(
+            'contains an unknown environment hook type: ' + type_)
     return commands
 
 
