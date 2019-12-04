@@ -103,7 +103,7 @@ def main(*, command_name='colcon', argv=None):
 
 def _main(*, command_name, argv):
     global colcon_logger
-    # default log level
+    # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
     set_logger_level_from_env(
         colcon_logger, '{command_name}_LOG_LEVEL'.format_map(locals()).upper())
@@ -111,7 +111,7 @@ def _main(*, command_name, argv):
         'Command line arguments: {argv}'
         .format(argv=argv if argv is not None else sys.argv))
 
-    # set default locations for config files
+    # set default locations for config files, for searchability: COLCON_HOME
     set_default_config_path(
         path=(
             Path('~') / '.{command_name}'.format_map(locals())).expanduser(),
@@ -148,7 +148,7 @@ def _main(*, command_name, argv):
         print(parser.format_usage())
         return 'Error: No verb provided'
 
-    # set default locations for log files
+    # set default locations for log files, for searchability: COLCON_LOG_PATH
     now = datetime.datetime.now()
     now_str = str(now)[:-7].replace(' ', '_').replace(':', '-')
     set_default_log_path(
