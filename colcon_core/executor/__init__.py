@@ -33,7 +33,7 @@ class Job:
 
     def __init__(self, *, identifier, dependencies, task, task_context):
         """
-        Constructor.
+        Construct a Job.
 
         :param str identifier: The job identifier
         :param set dependencies: The identifiers of other jobs which this job

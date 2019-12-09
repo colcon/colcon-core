@@ -14,7 +14,7 @@ class Command:
 
     def __init__(self, cmd, *, cwd, env=None, shell=False):
         """
-        Constructor.
+        Construct a Command.
 
         :param cmd: the sequence of program arguments
         :param cwd: the working directory
@@ -93,7 +93,7 @@ class CommandEnded(Command):
 
     def __init__(self, cmd, *, cwd, returncode, env=None, shell=False):
         """
-        Constructor.
+        Construct a CommandEnded.
 
         :param cmd: the sequence of program arguments
         :param cwd: the working directory

@@ -9,7 +9,7 @@ class JobQueued:
 
     def __init__(self, identifier, dependencies=None):
         """
-        Constructor.
+        Construct a JobQueued.
 
         :param str identifier: The job identifier
         :param set dependencies: The name of the recursive dependencies
@@ -25,7 +25,7 @@ class JobStarted:
 
     def __init__(self, identifier):
         """
-        Constructor.
+        Construct a JobStarted.
 
         :param str identifier: The job identifier
         """
@@ -39,7 +39,7 @@ class JobProgress:
 
     def __init__(self, identifier, progress):
         """
-        Constructor.
+        Construct a JobProgress.
 
         :param str identifier: The job identifier
         :param str progress: The message describing the progress of the job
@@ -55,7 +55,7 @@ class JobEnded:
 
     def __init__(self, identifier, rc):
         """
-        Constructor.
+        Construct a JobEnded.
 
         :param str identifier: The job identifier
         :param rc: The return code of the job
@@ -71,7 +71,7 @@ class JobSkipped:
 
     def __init__(self, identifier):
         """
-        Constructor.
+        Construct a JobSkipped.
 
         :param str identifier: The job identifier
         """
