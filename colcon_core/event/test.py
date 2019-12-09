@@ -9,7 +9,7 @@ class TestFailure:
 
     def __init__(self, identifier):
         """
-        Constructor.
+        Construct a TestFailure.
 
         :param str identifier: The job identifier
         """

@@ -202,7 +202,7 @@ class SuppressUsageOutput:
 
     def __init__(self, parsers):
         """
-        Constructor.
+        Construct a SuppressUsageOutput.
 
         :param parsers: The parsers
         """

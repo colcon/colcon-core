@@ -34,7 +34,7 @@ class TestPackageArguments:
 
     def __init__(self, pkg, args, *, additional_destinations=None):
         """
-        Constructor.
+        Construct a TestPackageArguments.
 
         :param pkg: The package descriptor
         :param args: The parsed command line arguments

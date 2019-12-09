@@ -13,7 +13,7 @@ class StdoutLine:
 
     def __init__(self, line):
         """
-        Constructor.
+        Construct a StdoutLine.
 
         :param bytes|str line: The line of text
         """
@@ -31,7 +31,7 @@ class StderrLine:
 
     def __init__(self, line):
         """
-        Constructor.
+        Construct a StderrLine.
 
         :param bytes|str line: The line of text
         """

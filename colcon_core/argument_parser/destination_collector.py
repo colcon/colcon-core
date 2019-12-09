@@ -11,7 +11,7 @@ class DestinationCollectorDecorator(ArgumentParserDecorator):
 
     def __init__(self, parser, **kwargs):
         """
-        Constructor.
+        Construct a DestinationCollectorDecorator.
 
         :param parser: The argument parser to decorate
         """

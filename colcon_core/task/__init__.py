@@ -24,7 +24,7 @@ class TaskContext:
 
     def __init__(self, *, pkg, args, dependencies):
         """
-        Constructor.
+        Construct a TaskContext.
 
         :param pkg: The package descriptor
         :param args: The parsed command line arguments
