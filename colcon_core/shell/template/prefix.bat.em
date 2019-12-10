@@ -101,3 +101,17 @@ goto:eof
     echo not found: "%~1" 1>&2
   )
 goto:eof
+
+
+:: strip a trailing semicolon from an environment variable if applicable
+:: first argument: the environment variable name
+:_colcon_prefix_bat_strip_trailing_semicolon
+  setlocal enabledelayedexpansion
+  set "name=%~1"
+  set "value=!%name%!"
+  if "%value:~-1%"==";" set "value=%value:~0,-1%"
+  :: set result variable in parent scope
+  endlocal & (
+    set "%~1=%value%"
+  )
+goto:eof
