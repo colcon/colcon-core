@@ -36,9 +36,9 @@ def test_has_parameters():
 
 
 def identify(_, path):
-    if path == os.path.realpath('/empty/path'):
+    if path == '/empty/path':
         return None
-    if path == os.path.realpath('/skip/path'):
+    if path == '/skip/path':
         raise IgnoreLocationException()
     return PackageDescriptor(path)
 

@@ -3,6 +3,7 @@
 
 from collections import defaultdict
 from copy import deepcopy
+import os
 from pathlib import Path
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
@@ -13,7 +14,7 @@ class PackageDescriptor:
     A descriptor for a package.
 
     A packages is identified by the following triplet:
-    * the 'path' which must be a realpath
+    * the 'path' which must be an existing path
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
 
@@ -47,6 +48,11 @@ class PackageDescriptor:
         # IDEA category specific hooks
         self.hooks = []
         self.metadata = {}
+
+    @property
+    def realpath(self):
+        """Resolve the realpath of the package path."""
+        return os.path.realpath(str(self.path))
 
     def identifies_package(self):
         """
@@ -132,11 +138,11 @@ class PackageDescriptor:
         return dependencies
 
     def __hash__(self):  # noqa: D105
-        return hash((self.path, self.type, self.name))
+        return hash((self.realpath, self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
-        return (self.path, self.type, self.name) == \
-            (other.path, other.type, other.name)
+        return (self.realpath, self.type, self.name) == \
+            (other.realpath, other.type, other.name)
 
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(
