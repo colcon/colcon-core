@@ -58,7 +58,7 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
             visited_paths.add(real_path)
 
             try:
-                result = identify(identification_extensions, real_path)
+                result = identify(identification_extensions, path)
             except IgnoreLocationException:
                 continue
             if result:
