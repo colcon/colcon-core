@@ -1,8 +1,8 @@
 # Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from asyncio import CancelledError
 from collections import OrderedDict
-from concurrent.futures import CancelledError
 import locale
 import os
 from pathlib import Path

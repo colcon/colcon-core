@@ -10,7 +10,6 @@ to maintain the original order as closely as possible.
 
 import asyncio
 from concurrent.futures import ALL_COMPLETED
-from concurrent.futures import CancelledError
 from functools import partial
 import os
 import platform
@@ -174,7 +173,7 @@ async def _async_check_call(
                 stdout if use_pty else None, stderr if use_pty else None))
         try:
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
-        except CancelledError:
+        except asyncio.CancelledError:
             # finish the communication with the subprocess
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
             raise
