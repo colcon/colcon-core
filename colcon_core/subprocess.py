@@ -171,6 +171,15 @@ async def _async_check_call(
                 process,
                 # pseudo terminals need to be closed explicitly
                 stdout if use_pty else None, stderr if use_pty else None))
+        # waiting for coroutines is deprecated as of Python 3.8
+        # convert coroutines into tasks
+        for i, callback in enumerate(callbacks):
+            if not isinstance(callback, asyncio.Task):
+                try:
+                    callbacks[i] = asyncio.create_task(callback)
+                except AttributeError:
+                    # fallback for Python < 3.7
+                    callbacks[i] = asyncio.ensure_future(callback)
         try:
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
         except asyncio.CancelledError:
@@ -247,7 +256,7 @@ async def _pipe2callback(stream, callback, other_stream=None):
 
 
 async def _wait_and_close_fds(process, stdout=None, stderr=None):
-    """Wait for the process and ensure that all handles are closed."""
+    """Coroutine waiting for the process and closing all handles."""
     try:
         await process.wait()
     finally:
@@ -261,7 +270,7 @@ async def _wait_and_close_fds(process, stdout=None, stderr=None):
 async def _communicate_and_close_fds(
     process, output, stdout=None, stderr=None
 ):
-    """Communicate with the process and close all handles."""
+    """Coroutine communicating with the process and closing all handles."""
     stdout_data, stderr_data = await process.communicate()
     output[0] = stdout_data
     output[1] = stderr_data
