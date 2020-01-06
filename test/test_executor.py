@@ -35,7 +35,7 @@ class Task:
         pass
 
     async def __call__(self, *args, **kwargs):
-        if isinstance(self.return_value, Exception):
+        if isinstance(self.return_value, BaseException):
             raise self.return_value
         return self.return_value
 
