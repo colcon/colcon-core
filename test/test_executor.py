@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 from argparse import ArgumentParser
-from concurrent.futures import CancelledError
+from asyncio import CancelledError
 
 from colcon_core.event.job import JobEnded
 from colcon_core.event.job import JobQueued

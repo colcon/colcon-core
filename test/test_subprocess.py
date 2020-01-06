@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import asyncio
-from concurrent.futures import CancelledError
 import sys
 
 from colcon_core.subprocess import check_output
@@ -93,7 +92,7 @@ def test_run_cancel():
     task = asyncio.Task(coroutine, loop=loop)
     assert task.cancel() is True
     try:
-        with pytest.raises(CancelledError):
+        with pytest.raises(asyncio.CancelledError):
             loop.run_until_complete(task)
     finally:
         loop.close()
