@@ -47,7 +47,8 @@ def wrap_default_value(value):
     """
     global _types
     if is_default_value(value):
-        assert False
+        raise ValueError(
+            'the passed value is already wrapped: ' + str(type(value)))
         return value
     if type(value) in _types:
         return _types[type(value)](value)
