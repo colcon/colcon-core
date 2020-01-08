@@ -1,10 +1,12 @@
-# Copyright 2016-2018 Dirk Thomas
+# Copyright 2016-2020 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
 from glob import glob
 import os
 import sys
 
+from colcon_core.argument_default import is_default_value
+from colcon_core.argument_default import wrap_default_value
 from colcon_core.package_discovery import logger
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
 from colcon_core.package_identification import identify
@@ -30,13 +32,14 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
             '--paths',
             nargs='*' if not single_path else '?',
             metavar='PATH',
-            default='.' if with_default else None,
+            default=wrap_default_value(['.']) if with_default else None,
             help='The paths to check for a package. Use shell wildcards '
                  '(e.g. `src/*`) to select all direct subdirectories' +
                  (' (default: .)' if with_default else ''))
 
     def has_parameters(self, *, args):  # noqa: D102
-        return bool(args.paths)
+        return not is_default_value(args.paths) and \
+            bool(args.paths)
 
     def discover(self, *, args, identification_extensions):  # noqa: D102
         if args.paths is None:
