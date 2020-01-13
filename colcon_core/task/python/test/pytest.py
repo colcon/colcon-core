@@ -40,6 +40,10 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             help='Pass arguments to pytests. '
             'Arguments matching other options must be prefixed by a space,\n'
             'e.g. --pytest-args " --help"')
+        parser.add_argument(
+            '--pytest-with-coverage',
+            action='store_true',
+            help='Generate coverage information')
 
     def match(self, context, env, setup_py_data):  # noqa: D102
         return has_test_dependency(setup_py_data, 'pytest')
@@ -70,7 +74,10 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             ]
         env = dict(env)
 
-        if has_test_dependency(setup_py_data, 'pytest-cov'):
+        if (
+            context.args.pytest_with_coverage or
+            has_test_dependency(setup_py_data, 'pytest-cov')
+        ):
             try:
                 from pytest_cov import __version__ as pytest_cov_version
             except ImportError:
