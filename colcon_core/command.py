@@ -206,12 +206,8 @@ def create_parser(environment_variables_group_name):
             return result
 
     # top level parser
-    prog = sys.argv[0]
-    if os.path.basename(prog) == '__main__.py':
-        # use the module name in case the script was invoked with python -m ...
-        prog = os.path.basename(os.path.dirname(prog))
     parser = CustomArgumentParser(
-        prog=prog,
+        prog=get_prog_name(),
         formatter_class=CustomFormatter,
         epilog=get_environment_variables_epilog(
             environment_variables_group_name))
@@ -222,6 +218,15 @@ def create_parser(environment_variables_group_name):
     add_log_level_argument(parser)
 
     return parser
+
+
+def get_prog_name():
+    """Get the prog name used for the argparse parser."""
+    prog = sys.argv[0]
+    if os.path.basename(prog) == '__main__.py':
+        # use the module name in case the script was invoked with python -m ...
+        prog = os.path.basename(os.path.dirname(prog))
+    return prog
 
 
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
