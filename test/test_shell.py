@@ -47,6 +47,8 @@ def test_extension_interface():
         extension.create_hook_prepend_value(None, None, None, None, None)
     with pytest.raises(NotImplementedError):
         extension.create_hook_include_file(None, None, None, None)
+    with pytest.raises(NotImplementedError):
+        extension.create_hook_populate_environment(None, None, None, None, None)
 
     coroutine = extension.generate_command_environment(None, None, None)
     with pytest.raises(NotImplementedError):

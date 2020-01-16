@@ -253,6 +253,24 @@ class ShellExtensionPoint:
         """
         raise NotImplementedError()
 
+    def create_hook_populate_environment(
+        self, env_hook_name, prefix_path, pkg_name, env_dest, env_src
+    ):
+        """
+        Create a hook script to populate an environment variable from an existing one.
+
+        This method must be overridden in a subclass.
+
+        :param str env_hook_name: The name of the hook script
+        :param Path prefix_path: The path of the install prefix
+        :param str pkg_name: The package name
+        :param str env_dest: The name of the destination environment variable
+        :param str env_src: The name of the source environment variable
+        :returns: The relative path to the created hook script
+        :rtype: Path
+        """
+        raise NotImplementedError()
+
 
 def get_shell_extensions():
     """

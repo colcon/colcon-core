@@ -135,3 +135,14 @@ class ShShell(ShellExtensionPoint):
                 h.write('{key}={value}\n'.format_map(locals()))
 
         return env
+
+    def create_hook_populate_environment(
+        self, env_hook_name, prefix_path, pkg_name, env_dest, env_src,
+    ):  # noqa: D102
+        hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
+            ('%s.sh' % env_hook_name)
+        logger.info("Creating environment hook '%s'" % hook_path)
+        expand_template(
+            Path(__file__).parent / 'template' / 'hook_set_value.sh.em',
+            hook_path, {'name': env_dest, 'value': "$%s" % env_src})
+        return hook_path
