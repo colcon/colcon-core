@@ -143,5 +143,5 @@ class BatShell(ShellExtensionPoint):
         logger.info("Creating environment hook '%s'" % hook_path)
         expand_template(
             Path(__file__).parent / 'template' / 'hook_set_value.bat.em',
-            hook_path, {'name': env_dest, 'value': "%%%s%%" % env_src})
+            hook_path, {'name': env_dest, 'value': '%%%s%%' % env_src})
         return hook_path

@@ -257,7 +257,8 @@ class ShellExtensionPoint:
         self, env_hook_name, prefix_path, pkg_name, env_dest, env_src
     ):
         """
-        Create a hook script to populate an environment variable from an existing one.
+        Create a hook script to populate an environment variable from an
+        existing one.
 
         This method must be overridden in a subclass.
 
