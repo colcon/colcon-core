@@ -136,7 +136,7 @@ class BatShell(ShellExtensionPoint):
         return env
 
     def create_hook_populate_environment(
-        self, env_hook_name, prefix_path, pkg_name, , env_dest, env_src,
+        self, env_hook_name, prefix_path, pkg_name, env_dest, env_src,
     ):  # noqa: D102
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.bat' % env_hook_name)
