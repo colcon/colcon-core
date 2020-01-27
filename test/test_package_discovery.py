@@ -111,9 +111,9 @@ def test_discover_packages():
         descs = discover_packages(None, None, discovery_extensions=extensions)
         assert len(descs) == 2
         expected_path = '/extension1/pkg1'.replace('/', os.sep)
-        assert expected_path in {str(d.path) for d in descs}
+        assert expected_path in (str(d.path) for d in descs)
         expected_path = '/extension2/pkg1'.replace('/', os.sep)
-        assert expected_path in {str(d.path) for d in descs}
+        assert expected_path in (str(d.path) for d in descs)
 
         # check with parameters
         extensions['extension3'].has_parameters = Mock(return_value=True)
@@ -125,9 +125,9 @@ def test_discover_packages():
         descs = discover_packages(None, None, discovery_extensions=extensions)
         assert len(descs) == 2
         expected_path = '/extension3/pkg1'.replace('/', os.sep)
-        assert expected_path in {str(d.path) for d in descs}
+        assert expected_path in (str(d.path) for d in descs)
         expected_path = '/extension3/pkg2'.replace('/', os.sep)
-        assert expected_path in {str(d.path) for d in descs}
+        assert expected_path in (str(d.path) for d in descs)
 
 
 def test__get_extensions_with_parameters():
@@ -197,6 +197,6 @@ def test__discover_packages():
 
         assert len(descs) == 2
         expected_path = '/extension3/pkg1'.replace('/', os.sep)
-        assert expected_path in {str(d.path) for d in descs}
+        assert expected_path in (str(d.path) for d in descs)
         expected_path = '/extension3/pkg2'.replace('/', os.sep)
-        assert expected_path in {str(d.path) for d in descs}
+        assert expected_path in (str(d.path) for d in descs)
