@@ -16,6 +16,6 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 +	# would result in a runtime error by pkg_resources
 +	# pytest-repeat
 +	# pytest-rerunfailures
- 	pytest-runner
  	setuptools>=30.3.0
  packages = find:
+ tests_require = 
