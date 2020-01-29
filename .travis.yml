@@ -8,11 +8,9 @@ env:
 install:
   - pip install -U setuptools
   # install_requires
-  - pip install -U distlib EmPy
-  # tests_require
-  - if [ "$TEST_SUITE" = "pytest" ]; then pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pylint pytest pytest-cov scspell3k; fi
-  # colcon test needs pytest-cov and pytest-runner
-  - if [ "$TEST_SUITE" = "bootstrap" ]; then pip install -U pytest pytest-cov pytest-rerunfailures pytest-repeat pytest-runner; fi
+  - pip install -U distlib EmPy pytest-rerunfailures pytest pytest-cov pytest-repeat pytest-runner
+  # additional tests_require
+  - if [ "$TEST_SUITE" = "pytest" ]; then pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pylint scspell3k; fi
   # for uploading the coverage information to codecov
   - if [ "$TEST_SUITE" = "pytest" ]; then pip install codecov; fi
 script:
