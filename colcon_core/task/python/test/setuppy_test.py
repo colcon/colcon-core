@@ -10,12 +10,20 @@ from colcon_core.verb.test import logger
 
 
 class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
-    """Use `setup.py test` to test packages."""
+    """Use `unittest` to test packages."""
 
     def __init__(self):  # noqa: D107
         super().__init__()
         satisfies_version(
             PythonTestingStepExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
+
+    def add_arguments(self, *, parser):  # noqa: D102
+        parser.add_argument(
+            '--unittest-args',
+            nargs='*', metavar='*', type=str.lstrip,
+            help='Pass arguments to Python unittests. '
+            'Arguments matching other options must be prefixed by a space,\n'
+            'e.g. --unittest-args " --help"')
 
     def match(self, context, env, setup_py_data):  # noqa: D102
         return True
@@ -24,20 +32,18 @@ class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
         if context.args.retest_until_fail:
             logger.warning(
                 "Ignored '--retest-until-fail' for package "
-                "'{context.pkg.name}' since 'setup.py test' does not support "
-                'the usage'.format_map(locals()))
+                "'{context.pkg.name}' since 'unittest' does not support the "
+                'usage'.format_map(locals()))
 
         if context.args.retest_until_pass:
             logger.warning(
                 "Ignored '--retest-until-pass' for package "
-                "'{context.pkg.name}' since 'setup.py test' does not support "
-                'the usage'.format_map(locals()))
+                "'{context.pkg.name}' since 'unittest' does not support the "
+                'usage'.format_map(locals()))
 
-        cmd = [
-            executable,
-            'setup.py', 'test',
-            'egg_info', '--egg-base', context.args.build_base,
-        ]
+        cmd = [executable, '-m', 'unittest', '-v']
+        if context.args.unittest_args is not None:
+            cmd += context.args.unittest_args
         rc = await check_call(context, cmd, cwd=context.args.path, env=env)
         if rc and rc.returncode:
             return rc.returncode
