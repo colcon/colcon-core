@@ -8,7 +8,7 @@ env:
 install:
   - pip install -U setuptools
   # install_requires
-  - pip install -U distlib EmPy pytest-rerunfailures pytest pytest-cov pytest-repeat pytest-runner
+  - pip install -U distlib EmPy pytest-rerunfailures pytest pytest-cov pytest-repeat
   # additional tests_require
   - pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes pep8-naming pylint scspell3k
   # for uploading the coverage information to codecov

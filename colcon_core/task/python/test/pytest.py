@@ -13,7 +13,6 @@ from colcon_core.task import check_call
 from colcon_core.task.python.test import has_test_dependency
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
-from pkg_resources import iter_entry_points
 from pkg_resources import parse_version
 
 
@@ -29,9 +28,10 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         satisfies_version(
             PythonTestingStepExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
-        entry_points = iter_entry_points('distutils.commands', name='pytest')
-        if not list(entry_points):
-            raise SkipExtensionException("'pytest-runner' not found")
+        try:
+            import pytest  # noqa: F401
+        except ImportError:
+            raise SkipExtensionException("'pytest' not found")
 
     def add_arguments(self, *, parser):  # noqa: D102
         parser.add_argument(
@@ -49,11 +49,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         return has_test_dependency(setup_py_data, 'pytest')
 
     async def step(self, context, env, setup_py_data):  # noqa: D102
-        cmd = [
-            sys.executable,
-            'setup.py', 'pytest',
-            'egg_info', '--egg-base', context.args.build_base,
-        ]
+        cmd = [sys.executable, '-m', 'pytest']
         junit_xml_path = Path(
             context.args.test_result_base
             if context.args.test_result_base
