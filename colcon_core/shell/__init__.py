@@ -173,7 +173,8 @@ class ShellExtensionPoint:
         :param Path prefix_path: The path of the install prefix
         :param str pkg_name: The package name
         :param str name: The name of the environment variable
-        :param str value: The value to be set
+        :param str value: The value to be set. If an empty string is passed the
+          environment variable should be set to the prefix path.
         :returns: The relative path to the created hook script
         :rtype: Path
         """

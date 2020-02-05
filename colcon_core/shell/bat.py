@@ -85,6 +85,8 @@ class BatShell(ShellExtensionPoint):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.bat' % env_hook_name)
         logger.info("Creating environment hook '%s'" % hook_path)
+        if value == '':
+            value = '%COLCON_PREFIX_PATH%'
         expand_template(
             Path(__file__).parent / 'template' / 'hook_set_value.bat.em',
             hook_path, {'name': name, 'value': value})
