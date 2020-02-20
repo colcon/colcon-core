@@ -23,12 +23,14 @@ from colcon_core import entry_point  # noqa: E402
 custom_entry_points = {}
 
 
-def custom_load_entry_points(group_name):  # noqa: D103
+def custom_load_entry_points(group_name, *, exclude_names=None):  # noqa: D103
     global custom_entry_points
     assert group_name in custom_entry_points, \
         "get_entry_points() not overridden for group '{group_name}'" \
         .format_map(locals())
-    return custom_entry_points[group_name]
+    return {
+        k: v for k, v in custom_entry_points[group_name].items()
+        if exclude_names is None or k not in exclude_names}
 
 
 # override function before importing other modules
