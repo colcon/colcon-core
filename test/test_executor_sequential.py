@@ -176,7 +176,7 @@ def test_sequential_keyboard_interrupt():
             os.getpid(),
             signal.SIGINT if sys.platform != 'win32' else signal.CTRL_C_EVENT)
         if sys.platform == 'win32':
-            os.kill(signal.CTRL_C_EVENT)
+            os.kill(os.getpid(), signal.CTRL_C_EVENT)
 
     thread = Thread(target=delayed_sigint)
     try:
