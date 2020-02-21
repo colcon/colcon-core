@@ -52,7 +52,7 @@ class PackageDescriptor:
 
     @property
     def path(self):
-        """The path of the package."""
+        """Get the path of the package."""
         return self._path
 
     @path.setter
