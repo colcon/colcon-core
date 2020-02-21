@@ -33,6 +33,7 @@ class PackageDescriptor:
         'dependencies',
         'hooks',
         'metadata',
+        'realpath',
     )
 
     def __init__(self, path):
@@ -42,17 +43,13 @@ class PackageDescriptor:
         :param str|Path path: The location of the package
         """
         self.path = Path(str(path))
+        self.realpath = os.path.realpath(str(path))
         self.type = None
         self.name = None
         self.dependencies = defaultdict(set)
         # IDEA category specific hooks
         self.hooks = []
         self.metadata = {}
-
-    @property
-    def realpath(self):
-        """Resolve the realpath of the package path."""
-        return os.path.realpath(str(self.path))
 
     def identifies_package(self):
         """
