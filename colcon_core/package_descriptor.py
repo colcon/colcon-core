@@ -14,7 +14,7 @@ class PackageDescriptor:
     A descriptor for a package.
 
     A packages is identified by the following triplet:
-    * the 'realpath' which must be an existing path
+    * the 'path' which must be an existing path
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
 
@@ -27,8 +27,7 @@ class PackageDescriptor:
     """
 
     __slots__ = (
-        '_path',
-        'realpath',
+        'path',
         'type',
         'name',
         'dependencies',
@@ -42,7 +41,7 @@ class PackageDescriptor:
 
         :param str|Path path: The location of the package
         """
-        self.path = path
+        self.path = Path(str(path))
         self.type = None
         self.name = None
         self.dependencies = defaultdict(set)
@@ -51,14 +50,9 @@ class PackageDescriptor:
         self.metadata = {}
 
     @property
-    def path(self):
-        """Get the path of the package."""
-        return self._path
-
-    @path.setter
-    def path(self, value):
-        self._path = Path(str(value))
-        self.realpath = os.path.realpath(str(value))
+    def realpath(self):
+        """Resolve the realpath of the package path."""
+        return os.path.realpath(str(self.path))
 
     def identifies_package(self):
         """
