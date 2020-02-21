@@ -27,7 +27,7 @@ class PackageDescriptor:
     """
 
     __slots__ = (
-        'path',
+        '_path',
         'type',
         'name',
         'dependencies',
@@ -43,13 +43,22 @@ class PackageDescriptor:
         :param str|Path path: The location of the package
         """
         self.path = Path(str(path))
-        self.realpath = os.path.realpath(str(path))
         self.type = None
         self.name = None
         self.dependencies = defaultdict(set)
         # IDEA category specific hooks
         self.hooks = []
         self.metadata = {}
+
+    @property
+    def path(self):
+        """Path on the filesystem to this package."""
+        return self._path
+
+    @path.setter
+    def path(self, value):
+        self._path = Path(str(value))
+        self.realpath = os.path.realpath(str(value))
 
     def identifies_package(self):
         """
