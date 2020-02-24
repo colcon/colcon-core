@@ -16,9 +16,11 @@ class EntryPointContext:
 
         self._memento = plugin_system.load_entry_points
 
-        def load_entry_points(_):
+        def load_entry_points(_, *, exclude_names=None):
             nonlocal self
-            return dict(**self._kwargs)
+            return {
+                k: v for k, v in self._kwargs.items()
+                if exclude_names is None or k not in exclude_names}
 
         plugin_system.load_entry_points = load_entry_points
 
