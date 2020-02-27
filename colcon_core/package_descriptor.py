@@ -137,12 +137,22 @@ class PackageDescriptor:
                 dependencies.add(dep)
         return dependencies
 
+    def _key(self):
+        """Return a substitute value for hashing and equality checking."""
+        try:
+            # note this is what is used in os.path.samefile
+            st = self.path.stat()
+        except FileNotFoundError:
+            st = self.realpath
+        return (st, self.type, self.name)
+
     def __hash__(self):  # noqa: D105
-        return hash((self.realpath, self.type, self.name))
+        return hash(self._key())
 
     def __eq__(self, other):  # noqa: D105
-        return (self.realpath, self.type, self.name) == \
-            (other.realpath, other.type, other.name)
+        if type(self) != type(other):
+            return NotImplemented
+        return self._key() == other._key()
 
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(
