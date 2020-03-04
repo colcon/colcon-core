@@ -37,10 +37,10 @@ class DependencyDescriptor(str):
         """
         return str(self)
 
-    def __deepcopy__(self, memodict):  # noqa: D105
+    def __deepcopy__(self, memo=None):  # noqa: D105
         # surprisingly this is significantly faster than the default
         if not self.metadata:
             # explicitly skipping the deep copy of an empty dict is also faster
             return DependencyDescriptor(self.name)
         return DependencyDescriptor(
-            self.name, metadata=copy.deepcopy(self.metadata))
+            self.name, metadata=copy.deepcopy(self.metadata, memo=memo))
