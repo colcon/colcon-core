@@ -1,6 +1,8 @@
 # Copyright 2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import copy
+
 
 class DependencyDescriptor(str):
     """
@@ -34,3 +36,11 @@ class DependencyDescriptor(str):
         :rtype: str
         """
         return str(self)
+
+    def __deepcopy__(self, memodict):  # noqa: D105
+        # surprisingly this is significantly faster than the default
+        if not self.metadata:
+            # explicitly skipping the deep copy of an empty dict is also faster
+            return DependencyDescriptor(self.name)
+        return DependencyDescriptor(
+            self.name, metadata=copy.deepcopy(self.metadata))
