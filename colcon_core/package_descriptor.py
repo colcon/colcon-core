@@ -5,7 +5,6 @@ from collections import defaultdict
 from copy import deepcopy
 import os
 from pathlib import Path
-import sys
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
 
