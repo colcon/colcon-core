@@ -148,12 +148,8 @@ class PackageDescriptor:
             return True
         if not (self.type == other.type and self.name == other.name):
             return False
-        if sys.platform == 'win32':
-            try:
-                # significantly faster on Windows if the file exists
-                return self.path.samefile(other.path)
-            except FileNotFoundError:
-                pass
+        if self.path == other.path:
+            return True
 
         return self.realpath == other.realpath
 
