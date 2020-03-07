@@ -5,6 +5,7 @@ from collections import defaultdict
 from copy import deepcopy
 import os
 from pathlib import Path
+import sys
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
 
@@ -137,22 +138,24 @@ class PackageDescriptor:
                 dependencies.add(dep)
         return dependencies
 
-    def _key(self):
-        """Return a substitute value for hashing and equality checking."""
-        try:
-            # note this is what is used in os.path.samefile
-            st = self.path.stat()
-        except FileNotFoundError:
-            st = self.realpath
-        return (st, self.type, self.name)
-
     def __hash__(self):  # noqa: D105
-        return hash(self._key())
+        return hash((self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
         if type(self) != type(other):
             return NotImplemented
-        return self._key() == other._key()
+        if self is other:
+            return True
+        if not (self.type == other.type and self.name == other.name):
+            return False
+        if sys.platform == 'win32':
+            try:
+                # significantly faster on Windows if the file exists
+                return self.path.samefile(other.path)
+            except FileNotFoundError:
+                pass
+
+        return self.realpath == other.realpath
 
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(
