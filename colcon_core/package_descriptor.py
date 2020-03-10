@@ -14,10 +14,12 @@ class PackageDescriptor:
     A descriptor for a package.
 
     A packages is identified by the following triplet:
-    * the 'path' which must be an existing path. For our purposes, two packages
-      with different paths may be equal if they indicate the same directory.
+    * the 'path' which must be an existing path
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
+
+    Packages with the same type and name but different path are considered
+    equal if their realpath is te same.
 
     'dependencies' are grouped by their category as `DependencyDescriptor` or
     `str`.
@@ -134,8 +136,8 @@ class PackageDescriptor:
         return dependencies
 
     def __hash__(self):  # noqa: D105
-        # self.path is omitted from hash because different paths may coincide
-        # on disk.
+        # the hash doesn't include the path since different paths are
+        # considered equal if their realpath is the same
         return hash((self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
@@ -145,9 +147,9 @@ class PackageDescriptor:
             return False
         if self.path == other.path:
             return True
-        # check realpath last since it is the most expensive to compute.
-        return (os.path.realpath(str(self.path)) ==
-                os.path.realpath(str(other.path)))
+        # check realpath last since it is the most expensive to compute
+        return os.path.realpath(str(self.path)) == \
+            os.path.realpath(str(other.path))
 
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(
