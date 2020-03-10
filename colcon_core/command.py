@@ -6,6 +6,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
+import shutil
 import signal
 import sys
 import traceback
@@ -223,9 +224,13 @@ def create_parser(environment_variables_group_name):
 def get_prog_name():
     """Get the prog name used for the argparse parser."""
     prog = sys.argv[0]
-    if os.path.basename(prog) == '__main__.py':
+    basename = os.path.basename(prog)
+    if basename == '__main__.py':
         # use the module name in case the script was invoked with python -m ...
         prog = os.path.basename(os.path.dirname(prog))
+    elif shutil.which(basename) == prog:
+        # use basename only if it is on the PATH
+        prog = basename
     return prog
 
 
