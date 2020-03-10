@@ -14,7 +14,8 @@ class PackageDescriptor:
     A descriptor for a package.
 
     A packages is identified by the following triplet:
-    * the 'path' which must be an existing path
+    * the 'path' which must be an existing path. For our purposes, two packages
+      with different paths may be equal if they indicate the same directory.
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
 
@@ -48,11 +49,6 @@ class PackageDescriptor:
         # IDEA category specific hooks
         self.hooks = []
         self.metadata = {}
-
-    @property
-    def realpath(self):
-        """Resolve the realpath of the package path."""
-        return os.path.realpath(str(self.path))
 
     def identifies_package(self):
         """
@@ -138,19 +134,20 @@ class PackageDescriptor:
         return dependencies
 
     def __hash__(self):  # noqa: D105
+        # self.path is omitted from hash because different paths may coincide
+        # on disk.
         return hash((self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
         if type(self) != type(other):
             return NotImplemented
-        if self is other:
-            return True
-        if not (self.type == other.type and self.name == other.name):
+        if (self.type, self.name) != (other.type, other.name):
             return False
         if self.path == other.path:
             return True
-
-        return self.realpath == other.realpath
+        # check realpath last since it is the most expensive to compute.
+        return (os.path.realpath(str(self.path)) ==
+                os.path.realpath(str(other.path)))
 
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(
