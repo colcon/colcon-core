@@ -14,9 +14,12 @@ class PackageDescriptor:
     A descriptor for a package.
 
     A packages is identified by the following triplet:
-    * the 'realpath' which must be an existing path
+    * the 'path' which must be an existing path
     * the 'type' which must be a non-empty string
     * the 'name' which must be a non-empty string
+
+    Packages with the same type and name but different path are considered
+    equal if their realpath is te same.
 
     'dependencies' are grouped by their category as `DependencyDescriptor` or
     `str`.
@@ -27,8 +30,7 @@ class PackageDescriptor:
     """
 
     __slots__ = (
-        '_path',
-        'realpath',
+        'path',
         'type',
         'name',
         'dependencies',
@@ -42,23 +44,13 @@ class PackageDescriptor:
 
         :param str|Path path: The location of the package
         """
-        self.path = path
+        self.path = Path(str(path))
         self.type = None
         self.name = None
         self.dependencies = defaultdict(set)
         # IDEA category specific hooks
         self.hooks = []
         self.metadata = {}
-
-    @property
-    def path(self):
-        """Get the path of the package."""
-        return self._path
-
-    @path.setter
-    def path(self, value):
-        self._path = Path(str(value))
-        self.realpath = os.path.realpath(str(value))
 
     def identifies_package(self):
         """
@@ -144,11 +136,20 @@ class PackageDescriptor:
         return dependencies
 
     def __hash__(self):  # noqa: D105
-        return hash((self.realpath, self.type, self.name))
+        # the hash doesn't include the path since different paths are
+        # considered equal if their realpath is the same
+        return hash((self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
-        return (self.realpath, self.type, self.name) == \
-            (other.realpath, other.type, other.name)
+        if type(self) != type(other):
+            return NotImplemented
+        if (self.type, self.name) != (other.type, other.name):
+            return False
+        if self.path == other.path:
+            return True
+        # check realpath last since it is the most expensive to compute
+        return os.path.realpath(str(self.path)) == \
+            os.path.realpath(str(other.path))
 
     def __str__(self):  # noqa: D105
         return '{' + ', '.join(

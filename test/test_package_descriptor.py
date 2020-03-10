@@ -121,7 +121,6 @@ def test_magic_methods():
 
     d2.path = Path('/other/path')
     assert d1 != d2
-    assert hash(d1) != hash(d2)
 
 
 def test_str():
