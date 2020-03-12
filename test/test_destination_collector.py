@@ -21,3 +21,12 @@ def test_destination_collector_decorator():
     group.add_argument('--other-option', action='store_true')
     assert decorator.get_destinations() == OrderedDict([
         ('option', 'option'), ('other-option', 'other_option')])
+
+    subparser = decorator.add_subparsers(title='subs', dest='dest')
+    parser = subparser.add_parser('parser')
+    parser.add_argument('--another-option', action='store_true')
+    assert decorator.get_destinations() == OrderedDict([
+        ('option', 'option'), ('other-option', 'other_option'),
+        ('another-option', 'another_option')])
+    assert decorator.get_destinations(recursive=False) == OrderedDict([
+        ('option', 'option'), ('other-option', 'other_option')])
