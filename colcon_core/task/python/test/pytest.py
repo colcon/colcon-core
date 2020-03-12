@@ -147,8 +147,8 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         # and doesn't generate a result file at all
         junit_xml_path.parent.mkdir(parents=True, exist_ok=True)
         junit_xml_path.write_text("""<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="{context.pkg.name}" tests="1" failures="1" time="0" errors="0" skip="0">
-  <testcase classname="{context.pkg.name}" name="pytest.missing_result" status="run" time="0">
+<testsuite name="{context.pkg.name}" tests="1" failures="0" time="0" errors="1" skipped="0">
+  <testcase classname="{context.pkg.name}" name="pytest.missing_result" time="0">
     <failure message="The test invocation failed without generating a result file."/>
   </testcase>
 </testsuite>
