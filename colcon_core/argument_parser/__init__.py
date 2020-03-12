@@ -3,6 +3,7 @@
 
 import traceback
 import types
+import warnings
 
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
@@ -108,10 +109,22 @@ class ArgumentParserDecorator:
         """
         assert '_parser' not in kwargs
         kwargs['_parser'] = parser
-        assert '_nested_decorators' not in kwargs
-        kwargs['_nested_decorators'] = []
+        assert '_nested_decorators_' not in kwargs
+        kwargs['_nested_decorators_'] = []
+        assert '_group_decorators' not in kwargs
+        kwargs['_group_decorators'] = []
+        assert '_recursive_decorators' not in kwargs
+        kwargs['_recursive_decorators'] = []
         for k, v in kwargs.items():
             self.__dict__[k] = v
+
+    @property
+    def _nested_decorators(self):
+        warnings.warn(
+            'colcon_core.argument_parser.ArgumentParserDecorator.'
+            '_nested_decorators is a private variable and has been '
+            'deprecated', stacklevel=2)
+        return self._nested_decorators_
 
     def __getattr__(self, name):
         """
@@ -157,7 +170,8 @@ class ArgumentParserDecorator:
         """
         group = self.__class__(
             self._parser.add_argument_group(*args, **kwargs))
-        self._nested_decorators.append(group)
+        self._nested_decorators_.append(group)
+        self._group_decorators.append(group)
         return group
 
     def add_mutually_exclusive_group(self, *args, **kwargs):
@@ -169,7 +183,8 @@ class ArgumentParserDecorator:
         """
         group = self.__class__(
             self._parser.add_mutually_exclusive_group(*args, **kwargs))
-        self._nested_decorators.append(group)
+        self._nested_decorators_.append(group)
+        self._group_decorators.append(group)
         return group
 
     def add_parser(self, *args, **kwargs):
@@ -181,7 +196,8 @@ class ArgumentParserDecorator:
         """
         parser = self.__class__(
             self._parser.add_parser(*args, **kwargs))
-        self._nested_decorators.append(parser)
+        self._nested_decorators_.append(parser)
+        self._recursive_decorators.append(parser)
         return parser
 
     def add_subparsers(self, *args, **kwargs):
@@ -193,7 +209,8 @@ class ArgumentParserDecorator:
         """
         subparser = self.__class__(
             self._parser.add_subparsers(*args, **kwargs))
-        self._nested_decorators.append(subparser)
+        self._nested_decorators_.append(subparser)
+        self._recursive_decorators.append(subparser)
         return subparser
 
 

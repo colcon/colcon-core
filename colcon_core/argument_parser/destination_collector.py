@@ -22,17 +22,23 @@ class DestinationCollectorDecorator(ArgumentParserDecorator):
             _destinations=OrderedDict(),
             **kwargs)
 
-    def get_destinations(self):
+    def get_destinations(self, *, recursive=True):
         """
         Get destinations for all added arguments.
 
+        :param bool recursive: The flag if destinations from added parsers /
+          subparsers should be included, destinations from grouped arguments
+          are always included
         :returns: The destination names
         :rtype: OrderedDict
         """
         destinations = OrderedDict()
         destinations.update(self._destinations)
-        for d in self._nested_decorators:
+        for d in self._group_decorators:
             destinations.update(d.get_destinations())
+        if recursive:
+            for d in self._recursive_decorators:
+                destinations.update(d.get_destinations())
         return destinations
 
     def add_argument(self, *args, **kwargs):
