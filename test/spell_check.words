@@ -42,6 +42,7 @@ setuppy
 setuptools
 sigint
 stdeb
+subparser
 subparsers
 symlink
 sysconfig
