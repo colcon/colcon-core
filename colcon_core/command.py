@@ -139,7 +139,8 @@ def _main(*, command_name, argv):
     context = CommandContext(command_name=command_name, args=args)
 
     if args.log_level:
-        colcon_logger.setLevel(args.log_level)
+        # the value might be provided externally and needs to be checked again
+        colcon_logger.setLevel(get_numeric_log_level(args.log_level))
 
     colcon_logger.debug(
         'Parsed command line arguments: {args}'.format_map(locals()))
