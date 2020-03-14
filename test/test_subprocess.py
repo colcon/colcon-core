@@ -36,8 +36,7 @@ def test_run():
 
     # without callbacks, with pty
     coroutine = run(
-        [sys.executable, '-c', r"print('line1\nline2')"], None, None,
-        use_pty=True)
+        [sys.executable, '-c', r"print('line1\nline2')"], None, None)
     completed_process = run_until_complete(coroutine)
     assert completed_process.returncode == 0
 
@@ -65,7 +64,7 @@ def test_run():
     stderr_lines = []
     coroutine = run(
         [sys.executable, '-c', r"print('line1\nline2')"],
-        stdout_callback, stderr_callback, use_pty=True)
+        stdout_callback, stderr_callback)
     completed_process = run_until_complete(coroutine)
     assert completed_process.returncode == 0
     assert stdout_lines == [b'line1\n', b'line2\n']

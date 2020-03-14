@@ -12,13 +12,11 @@ import asyncio
 from concurrent.futures import ALL_COMPLETED
 from functools import partial
 import os
-import platform
 import shlex
 import subprocess
 import sys
 from typing import Callable
 from typing import Mapping
-from typing import Optional
 from typing import Sequence
 
 from colcon_core.logging import colcon_logger
@@ -48,8 +46,7 @@ async def run(
     *,
     cwd: str = None,
     env: Mapping[str, str] = None,
-    shell: bool = False,
-    use_pty: Optional[bool] = None
+    shell: bool = False
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
@@ -64,22 +61,14 @@ async def run(
     :param cwd: the working directory for the subprocess
     :param env: a dictionary with environment variables
     :param shell: whether to use the shell as the program to execute
-    :param use_pty: whether to use a pseudo terminal
     :returns: the result of the completed process
     """
     assert callable(stdout_callback) or stdout_callback is None
     assert callable(stderr_callback) or stderr_callback is None
 
-    # if use_pty is neither True nor False choose based on isatty of stdout
-    if use_pty is None:
-        use_pty = sys.stdout.isatty()
-    # the pty module is only supported on Windows
-    if use_pty and platform.system() != 'Linux':
-        use_pty = False
-
     rc, _, _ = await _async_check_call(
         args, stdout_callback, stderr_callback,
-        cwd=cwd, env=env, shell=shell, use_pty=use_pty)
+        cwd=cwd, env=env, shell=shell)
     return subprocess.CompletedProcess(args, rc)
 
 
@@ -102,14 +91,14 @@ async def check_output(
     """
     rc, stdout_data, _ = await _async_check_call(
         args, subprocess.PIPE, None,
-        cwd=cwd, env=env, shell=shell, use_pty=False)
+        cwd=cwd, env=env, shell=shell)
     assert not rc, 'Expected {args} to pass'.format_map(locals())
     return stdout_data
 
 
 async def _async_check_call(
     args, stdout_callback, stderr_callback, *,
-    cwd=None, env=None, shell=False, use_pty=None
+    cwd=None, env=None, shell=False
 ):
     """Coroutine running the command and invoking the callbacks."""
     # choose function to create subprocess
@@ -123,34 +112,19 @@ async def _async_check_call(
     stdout = subprocess.PIPE if stdout_callback else subprocess.DEVNULL
     stderr = subprocess.PIPE if stderr_callback else subprocess.DEVNULL
 
-    # open pseudo terminals
-    if use_pty:
-        # only import when requested since it is not available on all platforms
-        import pty
-        if stdout_callback:
-            stdout_master, stdout = pty.openpty()
-        if stderr_callback:
-            stderr_master, stderr = pty.openpty()
-
     process = await create_subprocess(
         *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr)
 
     # read pipes concurrently
     callbacks = []
-    if use_pty:
-        if callable(stdout_callback):
-            callbacks.append(_fd2callback(stdout_master, stdout_callback))
-        if callable(stderr_callback):
-            callbacks.append(_fd2callback(stderr_master, stderr_callback))
-    else:
-        if callable(stdout_callback):
-            callbacks.append(_pipe2callback(
-                process.stdout, stdout_callback,
-                process.stderr if callable(stderr_callback) else None))
-        if callable(stderr_callback):
-            callbacks.append(asyncio.ensure_future(_pipe2callback(
-                process.stderr, stderr_callback,
-                process.stdout if callable(stdout_callback) else None)))
+    if callable(stdout_callback):
+        callbacks.append(_pipe2callback(
+            process.stdout, stdout_callback,
+            process.stderr if callable(stderr_callback) else None))
+    if callable(stderr_callback):
+        callbacks.append(asyncio.ensure_future(_pipe2callback(
+            process.stderr, stderr_callback,
+            process.stdout if callable(stdout_callback) else None)))
 
     output = [None, None]
     if not stdout_callback and not stderr_callback:
@@ -163,14 +137,9 @@ async def _async_check_call(
             callbacks.append(_communicate_and_close_fds(
                 process,
                 # collect output in case the process uses any pipes
-                output,
-                # pseudo terminals need to be closed explicitly
-                stdout if use_pty else None, stderr if use_pty else None))
+                output))
         else:
-            callbacks.append(_wait_and_close_fds(
-                process,
-                # pseudo terminals need to be closed explicitly
-                stdout if use_pty else None, stderr if use_pty else None))
+            callbacks.append(_wait_and_close_fds(process))
         # waiting for coroutines is deprecated as of Python 3.8
         # convert coroutines into tasks
         for i, callback in enumerate(callbacks):
@@ -255,26 +224,11 @@ async def _pipe2callback(stream, callback, other_stream=None):
         other_stream.feed_eof()
 
 
-async def _wait_and_close_fds(process, stdout=None, stderr=None):
+async def _wait_and_close_fds(process):
     """Coroutine waiting for the process and closing all handles."""
-    try:
-        await process.wait()
-    finally:
-        # always close handles even when a CancelledError is raised
-        if stdout:
-            os.close(stdout)
-        if stderr:
-            os.close(stderr)
+    await process.wait()
 
 
-async def _communicate_and_close_fds(
-    process, output, stdout=None, stderr=None
-):
+async def _communicate_and_close_fds(process, output):
     """Coroutine communicating with the process and closing all handles."""
-    stdout_data, stderr_data = await process.communicate()
-    output[0] = stdout_data
-    output[1] = stderr_data
-    if stdout:
-        os.close(stdout)
-    if stderr:
-        os.close(stderr)
+    output[0], output[1] = await process.communicate()

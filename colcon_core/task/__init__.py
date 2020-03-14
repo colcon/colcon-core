@@ -119,7 +119,7 @@ class TaskExtensionPoint:
 
 
 async def check_call(
-    context, cmd, *, cwd=None, env=None, shell=False, use_pty=None
+    context, cmd, *, cwd=None, env=None, shell=False
 ):
     """
     Run the command described by cmd.
@@ -133,7 +133,6 @@ async def check_call(
     :param cwd: the working directory for the subprocess
     :param env: a dictionary with environment variables
     :param shell: whether to use the shell as the program to execute
-    :param use_pty: whether to use a pseudo terminal
     :returns: the result of the completed process
     """
     def stdout_callback(line):
@@ -146,7 +145,7 @@ async def check_call(
         Command(cmd, cwd=cwd, env=env, shell=shell))
     rc = await run(
         cmd, stdout_callback, stderr_callback,
-        cwd=cwd, env=env, shell=shell, use_pty=use_pty)
+        cwd=cwd, env=env, shell=shell)
     context.put_event_into_queue(
         CommandEnded(
             cmd, cwd=cwd, env=env, shell=shell, returncode=rc.returncode))
