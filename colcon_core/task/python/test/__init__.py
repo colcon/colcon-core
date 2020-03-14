@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import re
-import traceback
 
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import get_first_line_doc
@@ -27,7 +26,6 @@ class PythonTestTask(TaskExtensionPoint):
         add_python_testing_step_arguments(parser)
 
     async def test(self, *, additional_hooks=None):  # noqa: D102
-        pkg = self.context.pkg
         args = self.context.args
 
         logger.info(
@@ -36,8 +34,8 @@ class PythonTestTask(TaskExtensionPoint):
         try:
             env = await get_command_environment(
                 'setup_py', args.build_base, self.context.dependencies)
-        except RuntimeError as e:
-            logger.error(str(e))
+        except RuntimeError:
+            logger.exception('Failed to get command environment')
             return 1
         setup_py_data = get_setup_data(self.context.pkg, env)
 
@@ -52,15 +50,13 @@ class PythonTestTask(TaskExtensionPoint):
                     1, "test() by extension '{key}'".format_map(locals()))
                 try:
                     matched = extension.match(self.context, env, setup_py_data)
-                except Exception as e:  # noqa: F841
+                except Exception:
                     # catch exceptions raised in python testing step extension
-                    exc = traceback.format_exc()
-                    logger.error(
+                    logger.exception(
                         'Exception in Python testing step extension '
-                        "'{extension.STEP_TYPE}': {e}\n{exc}"
+                        "'{extension.STEP_TYPE}'"
                         .format_map(locals()))
-                    # skip failing extension, continue with next one
-                    continue
+                    return 1
                 if matched:
                     break
             else:
@@ -73,12 +69,11 @@ class PythonTestTask(TaskExtensionPoint):
             1, "test.step() by extension '{key}'".format_map(locals()))
         try:
             return await extension.step(self.context, env, setup_py_data)
-        except Exception as e:  # noqa: F841
+        except Exception:
             # catch exceptions raised in python testing step extension
-            exc = traceback.format_exc()
-            logger.error(
+            logger.exception(
                 'Exception in Python testing step extension '
-                "'{extension.STEP_TYPE}': {e}\n{exc}".format_map(locals()))
+                "'{extension.STEP_TYPE}'".format_map(locals()))
             return 1
 
 
@@ -176,12 +171,11 @@ def add_python_testing_step_arguments(parser):
         try:
             retval = extension.add_arguments(parser=parser)
             assert retval is None, 'add_arguments() should return None'
-        except Exception as e:  # noqa: F841
+        except Exception:
             # catch exceptions raised in package selection extension
-            exc = traceback.format_exc()
-            logger.error(
+            logger.exception(
                 'Exception in Python testing step extension '
-                "'{extension.STEP_TYPE}': {e}\n{exc}".format_map(locals()))
+                "'{extension.STEP_TYPE}'".format_map(locals()))
             # skip failing extension, continue with next one
 
 
