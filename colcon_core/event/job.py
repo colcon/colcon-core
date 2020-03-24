@@ -2,6 +2,20 @@
 # Licensed under the Apache License, Version 2.0
 
 
+class JobUnselected:
+    """An event containing the identifier of the unselected job."""
+
+    __slots__ = ('identifier', )
+
+    def __init__(self, identifier):
+        """
+        Construct a JobUnselected.
+
+        :param str identifier: The job identifier
+        """
+        self.identifier = identifier
+
+
 class JobQueued:
     """An event containing the identifier of the queued job."""
 
