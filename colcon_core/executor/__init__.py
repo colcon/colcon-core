@@ -263,7 +263,8 @@ def add_executor_arguments(parser):
 
 
 def execute_jobs(
-    context, jobs, *, on_error: OnError = None, abort_on_error=None
+    context, jobs, *, on_error: OnError = None, abort_on_error=None,
+    pre_execution_callback=None
 ):
     """
     Execute jobs.
@@ -282,6 +283,9 @@ def execute_jobs(
     :param on_error: The decision how to proceed when one job fails
     :param abort_on_error: The flag if pending jobs should be aborted in case
       of individual jobs failing (deprecated, use `on_error` instead)
+    :param pre_execution_callback: An optional callable taking a keyword
+      argument `event_queue` which will be invoked before the executors
+      `execute()` method
     :returns: The return code
     """
     assert on_error is None or abort_on_error is None, \
@@ -303,6 +307,10 @@ def execute_jobs(
     # create event reactor with handlers specified by the args
     with create_event_reactor(context) as event_controller:
         executor.set_event_controller(event_controller)
+
+        # allow the caller to post additional events
+        if pre_execution_callback is not None:
+            pre_execution_callback(event_queue=event_controller.get_queue())
 
         # pass queue to jobs to publish events
         for job in jobs.values():
