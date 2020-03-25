@@ -148,7 +148,6 @@ def _main(*, command_name, argv):
     # error: no verb provided
     if args.verb_name is None:
         print(parser.format_usage())
-        print(_RTFM_TEXT)
         return 'Error: No verb provided'
 
     # set default locations for log files, for searchability: COLCON_LOG_PATH
