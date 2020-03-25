@@ -148,6 +148,7 @@ def _main(*, command_name, argv):
     # error: no verb provided
     if args.verb_name is None:
         print(parser.format_usage())
+        print(_RTFM_TEXT)
         return 'Error: No verb provided'
 
     # set default locations for log files, for searchability: COLCON_LOG_PATH
@@ -211,8 +212,12 @@ def create_parser(environment_variables_group_name):
     parser = CustomArgumentParser(
         prog=get_prog_name(),
         formatter_class=CustomFormatter,
-        epilog=get_environment_variables_epilog(
-            environment_variables_group_name))
+        epilog=(
+            get_environment_variables_epilog(
+                environment_variables_group_name
+            ) + '\n\n' + _RTFM_TEXT
+        )
+    )
 
     # enable introspecting and intercepting all command line arguments
     parser = decorate_argument_parser(parser)
@@ -266,6 +271,9 @@ def get_environment_variables_epilog(group_name):
     for name in sorted(env_vars.keys()):
         epilog_lines += _format_pair(name, env_vars[name], indent=2, align=24)
     return 'Environment variables:\n' + '\n'.join(epilog_lines)
+
+
+_RTFM_TEXT = 'For more help and usage tips, see https://colcon.readthedocs.io'
 
 
 def add_log_level_argument(parser):
