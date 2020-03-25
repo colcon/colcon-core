@@ -5,7 +5,6 @@ import asyncio
 import logging
 import signal
 import sys
-import traceback
 
 from colcon_core.executor import ExecutorExtensionPoint
 from colcon_core.executor import OnError
@@ -68,10 +67,9 @@ class SequentialExecutor(ExecutorExtensionPoint):
                         "run_until_complete '{name}' finished"
                         .format_map(locals()))
                     return signal.SIGINT
-                except Exception as e:  # noqa: F841
-                    exc = traceback.format_exc()
-                    logger.error(
-                        "Exception in job execution '{name}': {e}\n{exc}"
+                except Exception:
+                    logger.exception(
+                        "Exception in job execution '{name}'"
                         .format_map(locals()))
                     return 1
                 result = future.result()
