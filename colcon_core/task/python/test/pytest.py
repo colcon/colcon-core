@@ -39,7 +39,8 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             nargs='*', metavar='*', type=str.lstrip,
             help='Pass arguments to pytests. '
             'Arguments matching other options must be prefixed by a space,\n'
-            'e.g. --pytest-args " --help"')
+            'e.g. --pytest-args " --help" (stdout output might not be shown '
+            'by default, e.g. add `--event-handlers console_cohesion+`)')
         parser.add_argument(
             '--pytest-with-coverage',
             action='store_true',
