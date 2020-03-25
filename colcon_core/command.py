@@ -214,7 +214,7 @@ def create_parser(environment_variables_group_name):
         epilog=(
             get_environment_variables_epilog(
                 environment_variables_group_name
-            ) + '\n\n' + _RTFM_TEXT
+            ) + '\n\n' + READTHEDOCS_MESSAGE
         )
     )
 
@@ -272,7 +272,8 @@ def get_environment_variables_epilog(group_name):
     return 'Environment variables:\n' + '\n'.join(epilog_lines)
 
 
-_RTFM_TEXT = 'For more help and usage tips, see https://colcon.readthedocs.io'
+READTHEDOCS_MESSAGE = 'For more help and usage tips, ' \
+                      'see https://colcon.readthedocs.io'
 
 
 def add_log_level_argument(parser):
