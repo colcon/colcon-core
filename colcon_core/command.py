@@ -214,9 +214,7 @@ def create_parser(environment_variables_group_name):
         epilog=(
             get_environment_variables_epilog(
                 environment_variables_group_name
-            ) + '\n\n' + READTHEDOCS_MESSAGE
-        )
-    )
+            ) + '\n\n' + READTHEDOCS_MESSAGE))
 
     # enable introspecting and intercepting all command line arguments
     parser = decorate_argument_parser(parser)
