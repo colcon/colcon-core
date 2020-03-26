@@ -86,13 +86,13 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                 args += [
                     '--cov=' + str(PurePosixPath(
                         *(Path(context.args.path).parts))),
+                    '--cov-report=term',
                     '--cov-report=html:' + str(PurePosixPath(
                         *(Path(context.args.build_base).parts)) /
                         'coverage.html'),
                     '--cov-report=xml:' + str(PurePosixPath(
                         *(Path(context.args.build_base).parts)) /
                         'coverage.xml'),
-                    '--cov-report=term',
                 ]
                 # use --cov-branch option only when available
                 # https://github.com/pytest-dev/pytest-cov/blob/v2.5.0/CHANGELOG.rst
