@@ -86,6 +86,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                 args += [
                     '--cov=' + str(PurePosixPath(
                         *(Path(context.args.path).parts))),
+                    '--cov-report=term',
                     '--cov-report=html:' + str(PurePosixPath(
                         *(Path(context.args.build_base).parts)) /
                         'coverage.html'),
