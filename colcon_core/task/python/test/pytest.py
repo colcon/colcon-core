@@ -92,6 +92,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                     '--cov-report=xml:' + str(PurePosixPath(
                         *(Path(context.args.build_base).parts)) /
                         'coverage.xml'),
+                    '--cov-report=term',
                 ]
                 # use --cov-branch option only when available
                 # https://github.com/pytest-dev/pytest-cov/blob/v2.5.0/CHANGELOG.rst
