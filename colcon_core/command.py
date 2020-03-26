@@ -52,7 +52,8 @@ if warnings_filters:
 from colcon_core.argument_parser import decorate_argument_parser  # noqa: E402 E501 I100 I202
 from colcon_core.argument_parser import SuppressUsageOutput  # noqa: E402
 from colcon_core.entry_point import load_entry_points  # noqa: E402
-from colcon_core.location import create_log_path  # noqa: E402
+from colcon_core.location import create_log_path, \
+    optional_expanded_path  # noqa: E402
 from colcon_core.location import get_log_path  # noqa: E402
 from colcon_core.location import set_default_config_path  # noqa: E402
 from colcon_core.location import set_default_log_path  # noqa: E402
@@ -282,6 +283,7 @@ def add_log_level_argument(parser):
     """
     parser.add_argument(
         '--log-base',
+        type=optional_expanded_path,
         help='The base path for all log directories (default: ./log, to '
              'disable: {os.devnull})'.format_map(globals()))
     parser.add_argument(

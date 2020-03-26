@@ -13,6 +13,7 @@ from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
 from colcon_core.executor import Job
 from colcon_core.executor import OnError
+from colcon_core.location import expanded_path, optional_expanded_path
 from colcon_core.package_identification.ignore import IGNORE_MARKER
 from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
@@ -44,17 +45,14 @@ class BuildPackageArguments:
         super().__init__()
         self.path = os.path.abspath(
             os.path.join(os.getcwd(), str(pkg.path)))
-        self.build_base = os.path.abspath(os.path.join(
-            os.getcwd(), args.build_base, pkg.name))
-        self.install_base = os.path.abspath(os.path.join(
-            os.getcwd(), args.install_base))
+        self.build_base = os.path.join(args.build_base, pkg.name)
+        self.install_base = args.install_base
         self.merge_install = args.merge_install
         if not args.merge_install:
             self.install_base = os.path.join(
                 self.install_base, pkg.name)
         self.symlink_install = args.symlink_install
-        self.test_result_base = os.path.abspath(os.path.join(
-            os.getcwd(), args.test_result_base, pkg.name)) \
+        self.test_result_base = os.path.join(args.test_result_base, pkg.name) \
             if args.test_result_base else None
 
         # set additional arguments
@@ -81,10 +79,12 @@ class BuildVerb(VerbExtensionPoint):
     def add_arguments(self, *, parser):  # noqa: D102
         parser.add_argument(
             '--build-base',
+            type=expanded_path,
             default='build',
             help='The base path for all build directories (default: build)')
         parser.add_argument(
             '--install-base',
+            type=expanded_path,
             default='install',
             help='The base path for all install prefixes (default: install)')
         parser.add_argument(
@@ -97,6 +97,7 @@ class BuildVerb(VerbExtensionPoint):
             help='Use symlinks instead of copying files where possible')
         parser.add_argument(
             '--test-result-base',
+            type=optional_expanded_path,
             help='The base path for all test results (default: --build-base)')
         parser.add_argument(
             '--continue-on-error',

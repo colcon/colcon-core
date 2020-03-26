@@ -2,8 +2,10 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+import os.path
 from pathlib import Path
 import uuid
+from typing import AnyStr, Optional
 
 from colcon_core.logging import colcon_logger
 
@@ -74,7 +76,7 @@ def get_log_path():
         _log_base_path_env_var is not None and
         os.environ.get(_log_base_path_env_var)
     ):
-        path = os.environ.get(_log_base_path_env_var)
+        path = expanded_path(os.environ.get(_log_base_path_env_var))
     else:
         global _log_base_path_default
         path = _log_base_path_default
@@ -108,7 +110,7 @@ def set_default_log_path(
     global _log_base_path_env_var
     global _log_subdirectory
     _log_base_path = base_path
-    _log_base_path_default = default
+    _log_base_path_default = expanded_path(default)
     _log_base_path_env_var = env_var
     assert subdirectory is None or subdirectory
     _log_subdirectory = subdirectory \
@@ -226,3 +228,32 @@ def get_relative_package_index_path():
     """
     # the value is also being hard coded in shell/template/prefix_util.py
     return Path('share', 'colcon-core', 'packages')
+
+
+def expanded_path(path: AnyStr) -> AnyStr:
+    """
+    Expand a user-provided path string in a shell-like way.
+
+    :param path: A string representing the intended path. If relative,
+        then relative to cwd.
+    :return: An absolute path with environment variables and home folder
+        references resolved. The path need not exist and symlinks are not
+        resolved.
+    """
+    if not path:
+        raise ValueError("Path is empty - did you mean '.'?")
+    p = os.path.expandvars(path)
+    p = os.path.expanduser(p)
+    p = os.path.abspath(p)
+    return p
+
+
+def optional_expanded_path(maybe_path: Optional[AnyStr]) -> Optional[AnyStr]:
+    """
+    Expand an optional user-provided path string in a shell-like way.
+
+    :param maybe_path: A string representing the intended path. If relative,
+        then relative to cwd.
+    :return: None if given a blank path or None, else same as expanded_path.
+    """
+    return expanded_path(maybe_path) if maybe_path else None

@@ -13,6 +13,7 @@ from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
 from colcon_core.executor import Job
 from colcon_core.executor import OnError
+from colcon_core.location import expanded_path
 from colcon_core.logging import colcon_logger
 from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
@@ -44,16 +45,13 @@ class TestPackageArguments:
         super().__init__()
         self.path = os.path.abspath(
             os.path.join(os.getcwd(), str(pkg.path)))
-        self.build_base = os.path.abspath(os.path.join(
-            os.getcwd(), args.build_base, pkg.name))
-        self.install_base = os.path.abspath(os.path.join(
-            os.getcwd(), args.install_base))
+        self.build_base = os.path.join(args.build_base, pkg.name)
+        self.install_base = args.install_base
         if not args.merge_install:
-            self.install_base = os.path.join(
-                self.install_base, pkg.name)
-        self.test_result_base = os.path.abspath(os.path.join(
-            os.getcwd(), args.test_result_base, pkg.name)) \
-            if args.test_result_base else None
+            self.install_base = os.path.join(self.install_base, pkg.name)
+        self.test_result_base = os.path.join(expanded_path(
+            args.test_result_base), pkg.name) if args.test_result_base \
+            else None
 
         # set additional arguments
         for dest in (additional_destinations or []):
@@ -86,10 +84,12 @@ class TestVerb(VerbExtensionPoint):
         parser.add_argument(
             '--build-base',
             default='build',
+            type=expanded_path,
             help='The base path for all build directories (default: build)')
         parser.add_argument(
             '--install-base',
             default='install',
+            type=expanded_path,
             help='The base path for all install prefixes (default: install)')
         parser.add_argument(
             '--merge-install',
@@ -140,8 +140,7 @@ class TestVerb(VerbExtensionPoint):
             additional_argument_names=self.task_argument_destinations,
             recursive_categories=('run', ))
 
-        install_base = os.path.abspath(os.path.join(
-            os.getcwd(), context.args.install_base))
+        install_base = context.args.install_base
         jobs = self._get_jobs(context.args, decorators, install_base)
 
         if context.args.return_code_on_test_failure:
