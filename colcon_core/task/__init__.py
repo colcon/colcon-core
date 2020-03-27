@@ -135,6 +135,7 @@ async def check_call(
     :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
     :returns: the result of the completed process
+    :rtype subprocess.CompletedProcess
     """
     def stdout_callback(line):
         context.put_event_into_queue(StdoutLine(line))
@@ -144,13 +145,14 @@ async def check_call(
 
     context.put_event_into_queue(
         Command(cmd, cwd=cwd, env=env, shell=shell))
-    rc = await run(
+    completed = await run(
         cmd, stdout_callback, stderr_callback,
         cwd=cwd, env=env, shell=shell, use_pty=use_pty)
     context.put_event_into_queue(
         CommandEnded(
-            cmd, cwd=cwd, env=env, shell=shell, returncode=rc.returncode))
-    return rc
+            cmd, cwd=cwd, env=env, shell=shell,
+            returncode=completed.returncode))
+    return completed
 
 
 def get_task_extensions(task_name, *, unique_instance=False):

@@ -45,6 +45,6 @@ class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
         cmd = [executable, '-m', 'unittest', '-v']
         if context.args.unittest_args is not None:
             cmd += context.args.unittest_args
-        rc = await check_call(context, cmd, cwd=context.args.path, env=env)
-        if rc and rc.returncode:
-            return rc.returncode
+        completed = await check_call(
+            context, cmd, cwd=context.args.path, env=env)
+        return completed.returncode

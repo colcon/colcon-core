@@ -57,8 +57,8 @@ class PythonBuildTask(TaskExtensionPoint):
 
         if not args.symlink_install:
             rc = await self._undo_develop(pkg, args, env)
-            if rc and rc.returncode:
-                return rc.returncode
+            if rc:
+                return rc
 
             # invoke `setup.py install` step with lots of arguments
             # to avoid placing any files in the source space
@@ -73,9 +73,10 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--single-version-externally-managed',
             ]
             self._append_install_layout(args, cmd)
-            rc = await check_call(self.context, cmd, cwd=args.path, env=env)
-            if rc and rc.returncode:
-                return rc.returncode
+            completed = await check_call(
+                self.context, cmd, cwd=args.path, env=env)
+            if completed.returncode:
+                return completed.returncode
 
         else:
             self._undo_install(pkg, args, setup_py_data, python_lib)
@@ -96,10 +97,10 @@ class PythonBuildTask(TaskExtensionPoint):
             if setup_py_data.get('data_files'):
                 cmd += ['install_data', '--install-dir', args.install_base]
             self._append_install_layout(args, cmd)
-            rc = await check_call(
+            completed = await check_call(
                 self.context, cmd, cwd=args.build_base, env=env)
-            if rc and rc.returncode:
-                return rc.returncode
+            if completed.returncode:
+                return completed.returncode
 
             # explicitly add the build directory to the PYTHONPATH
             # to maintain the desired order
@@ -131,10 +132,9 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--uninstall', '--editable',
                 '--build-directory', os.path.join(args.build_base, 'build')
             ]
-            rc = await check_call(
+            completed = await check_call(
                 self.context, cmd, cwd=args.build_base, env=env)
-            if rc:
-                return rc
+            return completed.returncode
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
         # undo previous install if install.log is found
