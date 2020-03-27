@@ -56,9 +56,9 @@ class PythonBuildTask(TaskExtensionPoint):
             env.get('PYTHONPATH', '')
 
         if not args.symlink_install:
-            none_or_completed = await self._undo_develop(pkg, args, env)
-            if none_or_completed and none_or_completed.returncode:
-                return none_or_completed.returncode
+            rc = await self._undo_develop(pkg, args, env)
+            if rc:
+                return rc
 
             # invoke `setup.py install` step with lots of arguments
             # to avoid placing any files in the source space
@@ -132,8 +132,9 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--uninstall', '--editable',
                 '--build-directory', os.path.join(args.build_base, 'build')
             ]
-            return await check_call(
+            completed = await check_call(
                 self.context, cmd, cwd=args.build_base, env=env)
+            return completed.returncode
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
         # undo previous install if install.log is found
