@@ -230,8 +230,12 @@ def test_execute_jobs():
             extensions = get_executor_extensions()
             extensions[110]['extension2'].execute = \
                 lambda args, jobs, on_error: 0
-            rc = execute_jobs(context, jobs, on_error=OnError.interrupt)
+            callback = Mock()
+            rc = execute_jobs(
+                context, jobs, on_error=OnError.interrupt,
+                pre_execution_callback=callback)
             assert rc == 0
             assert event_reactor.get_queue().put.call_count == 1
             assert isinstance(
                 event_reactor.get_queue().put.call_args[0][0][0], JobQueued)
+            assert callback.call_count == 1

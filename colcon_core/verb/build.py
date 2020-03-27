@@ -8,6 +8,7 @@ import traceback
 
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
+from colcon_core.event.job import JobUnselected
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
@@ -128,11 +129,22 @@ class BuildVerb(VerbExtensionPoint):
 
         install_base = os.path.abspath(os.path.join(
             os.getcwd(), context.args.install_base))
-        jobs = self._get_jobs(context.args, decorators, install_base)
+        jobs, unselected_packages = self._get_jobs(
+            context.args, decorators, install_base)
 
         on_error = OnError.interrupt \
             if not context.args.continue_on_error else OnError.skip_downstream
-        rc = execute_jobs(context, jobs, on_error=on_error)
+
+        def post_unselected_packages(*, event_queue):
+            nonlocal unselected_packages
+            names = [pkg.name for pkg in unselected_packages]
+            for name in sorted(names):
+                event_queue.put(
+                    (JobUnselected(name), None))
+
+        rc = execute_jobs(
+            context, jobs, on_error=on_error,
+            pre_execution_callback=post_unselected_packages)
 
         self._create_prefix_scripts(install_base, context.args.merge_install)
 
@@ -153,11 +165,14 @@ class BuildVerb(VerbExtensionPoint):
 
     def _get_jobs(self, args, decorators, install_base):
         jobs = OrderedDict()
+        unselected_packages = set()
         for decorator in decorators:
+            pkg = decorator.descriptor
+
             if not decorator.selected:
+                unselected_packages.add(pkg)
                 continue
 
-            pkg = decorator.descriptor
             extension = get_task_extension('colcon_core.task.build', pkg.type)
             if not extension:
                 logger.warning(
@@ -192,7 +207,7 @@ class BuildVerb(VerbExtensionPoint):
                 task=extension, task_context=task_context)
 
             jobs[pkg.name] = job
-        return jobs
+        return jobs, unselected_packages
 
     def _create_prefix_scripts(self, install_base, merge_install):
         extensions = get_shell_extensions()
