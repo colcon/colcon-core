@@ -66,6 +66,7 @@ async def run(
     :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
     :returns: the result of the completed process
+    :rtype subprocess.CompletedProcess
     """
     assert callable(stdout_callback) or stdout_callback is None
     assert callable(stderr_callback) or stderr_callback is None
