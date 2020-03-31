@@ -54,6 +54,23 @@ def wrap_default_value(value):
     return value
 
 
+def unwrap_default_value(value):
+    """
+    Unwrap a default value to the native type.
+
+    :param value: The wrapped default value
+    :returns: The unwrapped value
+    :raises ValueError: if the value is not a wrapped default value
+    """
+    global _types
+    if not is_default_value(value):
+        raise ValueError(
+            'the passed value is not a wrapped default value: ' +
+            str(type(value)))
+    type_ = [k for k, v in _types.items() if v == type(value)][0]
+    return type_(value)
+
+
 def is_default_value(value):
     """Check if a value is a default value."""
     global _types
