@@ -5,6 +5,7 @@ import os
 import shutil
 import sys
 import traceback
+import warnings
 
 from colcon_core.event.command import Command
 from colcon_core.event.command import CommandEnded
@@ -14,7 +15,7 @@ from colcon_core.event.output import StdoutLine
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_name
-from colcon_core.subprocess import run
+from colcon_core.subprocess import run as colcon_core_subprocess_run
 
 logger = colcon_logger.getChild(__name__)
 
@@ -129,6 +130,34 @@ async def check_call(
     All output to `stdout` and `stderr` is posted as `StdoutLine` and
     `StderrLine` events to the event queue.
 
+    This function has been depreated, use ``colcon_core.task.run()`` instead.
+
+    :param cmd: The command and its arguments
+    :param cwd: the working directory for the subprocess
+    :param env: a dictionary with environment variables
+    :param shell: whether to use the shell as the program to execute
+    :param use_pty: whether to use a pseudo terminal
+    :returns: the result of the completed process
+    :rtype subprocess.CompletedProcess
+    """
+    warnings.warn(
+        'colcon_core.task.check_call() has been deprecated, use '
+        'colcon_core.task.run() instead', stacklevel=2)
+    return await run(
+        context, cmd, cwd=cwd, env=env, shell=shell, use_pty=use_pty)
+
+
+async def run(
+    context, cmd, *, cwd=None, env=None, shell=False, use_pty=None
+):
+    """
+    Run the command described by cmd.
+
+    Post a `Command` event to the queue describing the exact invocation in
+    order to allow reproducing it.
+    All output to `stdout` and `stderr` is posted as `StdoutLine` and
+    `StderrLine` events to the event queue.
+
     :param cmd: The command and its arguments
     :param cwd: the working directory for the subprocess
     :param env: a dictionary with environment variables
@@ -145,7 +174,7 @@ async def check_call(
 
     context.put_event_into_queue(
         Command(cmd, cwd=cwd, env=env, shell=shell))
-    completed = await run(
+    completed = await colcon_core_subprocess_run(
         cmd, stdout_callback, stderr_callback,
         cwd=cwd, env=env, shell=shell, use_pty=use_pty)
     context.put_event_into_queue(

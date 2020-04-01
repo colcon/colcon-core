@@ -4,7 +4,7 @@
 from sys import executable
 
 from colcon_core.plugin_system import satisfies_version
-from colcon_core.task import check_call
+from colcon_core.task import run
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
 
@@ -45,6 +45,6 @@ class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
         cmd = [executable, '-m', 'unittest', '-v']
         if context.args.unittest_args is not None:
             cmd += context.args.unittest_args
-        completed = await check_call(
+        completed = await run(
             context, cmd, cwd=context.args.path, env=env)
         return completed.returncode

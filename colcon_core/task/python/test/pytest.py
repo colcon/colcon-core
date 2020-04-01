@@ -9,7 +9,7 @@ import sys
 from colcon_core.event.test import TestFailure
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
-from colcon_core.task import check_call
+from colcon_core.task import run
 from colcon_core.task.python.test import has_test_dependency
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
@@ -155,7 +155,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
 </testsuite>
 """.format_map(locals()))  # noqa: E501
 
-        completed = await check_call(
+        completed = await run(
             context, cmd, cwd=context.args.path, env=env)
 
         # use local import to avoid a dependency on pytest

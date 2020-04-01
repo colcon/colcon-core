@@ -14,7 +14,7 @@ from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
-from colcon_core.task import check_call
+from colcon_core.task import run
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
@@ -73,7 +73,7 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--single-version-externally-managed',
             ]
             self._append_install_layout(args, cmd)
-            completed = await check_call(
+            completed = await run(
                 self.context, cmd, cwd=args.path, env=env)
             if completed.returncode:
                 return completed.returncode
@@ -97,7 +97,7 @@ class PythonBuildTask(TaskExtensionPoint):
             if setup_py_data.get('data_files'):
                 cmd += ['install_data', '--install-dir', args.install_base]
             self._append_install_layout(args, cmd)
-            completed = await check_call(
+            completed = await run(
                 self.context, cmd, cwd=args.build_base, env=env)
             if completed.returncode:
                 return completed.returncode
@@ -132,7 +132,7 @@ class PythonBuildTask(TaskExtensionPoint):
                 '--uninstall', '--editable',
                 '--build-directory', os.path.join(args.build_base, 'build')
             ]
-            completed = await check_call(
+            completed = await run(
                 self.context, cmd, cwd=args.build_base, env=env)
             return completed.returncode
 
