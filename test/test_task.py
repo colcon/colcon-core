@@ -12,11 +12,11 @@ from colcon_core.event.output import StderrLine
 from colcon_core.event.output import StdoutLine
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.task import add_task_arguments
-from colcon_core.task import check_call
 from colcon_core.task import create_file
 from colcon_core.task import get_task_extension
 from colcon_core.task import get_task_extensions
 from colcon_core.task import install
+from colcon_core.task import run
 from colcon_core.task import TaskContext
 from colcon_core.task import TaskExtensionPoint
 from mock import Mock
@@ -78,7 +78,7 @@ def test_extension_interface():
 @pytest.mark.skip(
     reason='Results in stderr output due to a UnicodeDecodeError for the '
            'generated coverage files')
-def test_check_call():
+def test_run():
     context = Mock()
     events = []
 
@@ -90,7 +90,7 @@ def test_check_call():
     cmd = [
         sys.executable, '-c',
         "import sys; print('hello'); print('world', file=sys.stderr)"]
-    coroutine = check_call(context, cmd)
+    coroutine = run(context, cmd)
     completed_process = run_until_complete(coroutine)
     assert completed_process.returncode == 0
     assert len(events) == 3
