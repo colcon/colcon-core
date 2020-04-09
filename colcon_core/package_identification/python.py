@@ -8,20 +8,6 @@ from colcon_core.package_identification \
 from colcon_core.plugin_system import satisfies_version
 from distlib.util import parse_requirement
 from distlib.version import NormalizedVersion
-try:
-    from setuptools.config import read_configuration
-except ImportError as e:
-    from pkg_resources import get_distribution
-    from pkg_resources import parse_version
-    setuptools_version = get_distribution('setuptools').version
-    minimum_version = '30.3.0'
-    if parse_version(setuptools_version) < parse_version(minimum_version):
-        e.msg += ', ' \
-            "'setuptools' needs to be at least version {minimum_version}, if" \
-            ' a newer version is not available from the package manager use ' \
-            "'pip3 install -U setuptools' to update to the latest version" \
-            .format_map(locals())
-    raise
 
 
 class PythonPackageIdentification(PackageIdentificationExtensionPoint):
@@ -113,6 +99,21 @@ def get_configuration(setup_cfg):
     :returns: The configuration data
     :rtype: dict
     """
+    try:
+        # import locally to allow other functions in this module to be usable
+        from setuptools.config import read_configuration
+    except ImportError as e:
+        from pkg_resources import get_distribution
+        from pkg_resources import parse_version
+        setuptools_version = get_distribution('setuptools').version
+        minimum_version = '30.3.0'
+        if parse_version(setuptools_version) < parse_version(minimum_version):
+            e.msg += ', ' \
+                "'setuptools' needs to be at least version " \
+                '{minimum_version}, if a newer version is not available ' \
+                "from the package manager use 'pip3 install -U setuptools' " \
+                'to update to the latest version'.format_map(locals())
+        raise
     return read_configuration(str(setup_cfg))
 
 
