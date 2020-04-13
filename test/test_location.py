@@ -72,6 +72,10 @@ def test_log_path():
         assert isinstance(get_log_path(), Path)
         assert str(get_log_path().parent) == log_base_path
 
+    # suppress logging when environment variable is set to devnull
+    set_default_log_path(base_path=os.devnull)
+    assert get_log_path() is None
+
     # use environment variable when set and no base path passed
     log_base_path = '/other/path'.replace('/', os.sep)
     set_default_log_path(
@@ -79,6 +83,12 @@ def test_log_path():
     with EnvironmentContext(**{log_base_path_env_var: log_base_path}):
         assert isinstance(get_log_path(), Path)
         assert str(get_log_path().parent) == log_base_path
+
+    # use default if not environment variable is set and no base path passed
+    set_default_log_path(
+        base_path=None, env_var=log_base_path_env_var, default='some_default')
+    assert isinstance(get_log_path(), Path)
+    assert str(get_log_path().parent) == 'some_default'
 
     # use specific subdirectory
     subdirectory = 'sub'

@@ -121,7 +121,7 @@ class TaskExtensionPoint:
 
 async def check_call(
     context, cmd, *, cwd=None, env=None, shell=False, use_pty=None
-):
+):  # pragma: no cover
     """
     Run the command described by cmd.
 

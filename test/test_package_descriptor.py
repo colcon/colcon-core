@@ -122,6 +122,9 @@ def test_magic_methods():
     d2.path = Path('/other/path')
     assert d1 != d2
 
+    # comparing with other types always returns False
+    assert d1 != []
+
 
 def test_str():
     d = PackageDescriptor('/some/path')

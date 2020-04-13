@@ -12,6 +12,7 @@ debian
 debinfo
 decodable
 decos
+deepcopy
 deps
 descs
 getpid
