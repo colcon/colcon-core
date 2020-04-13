@@ -177,6 +177,11 @@ def _main(*, command_name, argv):
             None, None)
         handler.handle(log_record)
 
+    # set an environment variable named after the command (if not already set)
+    # which allows subprocesses to identify they are invoked by this command
+    if command_name.upper() not in os.environ:
+        os.environ[command_name.upper()] = '1'
+
     # invoke verb
     return verb_main(context, colcon_logger)
 
