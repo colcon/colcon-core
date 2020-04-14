@@ -119,7 +119,7 @@ class ArgumentParserDecorator:
             self.__dict__[k] = v
 
     @property
-    def _nested_decorators(self):
+    def _nested_decorators(self):  # pragma: no cover
         warnings.warn(
             'colcon_core.argument_parser.ArgumentParserDecorator.'
             '_nested_decorators is a private variable and has been '

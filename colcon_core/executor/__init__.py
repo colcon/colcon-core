@@ -293,7 +293,7 @@ def execute_jobs(
     # keep default behavior of deprecated keyword argument
     if on_error is None and abort_on_error is None:
         on_error = OnError.interrupt
-    if abort_on_error is not None:
+    if abort_on_error is not None:  # pragma: no cover
         warnings.warn(
             "'colcon_core.executor.execute_jobs' was called with the "
             "deprecated keyword argument 'abort_on_error'", stacklevel=2)
@@ -321,7 +321,7 @@ def execute_jobs(
         kwargs = {}
         if 'on_error' in signature.parameters:
             kwargs['on_error'] = on_error
-        else:
+        else:  # pragma: no cover
             # fallback to legacy API
             assert 'abort_on_error' in signature.parameters
             warnings.warn(
