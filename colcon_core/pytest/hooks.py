@@ -9,7 +9,7 @@ import pytest
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
-def pytest_terminal_summary(terminalreporter, exitstatus, config):
+def pytest_terminal_summary(terminalreporter, exitstatus=None, config=None):
     """Redirect the summary warnings to stderr when run within colcon."""
     summary_warnings = terminalreporter.summary_warnings
 
