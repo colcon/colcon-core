@@ -3,6 +3,7 @@
 
 from collections import OrderedDict
 import os
+import os.path
 from pathlib import Path
 import traceback
 
@@ -159,7 +160,7 @@ class BuildVerb(VerbExtensionPoint):
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
         ignore_marker = path / IGNORE_MARKER
-        if not ignore_marker.lexists():
+        if not os.path.lexists(str(ignore_marker)):
             with ignore_marker.open('w'):
                 pass
 
