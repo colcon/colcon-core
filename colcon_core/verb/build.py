@@ -159,7 +159,7 @@ class BuildVerb(VerbExtensionPoint):
         if not path.exists():
             path.mkdir(parents=True, exist_ok=True)
         ignore_marker = path / IGNORE_MARKER
-        if not ignore_marker.exists():
+        if not ignore_marker.lexists():
             with ignore_marker.open('w'):
                 pass
 

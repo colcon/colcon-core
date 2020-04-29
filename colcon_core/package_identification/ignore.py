@@ -23,5 +23,5 @@ class IgnorePackageIdentification(PackageIdentificationExtensionPoint):
 
     def identify(self, desc):  # noqa: D102
         colcon_ignore = desc.path / IGNORE_MARKER
-        if colcon_ignore.exists():
+        if colcon_ignore.lexists():
             raise IgnoreLocationException()
