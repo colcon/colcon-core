@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import os.path
 from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
@@ -23,5 +24,5 @@ class IgnorePackageIdentification(PackageIdentificationExtensionPoint):
 
     def identify(self, desc):  # noqa: D102
         colcon_ignore = desc.path / IGNORE_MARKER
-        if colcon_ignore.exists():
+        if os.path.lexists(str(colcon_ignore)):
             raise IgnoreLocationException()
