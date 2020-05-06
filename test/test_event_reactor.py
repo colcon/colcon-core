@@ -61,12 +61,20 @@ def test_create_event_reactor():
 
         # add a few dummy events
         with patch('colcon_core.event_reactor.logger.error') as error:
-            queue.put(('first', None))
-            queue.put(('second', None))
-            queue.put(('third', None))
+            assert error.call_count == 0
 
-            # check the collected events so far
+            queue.put(('first', None))
             event_reactor.flush()
+            assert error.call_count == 1
+
+            queue.put(('second', None))
+            event_reactor.flush()
+            assert error.call_count == 1
+
+            queue.put(('third', None))
+            event_reactor.flush()
+            assert error.call_count == 2
+
         # 1 timer event, 3 mock string events
         assert len(event_reactor._observers[0].events) == 4
         assert len(event_reactor._observers[1].events) == 4
