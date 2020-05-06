@@ -10,6 +10,7 @@ from colcon_core.event_reactor import create_event_reactor
 from colcon_core.event_reactor import EventReactorShutdown
 from mock import Mock
 from mock import patch
+import pytest
 
 from .entry_point_context import EntryPointContext
 
@@ -43,7 +44,8 @@ class Extension3(CustomExtension):
             raise RuntimeError('custom exception')
 
 
-def test_create_event_reactor():
+@pytest.mark.parametrize('execution_number', range(1000))
+def test_create_event_reactor(execution_number):
     context = Mock()
     context.args = Mock()
     context.args.event_handlers = []
