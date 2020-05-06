@@ -57,7 +57,7 @@ def test_create_event_reactor():
         assert isinstance(queue, Queue)
 
         # use larger interval to prevent different timing to effect the results
-        event_reactor.TIMER_INTERVAL = 0.25
+        event_reactor.TIMER_INTERVAL = 1.0
 
         # add a few dummy events
         with patch('colcon_core.event_reactor.logger.error') as error:
@@ -67,10 +67,13 @@ def test_create_event_reactor():
 
             # check the collected events so far
             event_reactor.flush()
+        # 1 timer event, 3 mock string events
         assert len(event_reactor._observers[0].events) == 4
         assert len(event_reactor._observers[1].events) == 4
+        # both observers got the timer event
         assert isinstance(event_reactor._observers[0].events[0][0], TimerEvent)
         assert isinstance(event_reactor._observers[1].events[0][0], TimerEvent)
+        # both observers got the 3 mock string events
         assert event_reactor._observers[0].events[1:] == \
             [('first', None), ('second', None), ('third', None)]
         assert event_reactor._observers[1].events[1:] == \
@@ -88,7 +91,7 @@ def test_create_event_reactor():
             'custom exception\n')
 
         # wait for another timer event to be generated
-        time.sleep(event_reactor.TIMER_INTERVAL)
+        time.sleep(1.5 * event_reactor.TIMER_INTERVAL)
         assert len(event_reactor._observers[0].events) == 5
         assert len(event_reactor._observers[1].events) == 5
         assert isinstance(
