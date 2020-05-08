@@ -52,6 +52,7 @@ goto:eof
 :: Run the commands in topological order
 :: first argument: the base path to look for packages
 :_colcon_run_ordered_commands
+  setlocal enabledelayedexpansion
   :: check environment variable for custom Python executable
   if "%COLCON_PYTHON_EXECUTABLE%" NEQ "" (
     if not exist "%COLCON_PYTHON_EXECUTABLE%" (
@@ -63,7 +64,7 @@ goto:eof
     :: use the Python executable known at configure time
     set "_colcon_python_executable=@(python_executable)"
     :: if it doesn't exist try a fall back
-    if not exist "%_colcon_python_executable%" (
+    if not exist "!_colcon_python_executable!" (
       python --version > NUL 2> NUL
       if errorlevel 1 (
         echo error: unable to find python executable
@@ -71,6 +72,10 @@ goto:eof
       )
       set "_colcon_python_executable=python"
     )
+  )
+
+  endlocal & (
+    set "_colcon_python_executable=%_colcon_python_executable%"
   )
 
   for /f "delims=" %%c in ('""%_colcon_python_executable%" "%~1_local_setup_util_bat.py" bat@
