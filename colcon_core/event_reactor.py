@@ -79,11 +79,12 @@ class EventReactor:
                 assert retval is None, 'event handler should return None'
             except Exception as e:  # noqa: F841
                 # catch exceptions raised in event handler extension
-                exc = traceback.format_exc()
-                logger.error(
-                    'Exception in event handler extension '
-                    "'{observer.EVENT_HANDLER_NAME}': {e}\n{exc}"
-                    .format_map(locals()))
+                msg = 'Exception in event handler extension ' \
+                    "'{observer.EVENT_HANDLER_NAME}': {e}" \
+                    .format_map(locals())
+                if not isinstance(e, RuntimeError):
+                    msg += '\n' + traceback.format_exc()
+                logger.error(msg)
                 # skip failing extension, continue with next one
 
     def flush(self):

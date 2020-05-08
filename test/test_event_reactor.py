@@ -39,8 +39,10 @@ class Extension3(CustomExtension):
 
     def __call__(self, event):
         super().__call__(event)
-        if event[0] in ('first', 'third'):
-            raise RuntimeError('custom exception')
+        if event[0] == 'first':
+            raise ValueError("ValueError for '%s'" % event[0])
+        if event[0] == 'third':
+            raise RuntimeError("RuntimeError for '%s'" % event[0])
 
 
 def test_create_event_reactor():
@@ -92,11 +94,11 @@ def test_create_event_reactor():
         assert len(error.call_args_list[0][0]) == 1
         assert error.call_args_list[0][0][0].startswith(
             "Exception in event handler extension 'extension3': "
-            'custom exception\n')
+            "ValueError for 'first'\n")
         assert len(error.call_args_list[1][0]) == 1
         assert error.call_args_list[1][0][0].startswith(
             "Exception in event handler extension 'extension3': "
-            'custom exception\n')
+            "RuntimeError for 'third'")
 
         # wait for another timer event to be generated
         time.sleep(1.5 * event_reactor.TIMER_INTERVAL)
