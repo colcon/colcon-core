@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import os.path
+
 from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
