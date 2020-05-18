@@ -142,7 +142,7 @@ class PythonBuildTask(TaskExtensionPoint):
         if not os.path.exists(install_log):
             return
         with open(install_log, 'r') as h:
-            lines = [l.rstrip() for l in h.readlines()]
+            lines = [line.rstrip() for line in h.readlines()]
 
         packages = setup_py_data.get('packages') or []
         for module_name in packages:
