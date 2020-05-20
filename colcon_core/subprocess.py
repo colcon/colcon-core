@@ -101,10 +101,13 @@ async def check_output(
     :returns: The `stdout` output of the command
     :rtype: str
     """
-    rc, stdout_data, _ = await _async_check_call(
-        args, subprocess.PIPE, None,
+    rc, stdout_data, stderr_data = await _async_check_call(
+        args, subprocess.PIPE, subprocess.PIPE,
         cwd=cwd, env=env, shell=shell, use_pty=False)
-    assert not rc, 'Expected {args} to pass'.format_map(locals())
+    if rc:
+        stderr_data = stderr_data.decode(errors='replace')
+    assert not rc, \
+        'Expected {args} to pass: {stderr_data}'.format_map(locals())
     return stdout_data
 
 
