@@ -45,6 +45,11 @@ class PythonTestTask(TaskExtensionPoint):
         if args.python_testing:
             key = args.python_testing
             extension = get_python_testing_step_extension(key)
+            if extension is None:
+                logger.error(
+                    "Failed to load Python testing step extension '{key}'"
+                    .format_map(locals()))
+                return 1
         else:
             extensions = get_python_testing_step_extensions()
             for key, extension in extensions.items():
