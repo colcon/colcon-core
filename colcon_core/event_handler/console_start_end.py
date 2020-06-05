@@ -44,10 +44,10 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
             self._with_test_failures.add(job)
 
         elif isinstance(data, JobEnded):
+            duration = \
+                time.monotonic() - self._start_times[data.identifier]
+            duration_string = format_duration(duration)
             if not data.rc:
-                duration = \
-                    time.monotonic() - self._start_times[data.identifier]
-                duration_string = format_duration(duration)
                 msg = 'Finished <<< {data.identifier} [{duration_string}]' \
                     .format_map(locals())
                 job = event[1]
@@ -56,12 +56,14 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
                 writable = sys.stdout
 
             elif data.rc == SIGINT_RESULT:
-                msg = 'Aborted  <<< {data.identifier}'.format_map(locals())
+                msg = 'Aborted  <<< {data.identifier} [{duration_string}]' \
+                    .format_map(locals())
                 writable = sys.stdout
 
             else:
-                msg = 'Failed   <<< {data.identifier}\t' \
-                    '[ Exited with code {data.rc} ]'.format_map(locals())
+                msg = 'Failed   <<< {data.identifier} ' \
+                    '[{duration_string}, exited with code {data.rc}]' \
+                    .format_map(locals())
                 writable = sys.stderr
 
             print(msg, file=writable, flush=True)
