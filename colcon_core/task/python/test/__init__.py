@@ -4,6 +4,7 @@
 import re
 import traceback
 
+from colcon_core.entry_point import load_entry_points
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import get_first_line_doc
 from colcon_core.plugin_system import instantiate_extensions
@@ -45,6 +46,11 @@ class PythonTestTask(TaskExtensionPoint):
         if args.python_testing:
             key = args.python_testing
             extension = get_python_testing_step_extension(key)
+            if extension is None:
+                logger.error(
+                    "Failed to load Python testing step extension '{key}'"
+                    .format_map(locals()))
+                return 1
         else:
             extensions = get_python_testing_step_extensions()
             for key, extension in extensions.items():
@@ -192,8 +198,14 @@ def get_python_testing_step_extension(step_name):
     :param str step_name: The entry point name of the extension
     :returns: A unique instance of the extension, otherwise None
     """
+    group_name = 'colcon_core.python_testing'
+    extension_types = load_entry_points(group_name)
+    extension_names = list(extension_types.keys())
+    if step_name not in extension_names:
+        return None
+    extension_names.remove(step_name)
     extensions = instantiate_extensions(
-        'colcon_core.python_testing.' + step_name, unique_instance=True)
+        group_name, exclude_names=extension_names, unique_instance=True)
     if step_name not in extensions:
         return None
     extension = extensions[step_name]
