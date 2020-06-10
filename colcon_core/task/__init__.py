@@ -305,7 +305,7 @@ def install(args, rel_src, rel_dst):
 
 def collect_existing_environment_hooks(path):
     """
-    Get a list of a all existing environment hooks in the given directory.
+    Get a list of all existing environment hooks in the given directory.
 
     :param Path path: The path to check for existing environment hooks
     :rtype: list
