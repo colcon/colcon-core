@@ -312,12 +312,11 @@ def collect_existing_environment_hooks(path):
     """
     additional_hooks = []
     shell_extensions = get_shell_extensions()
-    file_extensions = OrderedDict()
+    file_extensions = []
     for shell_extensions_same_prio in shell_extensions.values():
         for shell_extension in shell_extensions_same_prio.values():
-            for file_extension in shell_extension.get_file_extensions():
-                file_extensions[file_extension] = shell_extension
-    for file_extension, shell_extension in file_extensions.items():
+            file_extensions += shell_extension.get_file_extensions()
+    for file_extension in file_extensions:
         file_extension_hooks = sorted(path.glob(
             '*.{file_extension}'.format_map(locals())))
         if file_extension_hooks:
