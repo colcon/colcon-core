@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import OrderedDict
 import os
 import shutil
 import sys
@@ -15,6 +16,7 @@ from colcon_core.event.output import StdoutLine
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_name
+from colcon_core.shell import get_shell_extensions
 from colcon_core.subprocess import run as colcon_core_subprocess_run
 
 logger = colcon_logger.getChild(__name__)
@@ -299,3 +301,25 @@ def install(args, rel_src, rel_dst):
             shutil.rmtree(dst)
         if not os.path.exists(dst):
             os.symlink(src, dst)
+
+
+def collect_existing_environment_hooks(path):
+    """
+    Get a list of a all existing environment hooks in the given directory.
+
+    :param Path path: The path to check for existing environment hooks
+    :rtype: list
+    """
+    additional_hooks = []
+    shell_extensions = get_shell_extensions()
+    file_extensions = OrderedDict()
+    for shell_extensions_same_prio in shell_extensions.values():
+        for shell_extension in shell_extensions_same_prio.values():
+            for file_extension in shell_extension.get_file_extensions():
+                file_extensions[file_extension] = shell_extension
+    for file_extension, shell_extension in file_extensions.items():
+        file_extension_hooks = sorted(path.glob(
+            '*.{file_extension}'.format_map(locals())))
+        if file_extension_hooks:
+            additional_hooks += file_extension_hooks
+    return additional_hooks
