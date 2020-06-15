@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import asyncio
+from contextlib import suppress
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -21,11 +22,9 @@ import pytest
 def monkey_patch_get_shell_extensions(monkeypatch):
     a_shell = None
     for shell_extension_class in [ShShell, BatShell]:
-        try:
+        with suppress(SkipExtensionException):
             a_shell = shell_extension_class()
             break
-        except SkipExtensionException:
-            pass
 
     if a_shell is None:
         pytest.fail('No valid shell extension found.')

@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from contextlib import suppress
 from distutils.sysconfig import get_python_lib
 import os
 from pathlib import Path
@@ -175,10 +176,8 @@ class PythonBuildTask(TaskExtensionPoint):
                     directories.add(line)
         # remove empty directories
         for d in sorted(directories, reverse=True):
-            try:
+            with suppress(OSError):
                 os.rmdir(d)
-            except OSError:
-                pass
         os.remove(install_log)
 
     def _symlinks_in_build(self, args, setup_py_data):
