@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from contextlib import suppress
 import os
 from pathlib import Path
 import uuid
@@ -198,23 +199,15 @@ def _create_symlink(src, dst):
     # remove valid symlink to wrong destination (previous if, no return)
     # or invalid symlink (non-existing else from previous if)
     if dst.is_symlink():
-        try:
+        with suppress(FileNotFoundError):
             dst.unlink()
-        except FileNotFoundError:
-            pass
 
     # use relative path when possible
-    try:
+    with suppress(ValueError):
         src = src.relative_to(dst.parent)
-    except ValueError:
-        pass
-    try:
+    # Administrator privileges are required on Windows
+    with suppress(FileNotFoundError, OSError):
         os.symlink(str(src), str(dst))
-    except FileNotFoundError:
-        pass
-    except OSError:
-        # Administrator privileges are required on Windows
-        pass
 
 
 def get_relative_package_index_path():
