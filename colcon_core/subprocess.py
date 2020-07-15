@@ -132,9 +132,9 @@ async def _async_check_call(
         # only import when requested since it is not available on all platforms
         import pty
         if stdout_callback:
-            stdout_master, stdout = pty.openpty()
+            stdout_descriptor, stdout = pty.openpty()
         if stderr_callback:
-            stderr_master, stderr = pty.openpty()
+            stderr_descriptor, stderr = pty.openpty()
 
     process = await create_subprocess(
         *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr)
@@ -143,9 +143,9 @@ async def _async_check_call(
     callbacks = []
     if use_pty:
         if callable(stdout_callback):
-            callbacks.append(_fd2callback(stdout_master, stdout_callback))
+            callbacks.append(_fd2callback(stdout_descriptor, stdout_callback))
         if callable(stderr_callback):
-            callbacks.append(_fd2callback(stderr_master, stderr_callback))
+            callbacks.append(_fd2callback(stderr_descriptor, stderr_callback))
     else:
         if callable(stdout_callback):
             callbacks.append(_pipe2callback(
