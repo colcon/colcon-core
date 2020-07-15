@@ -1,6 +1,11 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from contextlib import suppress
+with suppress(ImportError):
+    # needed before importing distutils
+    # to avoid warning introduced in setuptools 49.2.0
+    import setuptools  # noqa: F401
 from distutils.sysconfig import get_python_lib
 from pathlib import Path
 
