@@ -186,7 +186,7 @@ async def _async_check_call(
                     callbacks[i] = asyncio.ensure_future(callback)
         try:
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, KeyboardInterrupt):
             # finish the communication with the subprocess
             done, _ = await asyncio.wait(callbacks, return_when=ALL_COMPLETED)
             raise
