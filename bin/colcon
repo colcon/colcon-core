@@ -40,7 +40,7 @@ entry_point.load_entry_points = custom_load_entry_points
 from colcon_core.command import HOME_ENVIRONMENT_VARIABLE  # noqa: E402 I202
 from colcon_core.command import LOG_LEVEL_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.entry_point \
-    import EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE  # noqa: E402
+    import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.environment.path import PathEnvironment  # noqa: E402
 from colcon_core.environment.pythonpath \
     import PythonPathEnvironment  # noqa: E402
@@ -83,7 +83,7 @@ custom_entry_points.update({
     'colcon_core.environment_variable': {
         'all_shells': ALL_SHELLS_ENVIRONMENT_VARIABLE,
         'default_executor': DEFAULT_EXECUTOR_ENVIRONMENT_VARIABLE,
-        'extension_blacklist': EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE,
+        'extension_blocklist': EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE,
         'home': HOME_ENVIRONMENT_VARIABLE,
         'log_level': LOG_LEVEL_ENVIRONMENT_VARIABLE,
     },

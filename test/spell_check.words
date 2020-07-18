@@ -4,6 +4,7 @@ argparse
 asyncio
 autouse
 basepath
+blocklist
 capsys
 catched
 colcon

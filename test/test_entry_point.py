@@ -82,8 +82,8 @@ def test_all_entry_points():
             assert get_all_entry_points()['group1']['extA'][1] .name == 'extA'
 
 
-def test_entry_point_blacklist():
-    # successful loading of entry point without a blacklist
+def test_entry_point_blocklist():
+    # successful loading of entry point without a blocklist
     with patch(
         'colcon_core.entry_point.iter_entry_points',
         side_effect=iter_entry_points
@@ -103,25 +103,25 @@ def test_entry_point_blacklist():
     load_entry_point(entry_point)
     assert entry_point.load.call_count == 1
 
-    # successful loading of entry point not in blacklist
+    # successful loading of entry point not in blocklist
     entry_point.load.reset_mock()
-    with EnvironmentContext(COLCON_EXTENSION_BLACKLIST=os.pathsep.join([
+    with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST=os.pathsep.join([
         'group1.extB', 'group2.extC'])
     ):
         load_entry_point(entry_point)
     assert entry_point.load.call_count == 1
 
-    # entry point in a blacklisted group can't be loaded
+    # entry point in a blocked group can't be loaded
     entry_point.load.reset_mock()
-    with EnvironmentContext(COLCON_EXTENSION_BLACKLIST='group1'):
+    with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST='group1'):
         with pytest.raises(RuntimeError) as e:
             load_entry_point(entry_point)
         assert 'The entry point group name is listed in the environment ' \
             'variable' in str(e.value)
     assert entry_point.load.call_count == 0
 
-    # entry point listed in the blacklist can't be loaded
-    with EnvironmentContext(COLCON_EXTENSION_BLACKLIST=os.pathsep.join([
+    # entry point listed in the blocklist can't be loaded
+    with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST=os.pathsep.join([
         'group1.extA', 'group1.extB'])
     ):
         with pytest.raises(RuntimeError) as e:
