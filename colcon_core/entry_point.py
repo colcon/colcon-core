@@ -3,17 +3,36 @@
 
 from collections import defaultdict
 import os
+import sys
 import traceback
+import warnings
 
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.logging import colcon_logger
 from pkg_resources import iter_entry_points
 from pkg_resources import WorkingSet
 
-"""Environment variable to blacklist extensions"""
-EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
-    'COLCON_EXTENSION_BLACKLIST',
-    'Blacklist extensions which should not be used')
+"""Environment variable to block extensions"""
+EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
+    'COLCON_EXTENSION_BLOCKLIST',
+    'Block extensions which should not be used')
+
+if sys.version_info[:2] >= (3, 7):
+    def __getattr__(name):
+        global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
+        if name == 'EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE':
+            warnings.warn(
+                "'colcon_core.entry_point.EXTENSION_BLACKLIST_ENVIRONMENT_"
+                "VARIABLE' has been deprecated, use 'colcon_core.entry_point."
+                "EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE' instead",
+                stacklevel=2)
+            return EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
+        raise AttributeError(
+            "module '%s' has no attribute '%s'" % (__name__, name))
+else:
+    # for backward compatibility but without a deprecation warning on usage
+    EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE = \
+        EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
 
 logger = colcon_logger.getChild(__name__)
 
@@ -122,21 +141,27 @@ def load_entry_point(entry_point):
     :returns: the loaded entry point
     :raises RuntimeError: if either the group name or the entry point name is
       listed in the environment variable
-      :const:`EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE`
+      :const:`EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE`
     """
-    global EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE
-    blacklist = os.environ.get(
-        EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE.name, None)
-    if blacklist:
-        blacklist = blacklist.split(os.pathsep)
-        env_var_name = EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE.name
-        if entry_point.group_name in blacklist:
+    global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
+    blocklist = os.environ.get(
+        EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE.name, None)
+    if blocklist is None:
+        blocklist = os.environ.get('COLCON_EXTENSION_BLACKLIST', None)
+        if blocklist is not None:
+            warnings.warn(
+                "The environment variable 'COLCON_EXTENSION_BLACKLIST' has "
+                "been deprecated, use 'COLCON_EXTENSION_BLOCKLIST' instead")
+    if blocklist:
+        blocklist = blocklist.split(os.pathsep)
+        env_var_name = EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE.name
+        if entry_point.group_name in blocklist:
             raise RuntimeError(
                 'The entry point group name is listed in the environment '
                 "variable '{env_var_name}'".format_map(locals()))
         full_name = '{entry_point.group_name}.{entry_point.name}' \
             .format_map(locals())
-        if full_name in blacklist:
+        if full_name in blocklist:
             raise RuntimeError(
                 'The entry point name is listed in the environment variable '
                 "'{env_var_name}'".format_map(locals()))
