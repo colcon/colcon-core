@@ -7,6 +7,7 @@ basepath
 blocklist
 capsys
 catched
+cmake
 colcon
 contextlib
 coroutine

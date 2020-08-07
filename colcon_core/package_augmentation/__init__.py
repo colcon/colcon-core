@@ -135,6 +135,15 @@ def update_descriptor(
     :param additional_argument_names: A dict of option names to destination
       names or a list of argument names
     """
+    # explicit key updates
+    try:
+        desc.name = data['name']
+    except KeyError:
+        pass
+    try:
+        desc.type = data['type']
+    except KeyError:
+        pass
     dep_types = ('build', 'run', 'test')
     # transfer generic dependencies to each specific type
     if 'dependencies' in data:

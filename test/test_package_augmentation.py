@@ -149,6 +149,14 @@ def test_update_descriptor():
     assert 'some' in desc.metadata
     assert desc.metadata['some'] == 'value'
 
+    data = {
+        'name': 'foo',
+        'type': 'cmake',
+    }
+    update_descriptor(desc, data)
+    assert desc.name == 'foo'
+    assert desc.type == 'cmake'
+
 
 def test_update_metadata():
     desc = PackageDescriptor('/some/path')
