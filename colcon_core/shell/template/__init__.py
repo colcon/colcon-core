@@ -5,8 +5,18 @@ from io import StringIO
 import os
 
 from colcon_core.logging import colcon_logger
-from em import Interpreter
-from em import OVERRIDE_OPT
+try:
+    from em import Interpreter
+    from em import OVERRIDE_OPT
+except ImportError as e:
+    try:
+        import em  # noqa: F401
+    except ImportError:
+        e.msg += " The Python package 'empy' must be installed"
+        raise e from None
+    e.msg += " The Python package 'empy' must be installed and 'em' must " \
+        'not be installed since both packages share the same namespace'
+    raise e from None
 
 logger = colcon_logger.getChild(__name__)
 
