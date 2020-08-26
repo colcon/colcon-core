@@ -32,8 +32,6 @@ class ShShell(ShellExtensionPoint):
     def __init__(self):  # noqa: D107
         super().__init__()
         satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^2.1')
-        if sys.platform == 'win32' and not shell.use_all_shell_extensions:
-            raise SkipExtensionException('Not used on Windows systems')
 
     def create_prefix_script(self, prefix_path, merge_install):  # noqa: D102
         prefix_env_path = prefix_path / 'local_setup.sh'
@@ -112,8 +110,6 @@ class ShShell(ShellExtensionPoint):
     async def generate_command_environment(
         self, task_name, build_base, dependencies,
     ):  # noqa: D102
-        if sys.platform == 'win32':
-            raise SkipExtensionException('Not usable on Windows systems')
 
         # check if all dependencies are available
         # removes dependencies available in the environment from the parameter
