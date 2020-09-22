@@ -143,8 +143,10 @@ def check_and_mark_root_dir(this_build_tool='colcon'):
             if current_path.name == original_path.name:
                 return
             raise RuntimeError(
-                f"{original_path} is not the root directory. Please go "
-                f"to {current_path} to invoke `colcon build` command")
+                f"{original_path} is not marked as the root directory. "
+                f"Please go to {current_path} to invoke `colcon build` command"
+                "If this is the root workspace, please remove the `.colcon`"
+                f"file in {current_path}, then run `colcon build` again.")
         else:
             current_path = parent_path
             parent_path = current_path.parent
