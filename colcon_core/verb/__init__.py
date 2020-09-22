@@ -123,6 +123,34 @@ def check_and_mark_install_layout(install_base, *, merge_install):
 
     marker_path.write_text(this_install_layout + '\n')
 
+def check_and_mark_root_dir(this_build_tool='colcon'):
+    """
+    Check the marker file for root workspace. If marker file is found in
+    parent directory, raise error; if it is found in current direcotry,
+    continue to build. If no marker file found, create marker file.
+
+    The marker filename is `.colcon`.
+
+    :param str this_build_tool: The name of this build tool
+    :raises RuntimeError: if marker file is found in parent directory
+    """
+    original_path = Path(os.getcwd())
+    current_path = original_path
+    parent_path = current_path.parent
+    while current_path.name != parent_path.name:
+        marker_path = current_path / '.colcon'
+        if marker_path.parent.is_dir() and marker_path.is_file():
+            if current_path.name == original_path.name:
+                return
+            raise RuntimeError(
+                f"{original_path} is not the root directory. Please go "
+                f"to {current_path} to invoke `colcon build` command")
+        else:
+            current_path = parent_path
+            parent_path = current_path.parent
+
+    marker_path = original_path / '.colcon'
+    marker_path.write_text(this_build_tool + '\n')
 
 def update_object(
     object_, key, value, package_name, argument_type, value_source
