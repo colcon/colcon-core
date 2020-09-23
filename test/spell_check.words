@@ -19,6 +19,7 @@ deps
 descs
 getpid
 iterdir
+localhost
 lstrip
 mkdtemp
 monkeypatch
@@ -57,3 +58,4 @@ tuples
 unlinking
 veyor
 wildcards
+xfail
