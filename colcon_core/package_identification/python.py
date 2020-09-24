@@ -1,13 +1,12 @@
 # Copyright 2016-2019 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-from colcon_core.dependency_descriptor import DependencyDescriptor
+import warnings
+
 from colcon_core.package_identification import logger
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 from colcon_core.plugin_system import satisfies_version
-from distlib.util import parse_requirement
-from distlib.version import NormalizedVersion
 
 
 class PythonPackageIdentification(PackageIdentificationExtensionPoint):
@@ -55,20 +54,6 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
             logger.error(msg)
             raise RuntimeError(msg)
         desc.name = name
-
-        version = config.get('metadata', {}).get('version')
-        desc.metadata['version'] = version
-
-        options = config.get('options', {})
-        dependencies = extract_dependencies(options)
-        for k, v in dependencies.items():
-            desc.dependencies[k] |= v
-
-        def getter(env):
-            nonlocal options
-            return options
-
-        desc.metadata['get_python_setup_options'] = getter
 
 
 def is_reading_cfg_sufficient(setup_py):
@@ -121,23 +106,23 @@ def extract_dependencies(options):
     """
     Get the dependencies of the package.
 
+    This function has been depreated, use
+    ``colcon_core.package_augmentation.python.extract_dependencies()``
+    instead.
+
     :param options: The dictionary from the options section of the setup.cfg
       file
     :returns: The dependencies
     :rtype: dict(string, set(DependencyDescriptor))
     """
-    mapping = {
-        'setup_requires': 'build',
-        'install_requires': 'run',
-        'tests_require': 'test',
-    }
-    dependencies = {}
-    for option_name, dependency_type in mapping.items():
-        dependencies[dependency_type] = set()
-        for dep in options.get(option_name, []):
-            dependencies[dependency_type].add(
-                create_dependency_descriptor(dep))
-    return dependencies
+    warnings.warn(
+        "'colcon_core.package_identification.python.extract_dependencies()' "
+        'has been deprecated, use '
+        "'colcon_core.package_augmentation.python.extract_dependencies()' "
+        'instead', stacklevel=2)
+    from colcon_core.package_augmentation.python import \
+        extract_dependencies as function
+    return function(options)
 
 
 def create_dependency_descriptor(requirement_string):
@@ -146,56 +131,19 @@ def create_dependency_descriptor(requirement_string):
 
     See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 
+    This function has been depreated, use
+    ``colcon_core.package_augmentation.python.create_dependency_descriptor()``
+    instead.
+
     :param str requirement_string: a PEP440 compliant requirement string
     :return: A descriptor with version constraints from the requirement string
     :rtype: DependencyDescriptor
     """
-    symbol_mapping = {
-        '==': 'version_eq',
-        '!=': 'version_neq',
-        '<=': 'version_lte',
-        '>=': 'version_gte',
-        '>': 'version_gt',
-        '<': 'version_lt',
-    }
-
-    requirement = parse_requirement(requirement_string)
-    metadata = {}
-    for symbol, version in (requirement.constraints or []):
-        if symbol in symbol_mapping:
-            metadata[symbol_mapping[symbol]] = version
-        elif symbol == '~=':
-            metadata['version_gte'] = version
-            metadata['version_lt'] = _next_incompatible_version(version)
-        else:
-            logger.warning(
-                "Ignoring unknown symbol '{symbol}' in '{requirement}'"
-                .format_map(locals()))
-    return DependencyDescriptor(requirement.name, metadata=metadata)
-
-
-def _next_incompatible_version(version):
-    """
-    Find the next non-compatible version.
-
-    This is for use with the ~= compatible syntax. It will provide
-    the first version that this version must be less than in order
-    to be compatible.
-
-    :param str version: PEP 440 compliant version number
-    :return: The first version after this version that is not compatible
-    :rtype: str
-    """
-    normalized = NormalizedVersion(version)
-    parse_tuple = normalized.parse(version)
-    version_tuple = parse_tuple[1]
-
-    *unchanged, increment, dropped = version_tuple
-    incremented = increment + 1
-
-    version = unchanged
-    version.append(incremented)
-    # versions have a minimum length of 2
-    if len(version) == 1:
-        version.append(0)
-    return '.'.join(map(str, version))
+    warnings.warn(
+        "'colcon_core.package_identification.python."
+        "create_dependency_descriptor()' has been deprecated, use "
+        "'colcon_core.package_augmentation.python."
+        "create_dependency_descriptor()' instead", stacklevel=2)
+    from colcon_core.package_augmentation.python import \
+        create_dependency_descriptor as function
+    return function(requirement_string)

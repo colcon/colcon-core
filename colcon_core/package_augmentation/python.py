@@ -2,17 +2,19 @@
 # Licensed under the Apache License, Version 2.0
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
-from colcon_core.package_identification import logger
-from colcon_core.package_identification \
-    import PackageIdentificationExtensionPoint
+from colcon_core.package_augmentation import logger
+from colcon_core.package_augmentation \
+    import PackageAugmentationExtensionPoint
+from colcon_core.package_identification.python import get_configuration
+from colcon_core.package_identification.python import is_reading_cfg_sufficient
 from colcon_core.plugin_system import satisfies_version
 from distlib.util import parse_requirement
 from distlib.version import NormalizedVersion
 
 
-class PythonPackageIdentification(PackageIdentificationExtensionPoint):
+class PythonPackageAugmentation(PackageAugmentationExtensionPoint):
     """
-    Identify Python packages with `setup.cfg` files.
+    Augment Python packages with information from `setup.cfg` files.
 
     Only packages which pass no arguments (or only a ``cmdclass``) to the
     ``setup()`` function in their ``setup.py`` file are being considered.
@@ -21,11 +23,13 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
     def __init__(self):  # noqa: D107
         super().__init__()
         satisfies_version(
-            PackageIdentificationExtensionPoint.EXTENSION_POINT_VERSION,
+            PackageAugmentationExtensionPoint.EXTENSION_POINT_VERSION,
             '^1.0')
 
-    def identify(self, desc):  # noqa: D102
-        if desc.type is not None and desc.type != 'python':
+    def augment_package(
+        self, desc, *, additional_argument_names=None
+    ):  # noqa: D102
+        if desc.type != 'python':
             return
 
         setup_py = desc.path / 'setup.py'
@@ -37,24 +41,9 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
             return
 
         if not is_reading_cfg_sufficient(setup_py):
-            logger.debug(
-                "Python package in '{desc.path}' passes arguments to the "
-                'setup() function which requires a different identification '
-                "extension than '{self.PACKAGE_IDENTIFICATION_NAME}'"
-                .format_map(locals()))
             return
 
         config = get_configuration(setup_cfg)
-        name = config.get('metadata', {}).get('name')
-        if not name:
-            return
-
-        desc.type = 'python'
-        if desc.name is not None and desc.name != name:
-            msg = 'Package name already set to different value'
-            logger.error(msg)
-            raise RuntimeError(msg)
-        desc.name = name
 
         version = config.get('metadata', {}).get('version')
         desc.metadata['version'] = version
@@ -69,52 +58,6 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
             return options
 
         desc.metadata['get_python_setup_options'] = getter
-
-
-def is_reading_cfg_sufficient(setup_py):
-    """
-    Check the content of the setup.py file.
-
-    If the ``setup()`` function is called with no arguments or only a
-    ``cmdclass`` it is sufficient to only read the content of the ``setup.cfg``
-    file.
-
-    :param setup_py: The path of the setup.py file
-    :returns: The flag if reading the setup.cfg file is sufficient
-    :rtype: bool
-    """
-    setup_py_content = setup_py.read_text()
-    # the setup function must be called with no arguments
-    # or only a ``cmdclass``to be considered by this extension otherwise
-    # only reading the content of the setup.cfg file isn't sufficient
-    return 'setup()' in setup_py_content or \
-        'setup(cmdclass=cmdclass)' in setup_py_content
-
-
-def get_configuration(setup_cfg):
-    """
-    Read the setup.cfg file.
-
-    :param setup_cfg: The path of the setup.cfg file
-    :returns: The configuration data
-    :rtype: dict
-    """
-    try:
-        # import locally to allow other functions in this module to be usable
-        from setuptools.config import read_configuration
-    except ImportError as e:
-        from pkg_resources import get_distribution
-        from pkg_resources import parse_version
-        setuptools_version = get_distribution('setuptools').version
-        minimum_version = '30.3.0'
-        if parse_version(setuptools_version) < parse_version(minimum_version):
-            e.msg += ', ' \
-                "'setuptools' needs to be at least version " \
-                '{minimum_version}, if a newer version is not available ' \
-                "from the package manager use 'pip3 install -U setuptools' " \
-                'to update to the latest version'.format_map(locals())
-        raise
-    return read_configuration(str(setup_cfg))
 
 
 def extract_dependencies(options):
