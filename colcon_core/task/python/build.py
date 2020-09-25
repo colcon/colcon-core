@@ -236,6 +236,9 @@ class PythonBuildTask(TaskExtensionPoint):
                 source = os.path.relpath(source, args.path)
             items.append(source)
 
+        for script in setup_py_data.get('scripts') or []:
+            items.append(script)
+
         symlinks = []
         # symlink files / directories from source space into build space
         for item in items:
