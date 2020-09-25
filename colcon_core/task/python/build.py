@@ -94,7 +94,7 @@ class PythonBuildTask(TaskExtensionPoint):
 
         else:
             self._undo_install(pkg, args, setup_py_data, python_lib)
-            self._symlinks_in_build(args, setup_py_data)
+            temp_symlinks = self._symlinks_in_build(args, setup_py_data)
 
             # invoke `setup.py develop` step in build space
             # to avoid placing any files in the source space
@@ -113,6 +113,11 @@ class PythonBuildTask(TaskExtensionPoint):
             self._append_install_layout(args, cmd)
             completed = await run(
                 self.context, cmd, cwd=args.build_base, env=env)
+
+            # Remove symlinks that were only needed during build time
+            for symlink in temp_symlinks:
+                os.unlink(symlink)
+
             if completed.returncode:
                 return completed.returncode
 
@@ -272,10 +277,14 @@ class PythonBuildTask(TaskExtensionPoint):
                 os.path.join(args.build_base, item)))
         # provide a symlink within the build space if a module name is
         # changed by the mapping specified in package_dir
+        temp_symlinks = []
         for rel_src, rel_dst in renamed_items:
             symlinks.append((
-                os.path.join(args.build_base, rel_src),
+                os.path.join(args.path, item),
                 os.path.join(args.build_base, rel_dst)))
+            # The other loop added an unrenamed symlink that should be removed
+            # after the setup.py is invoked
+            temp_symlinks.append(os.path.join(args.build_base, rel_src))
 
         for src, dst in symlinks:
             os.makedirs(os.path.dirname(dst), exist_ok=True)
@@ -288,6 +297,8 @@ class PythonBuildTask(TaskExtensionPoint):
                 shutil.rmtree(dst)
             if not os.path.exists(dst):
                 os.symlink(src, dst)
+
+        return temp_symlinks
 
     def _get_python_lib(self, args):
         path = get_python_lib(prefix=args.install_base)
