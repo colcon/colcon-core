@@ -69,7 +69,8 @@ class PythonBuildTask(TaskExtensionPoint):
             # to avoid placing any files in the source space
             cmd = [
                 executable, 'setup.py',
-                'egg_info', '--egg-base', args.build_base,
+                'egg_info', '--egg-base', os.path.relpath(
+                    args.build_base, args.path),
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
                 'install', '--prefix', args.install_base,
