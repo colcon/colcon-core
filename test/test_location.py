@@ -100,33 +100,21 @@ def test_log_path():
 
 
 def test_create_log_path():
-    # no need to create a directory if the path already exists
-    log_path = Path(os.getcwd())
-    set_default_log_path(
-        base_path=log_path.parent, subdirectory=log_path.name)
-    with patch('os.makedirs') as makedirs:
-        makedirs.side_effect = AssertionError('should not be called')
-        create_log_path('verb')
-    # no latest symlink is being created either
-    assert not (log_path.parent / 'latest').exists()
-
     subdirectory = 'sub'
     with TemporaryDirectory(prefix='test_colcon_') as log_path:
         log_path = Path(log_path)
         set_default_log_path(base_path=log_path, subdirectory=subdirectory)
 
-        # repeated call is a noop
-        with patch('os.makedirs') as makedirs:
-            makedirs.side_effect = AssertionError('should not be called')
-            create_log_path('verb2')
-        assert not (log_path.parent / 'latest').exists()
-
         # create a directory and symlink when the path doesn't exist
-        location._create_log_path_called = False
         with patch('os.makedirs', wraps=os.makedirs) as makedirs:
             create_log_path('verb')
             makedirs.assert_called_once_with(str(log_path / subdirectory))
         assert (log_path / subdirectory).exists()
+
+        # repeated call is a noop
+        with patch('os.makedirs') as makedirs:
+            makedirs.side_effect = AssertionError('should not be called')
+            create_log_path('verb')
 
         # since the directory already exists create one with a suffix
         location._create_log_path_called = False
