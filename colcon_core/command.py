@@ -75,6 +75,22 @@ HOME_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'Set the configuration directory (default: ~/.colcon)')
 
 
+_command_exit_handlers = []
+
+
+def register_command_exit_handler(handler):
+    """
+    Register a callable to be invoked after the command finished.
+
+    Repeated registrations of the same handler are ignored.
+
+    :param handler: The callable
+    """
+    global _command_exit_handlers
+    if handler not in _command_exit_handlers:
+        _command_exit_handlers.append(handler)
+
+
 def main(*, command_name='colcon', argv=None):
     """
     Execute the main logic of the command.
@@ -91,15 +107,22 @@ def main(*, command_name='colcon', argv=None):
     * Configure logging level based on an arguments
     * Create an invocation specific log directory
     * Invoke the logic of the selected verb (if applicable)
+    * Invoke registered exit handlers in reverse order
 
     :param str command_name: The name of the command invoked
     :param list argv: The list of arguments
     :returns: The return code
     """
+    global _command_exit_handlers
     try:
         return _main(command_name=command_name, argv=argv)
     except KeyboardInterrupt:
         return signal.SIGINT
+    finally:
+        # invoke all exit handlers
+        while _command_exit_handlers:
+            handler = _command_exit_handlers.pop()
+            handler()
 
 
 def _main(*, command_name, argv):
