@@ -4,9 +4,11 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from colcon_core.package_descriptor import PackageDescriptor
-from colcon_core.package_identification.python \
+from colcon_core.package_augmentation.python \
     import create_dependency_descriptor
+from colcon_core.package_augmentation.python \
+    import PythonPackageAugmentation
+from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification.python \
     import PythonPackageIdentification
 import pytest
@@ -14,6 +16,7 @@ import pytest
 
 def test_identify():
     extension = PythonPackageIdentification()
+    augmentation_extension = PythonPackageAugmentation()
 
     with TemporaryDirectory(prefix='test_colcon_') as basepath:
         desc = PackageDescriptor(basepath)
@@ -65,6 +68,10 @@ def test_identify():
         assert extension.identify(desc) is None
         assert desc.name == 'other-name'
         assert desc.type == 'python'
+        assert not desc.dependencies
+        assert not desc.metadata
+
+        augmentation_extension.augment_package(desc)
         assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
         assert desc.dependencies['build'] == {'build', 'build-windows'}
         assert desc.dependencies['run'] == {'runA', 'runB'}
