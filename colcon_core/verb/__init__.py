@@ -124,7 +124,7 @@ def check_and_mark_install_layout(install_base, *, merge_install):
     marker_path.write_text(this_install_layout + '\n')
 
 
-def check_and_mark_root_dir(this_build_tool='colcon'):
+def check_and_mark_root_dir():
     """
     Check the marker file for root workspace.
 
@@ -132,31 +132,30 @@ def check_and_mark_root_dir(this_build_tool='colcon'):
     if it is found in current direcotry, continue to build.
     If no marker file found, create marker file.
 
-    The marker filename is `.colcon`.
+    The marker filename is `.root_dir`.
 
     :param str this_build_tool: The name of this build tool
     :raises RuntimeError: if marker file is found in parent directory
     """
-    original_path = Path(os.getcwd())
-    current_path = original_path
-    parent_path = current_path.parent
-    while current_path.name != parent_path.name:
-        marker_path = current_path / '.colcon'
-        if marker_path.parent.is_dir() and marker_path.is_file():
-            if current_path.name == original_path.name:
+    start_path = Path(os.path.abspath(os.getcwd()))
+    current_path = start_path
+    home_path = Path(os.path.abspath(os.sep))
+    while current_path != home_path:
+        marker_path = current_path / '.root_dir'
+        if marker_path.parent.is_dir():
+            if marker_path.is_file():
+                if current_path != start_path:
+                    raise RuntimeError(
+                        "'{current_path}' is not marked as the root directory. "
+                        "Please go to '{start_path}' for `colcon build`. "
+                        'If the current directory is intended to be the root '
+                        "workspace, please remove the '.root_dir' file "
+                        "in '{current_path}'.".format_map(locals()))
                 return
-            raise RuntimeError(
-                "'{original_path}' is not marked as the root directory. "
-                "Please go to '{current_path}' for `colcon build`. "
-                'If the current directory is intended to be the root '
-                "workspace, please remove the '.colcon' file "
-                "in '{current_path}'.".format_map(locals()))
         else:
-            current_path = parent_path
-            parent_path = current_path.parent
-
-    marker_path = original_path / '.colcon'
-    marker_path.write_text(this_build_tool + '\n')
+            current_path = current_path.parent
+    marker_path = start_path / '.root_dir'
+    marker_path.write_text('colcon root directory\n')
 
 
 def update_object(

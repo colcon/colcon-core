@@ -23,7 +23,6 @@ from colcon_core.task import get_task_extension
 from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
-from colcon_core.verb import check_and_mark_root_dir
 from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
 
@@ -131,7 +130,6 @@ class TestVerb(VerbExtensionPoint):
             'retest_until_fail'
 
     def main(self, *, context):  # noqa: D102
-        check_and_mark_root_dir()
         check_and_mark_build_tool(context.args.build_base)
         check_and_mark_install_layout(
             context.args.install_base,
