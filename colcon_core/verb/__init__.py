@@ -134,7 +134,6 @@ def check_and_mark_root_dir(start_path):
     :raises RuntimeError: if marker file is found in parent directory
     """
     current_path = Path(start_path)
-    print(current_path)
     marker_name = '.root_dir'
     home_path = Path(os.path.abspath(os.sep))
     while current_path != home_path:
