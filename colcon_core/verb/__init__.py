@@ -124,37 +124,33 @@ def check_and_mark_install_layout(install_base, *, merge_install):
     marker_path.write_text(this_install_layout + '\n')
 
 
-def check_and_mark_root_dir():
+def check_and_mark_root_dir(start_path):
     """
-    Check the marker file for root workspace.
-
-    If marker file is found in parent directory, raise error;
-    if it is found in current direcotry, continue to build.
-    If no marker file found, create marker file.
+    Check the marker file for root workspace, otherwise create it.
 
     The marker filename is `.root_dir`.
 
-    :param str this_build_tool: The name of this build tool
+    :param str start_path: The path where verb is invoked
     :raises RuntimeError: if marker file is found in parent directory
     """
-    start_path = Path(os.path.abspath(os.getcwd()))
-    current_path = start_path
+    current_path = Path(start_path)
+    print(current_path)
+    marker_name = '.root_dir'
     home_path = Path(os.path.abspath(os.sep))
     while current_path != home_path:
-        marker_path = current_path / '.root_dir'
-        if marker_path.parent.is_dir():
-            if marker_path.is_file():
-                if current_path != start_path:
-                    raise RuntimeError(
-                        "'{current_path}' is not marked as the root directory. "
-                        "Please go to '{start_path}' for `colcon build`. "
-                        'If the current directory is intended to be the root '
-                        "workspace, please remove the '.root_dir' file "
-                        "in '{current_path}'.".format_map(locals()))
-                return
+        marker_path = current_path / marker_name
+        if marker_path.is_file():
+            if current_path != Path(start_path):
+                raise RuntimeError(
+                    "'{start_path}' is not marked as the root directory. "
+                    "Please go to '{current_path}' for `colcon build`. "
+                    'If the current directory is intended to be the root '
+                    "workspace, please remove the '{marker_name}' file "
+                    "in '{current_path}'.".format_map(locals()))
+            return
         else:
             current_path = current_path.parent
-    marker_path = start_path / '.root_dir'
+    marker_path = start_path / marker_name
     marker_path.write_text('colcon root directory\n')
 
 
