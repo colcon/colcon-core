@@ -11,6 +11,7 @@ from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_name
 
 logger = colcon_logger.getChild(__name__)
+DEFAULT_START_PATH = os.path.abspath(os.getcwd())
 
 
 class VerbExtensionPoint:

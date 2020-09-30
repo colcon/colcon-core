@@ -27,11 +27,10 @@ from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import check_and_mark_root_dir
+from colcon_core.verb import DEFAULT_START_PATH
 from colcon_core.verb import logger
 from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
-
-DEFAULT_START_PATH = os.path.abspath(os.getcwd())
 
 
 class BuildPackageArguments:
@@ -96,8 +95,7 @@ class BuildVerb(VerbExtensionPoint):
         parser.add_argument(
             '--start_path',
             default=DEFAULT_START_PATH,
-            help='The directory where build verb is invoked in'
-        )
+            help='The directory where build verb is invoked in')
         parser.add_argument(
             '--merge-install',
             action='store_true',
