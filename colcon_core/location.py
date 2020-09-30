@@ -12,10 +12,6 @@ logger = colcon_logger.getChild(__name__)
 
 _config_path = None
 _config_path_env_var = None
-_log_base_path = None
-_log_base_path_default = None
-_log_base_path_env_var = None
-_log_subdirectory = None
 
 
 def get_config_path():
@@ -51,10 +47,27 @@ def set_default_config_path(*, path, env_var=None):
     """
     global _config_path
     global _config_path_env_var
+
+    from colcon_core.command import register_command_exit_handler
+    register_command_exit_handler(_reset_config_path_globals)
+
     _config_path = Path(str(path))
     _config_path_env_var = env_var
     config_path = get_config_path()
     logger.info("Using config path '{config_path}'".format_map(locals()))
+
+
+def _reset_config_path_globals():
+    global _config_path
+    global _config_path_env_var
+    _config_path = None
+    _config_path_env_var = None
+
+
+_log_base_path = None
+_log_base_path_default = None
+_log_base_path_env_var = None
+_log_subdirectory = None
 
 
 def get_log_path():
@@ -108,6 +121,10 @@ def set_default_log_path(
     global _log_base_path_default
     global _log_base_path_env_var
     global _log_subdirectory
+
+    from colcon_core.command import register_command_exit_handler
+    register_command_exit_handler(_reset_log_path_globals)
+
     _log_base_path = base_path
     _log_base_path_default = default
     _log_base_path_env_var = env_var
@@ -115,6 +132,17 @@ def set_default_log_path(
     _log_subdirectory = subdirectory \
         if subdirectory is not None \
         else str(uuid.uuid4())
+
+
+def _reset_log_path_globals():
+    global _log_base_path
+    global _log_base_path_default
+    global _log_base_path_env_var
+    global _log_subdirectory
+    _log_base_path = None
+    _log_base_path_default = None
+    _log_base_path_env_var = None
+    _log_subdirectory = None
 
 
 _create_log_path_called = False
@@ -148,6 +176,9 @@ def create_log_path(verb_name):
     if _create_log_path_called:
         return
     _create_log_path_called = True
+
+    from colcon_core.command import register_command_exit_handler
+    register_command_exit_handler(_reset_log_path_creation_global)
 
     path = get_log_path()
     try:
@@ -185,6 +216,11 @@ def create_log_path(verb_name):
     _create_symlink(
         path.parent / 'latest_{verb_name}'.format_map(locals()),
         path.parent / 'latest')
+
+
+def _reset_log_path_creation_global():
+    global _create_log_path_called
+    _create_log_path_called = False
 
 
 def _create_symlink(src, dst):
