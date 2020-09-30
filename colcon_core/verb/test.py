@@ -101,7 +101,7 @@ class TestVerb(VerbExtensionPoint):
         parser.add_argument(
             '--start_path',
             default=DEFAULT_START_PATH,
-            help='The directory where build verb is invoked in')
+            help='The directory where test verb is invoked in')
         parser.add_argument(
             '--test-result-base',
             help='The base path for all test results (default: --build-base)')
