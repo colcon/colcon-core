@@ -69,7 +69,8 @@ class PythonBuildTask(TaskExtensionPoint):
             # to avoid placing any files in the source space
             cmd = [
                 executable, 'setup.py',
-                'egg_info', '--egg-base', args.build_base,
+                'egg_info', '--egg-base', os.path.relpath(
+                    args.build_base, args.path),
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
                 'install', '--prefix', args.install_base,
@@ -186,16 +187,31 @@ class PythonBuildTask(TaskExtensionPoint):
 
     def _symlinks_in_build(self, args, setup_py_data):
         items = ['setup.py']
+        renamed_items = []
         # add setup.cfg if available
         if os.path.exists(os.path.join(args.path, 'setup.cfg')):
             items.append('setup.cfg')
         # add all first level packages
         package_dir = setup_py_data.get('package_dir') or {}
-        for package in setup_py_data.get('packages') or []:
+        packages = setup_py_data.get('packages') or []
+        for package in packages:
             if '.' in package:
                 continue
             if package in package_dir:
                 items.append(package_dir[package])
+                renamed_items.append((package_dir[package], package))
+                if package_dir[package] in package_dir:
+                    package_dir_package = package_dir[package]
+                    raise RuntimeError(
+                        "The package_dir contains a mapping from '{package}' "
+                        "to '{package_dir_package}' which is also a key"
+                        .format_map(locals()))
+                if package_dir[package] in packages:
+                    package_dir_package = package_dir[package]
+                    raise RuntimeError(
+                        "The value '{package_dir_package}' in package_dir is "
+                        'also listed in packages'
+                        .format_map(locals()))
             elif '' in package_dir:
                 items.append(os.path.join(package_dir[''], package))
             else:
@@ -220,10 +236,23 @@ class PythonBuildTask(TaskExtensionPoint):
                 source = os.path.relpath(source, args.path)
             items.append(source)
 
+        for script in setup_py_data.get('scripts') or []:
+            items.append(script)
+
+        symlinks = []
         # symlink files / directories from source space into build space
         for item in items:
-            src = os.path.join(args.path, item)
-            dst = os.path.join(args.build_base, item)
+            symlinks.append((
+                os.path.join(args.path, item),
+                os.path.join(args.build_base, item)))
+        # provide a symlink within the build space if a module name is
+        # changed by the mapping specified in package_dir
+        for rel_src, rel_dst in renamed_items:
+            symlinks.append((
+                os.path.join(args.build_base, rel_src),
+                os.path.join(args.build_base, rel_dst)))
+
+        for src, dst in symlinks:
             os.makedirs(os.path.dirname(dst), exist_ok=True)
             if os.path.islink(dst):
                 if not os.path.exists(dst) or not os.path.samefile(src, dst):
