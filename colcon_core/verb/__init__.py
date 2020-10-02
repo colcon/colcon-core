@@ -12,6 +12,7 @@ from colcon_core.plugin_system import order_extensions_by_name
 
 logger = colcon_logger.getChild(__name__)
 DEFAULT_START_PATH = Path(os.path.abspath(os.getcwd()))
+MARKER_NAME = '.colcon_root'
 
 
 class VerbExtensionPoint:
@@ -125,33 +126,32 @@ def check_and_mark_install_layout(install_base, *, merge_install):
     marker_path.write_text(this_install_layout + '\n')
 
 
-def check_and_mark_root_dir(start_path):
+def check_and_mark_colcon_root(start_path):
     """
     Check the marker file for root workspace, otherwise create it.
 
-    The marker filename is `.root_dir`.
+    The marker filename is `.colcon_root`.
 
     :param str start_path: The path where verb is invoked
     :raises RuntimeError: if marker file is found in parent directory
     """
     current_path = start_path
-    marker_name = '.root_dir'
     home_path = Path(os.path.abspath(os.sep))
     while current_path != home_path:
-        marker_path = current_path / marker_name
+        marker_path = current_path / MARKER_NAME
         if marker_path.is_file():
             if current_path != start_path:
                 raise RuntimeError(
                     "'{start_path}' is not marked as the root directory. "
                     "Please go to '{current_path}'. "
                     'If you want to mark current path as root directory, '
-                    "please remove the '{marker_name}' file "
+                    "please remove the '{MARKER_NAME}' file "
                     "in '{current_path}'.".format_map(locals()))
             return
         else:
             current_path = current_path.parent
-    marker_path = start_path / marker_name
-    marker_path.write_text('colcon root directory\n')
+    marker_path = start_path / MARKER_NAME
+    marker_path.write_text('\n')
 
 
 def update_object(
