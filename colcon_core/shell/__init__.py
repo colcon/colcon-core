@@ -431,7 +431,7 @@ def get_colcon_prefix_path(*, skip=None):
     """
     warnings.warn(
         "'colcon_core.shell.get_colcon_prefix_path()' has been deprecated, "
-        "use 'colcon_core.prefix_path.get_chained_prefix_path() instead",
+        "use 'colcon_core.prefix_path.get_chained_prefix_path()' instead",
         stacklevel=2)
     global _get_colcon_prefix_path_warnings
     prefix_path = []
