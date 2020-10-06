@@ -7,6 +7,7 @@ with suppress(ImportError):
     # to avoid warning introduced in setuptools 49.2.0
     import setuptools  # noqa: F401
 from distutils.sysconfig import get_python_lib
+import locale
 import os
 from pathlib import Path
 import shutil
@@ -23,6 +24,7 @@ from colcon_core.task import run
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
+from colcon_core.subprocess import check_output
 
 logger = colcon_logger.getChild(__name__)
 
@@ -49,8 +51,6 @@ class PythonBuildTask(TaskExtensionPoint):
             return 1
         setup_py_data = get_setup_data(self.context.pkg, env)
 
-        # `setup.py egg_info` requires the --egg-base to exist
-        os.makedirs(args.build_base, exist_ok=True)
         # `setup.py develop|install` requires the python lib path to exist
         python_lib = os.path.join(
             args.install_base, self._get_python_lib(args))
@@ -60,24 +60,32 @@ class PythonBuildTask(TaskExtensionPoint):
         env['PYTHONPATH'] = python_lib + os.pathsep + \
             env.get('PYTHONPATH', '')
 
-        if not args.symlink_install:
+        # determine if setuptools specific commands are available
+        available_commands = await self._get_available_commands(
+            args.path, env)
+
+        if not args.symlink_install or 'develop' not in available_commands:
             rc = await self._undo_develop(pkg, args, env)
             if rc:
                 return rc
 
             # invoke `setup.py install` step with lots of arguments
             # to avoid placing any files in the source space
-            cmd = [
-                executable, 'setup.py',
-                'egg_info', '--egg-base', os.path.relpath(
-                    args.build_base, args.path),
+            cmd = [executable, 'setup.py']
+            if 'egg_info' in available_commands:
+                # `setup.py egg_info` requires the --egg-base to exist
+                os.makedirs(args.build_base, exist_ok=True)
+                cmd += [
+                    'egg_info', '--egg-base',
+                    os.path.relpath(args.build_base, args.path)]
+            cmd += [
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
                 'install', '--prefix', args.install_base,
-                '--record', os.path.join(args.build_base, 'install.log'),
+                '--record', os.path.join(args.build_base, 'install.log')]
+            if 'egg_info' in available_commands:
                 # prevent installation of dependencies specified in setup.py
-                '--single-version-externally-managed',
-            ]
+                cmd.append('--single-version-externally-managed')
             self._append_install_layout(args, cmd)
             completed = await run(
                 self.context, cmd, cwd=args.path, env=env)
@@ -125,6 +133,23 @@ class PythonBuildTask(TaskExtensionPoint):
         hooks = create_environment_hooks(args.install_base, pkg.name)
         create_environment_scripts(
             pkg, args, default_hooks=hooks, additional_hooks=additional_hooks)
+
+    async def _get_available_commands(self, path, env):
+        output = await check_output(
+            [executable, 'setup.py', '--help-commands'], cwd=path, env=env)
+        commands = set()
+        for line in output.splitlines():
+            if not line.startswith(b'  '):
+                continue
+            try:
+                index = line.index(b'  ', 2)
+            except ValueError:
+                continue
+            if index == 2:
+                continue
+            commands.add(
+                line[2:index].decode(locale.getpreferredencoding(False)))
+        return commands
 
     async def _undo_develop(self, pkg, args, env):
         # undo previous develop if .egg-info is found and develop symlinks
