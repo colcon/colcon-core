@@ -4,9 +4,7 @@
 from pathlib import Path
 import sys
 
-from colcon_core import shell
 from colcon_core.plugin_system import satisfies_version
-from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.prefix_path import get_chained_prefix_path
 from colcon_core.shell import check_dependency_availability
 from colcon_core.shell import get_environment_variables
