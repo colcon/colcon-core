@@ -1,6 +1,4 @@
 # Copyright 2016-2020 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-import sys
-
 __version__ = '0.6.1'
