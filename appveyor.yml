@@ -3,6 +3,8 @@ environment:
   matrix:
     - PYTHON: "C:\\Python36-x64"
 install:
+  # avoid warnings which could also be suppressed with --no-warn-script-location
+  - set "PATH=%PYTHON%\Scripts;%PATH%"
   - "%PYTHON%\\python.exe -m pip install -U setuptools"
   # install_requires
   - "%PYTHON%\\python.exe -m pip install -U coloredlogs distlib EmPy"
