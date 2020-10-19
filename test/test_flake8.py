@@ -10,8 +10,8 @@ from flake8.api.legacy import get_style_guide
 from pydocstyle.utils import log
 
 
-# avoid debug and info messages from flake8 internals
-LOG.setLevel(logging.WARNING)
+# avoid debug / info / warning messages from flake8 internals
+LOG.setLevel(logging.ERROR)
 
 
 def test_flake8():
