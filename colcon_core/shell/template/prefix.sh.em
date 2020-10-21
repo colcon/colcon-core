@@ -101,7 +101,7 @@ fi
 _colcon_prefix_sh_source_script() {
   if [ -f "$1" ]; then
     if [ -n "$COLCON_TRACE" ]; then
-      echo ". \"$1\""
+      echo "# . \"$1\""
     fi
     . "$1"
   else
@@ -118,10 +118,21 @@ $_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setu
 )"
 unset _colcon_python_executable
 if [ -n "$COLCON_TRACE" ]; then
-  echo "Execute generated script:"
-  echo "<<<"
+  echo "_colcon_prefix_sh_source_script() {
+    if [ -f \"\$1\" ]; then
+      if [ -n \"\$COLCON_TRACE\" ]; then
+        echo \"# . \\\"\$1\\\"\"
+      fi
+      . \"\$1\"
+    else
+      echo \"not found: \\\"\$1\\\"\" 1>&2
+    fi
+  }"
+  echo "# Execute generated script:"
+  echo "# <<<"
   echo "${_colcon_ordered_commands}"
-  echo ">>>"
+  echo "# >>>"
+  echo "unset _colcon_prefix_sh_source_script"
 fi
 eval "${_colcon_ordered_commands}"
 unset _colcon_ordered_commands
