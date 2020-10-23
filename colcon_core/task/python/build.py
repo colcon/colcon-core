@@ -7,6 +7,7 @@ with suppress(ImportError):
     # to avoid warning introduced in setuptools 49.2.0
     import setuptools  # noqa: F401
 from distutils.sysconfig import get_python_lib
+import functools
 import locale
 import os
 from pathlib import Path
@@ -94,29 +95,28 @@ class PythonBuildTask(TaskExtensionPoint):
 
         else:
             self._undo_install(pkg, args, setup_py_data, python_lib)
-            temp_symlinks = self._symlinks_in_build(args, setup_py_data)
+            unlink_temp_symlinks = self._symlinks_in_build(args, setup_py_data)
 
             # invoke `setup.py develop` step in build space
             # to avoid placing any files in the source space
 
-            # --editable causes this to skip creating/editing the
-            # easy-install.pth file
-            cmd = [
-                executable, 'setup.py',
-                'develop', '--prefix', args.install_base,
-                '--editable',
-                '--build-directory', os.path.join(args.build_base, 'build'),
-                '--no-deps',
-            ]
-            if setup_py_data.get('data_files'):
-                cmd += ['install_data', '--install-dir', args.install_base]
-            self._append_install_layout(args, cmd)
-            completed = await run(
-                self.context, cmd, cwd=args.build_base, env=env)
-
-            # Remove symlinks that were only needed during build time
-            for symlink in temp_symlinks:
-                os.unlink(symlink)
+            try:
+                # --editable causes this to skip creating/editing the
+                # easy-install.pth file
+                cmd = [
+                    executable, 'setup.py',
+                    'develop', '--prefix', args.install_base,
+                    '--editable',
+                    '--build-directory', os.path.join(args.build_base, 'build'),
+                    '--no-deps',
+                ]
+                if setup_py_data.get('data_files'):
+                    cmd += ['install_data', '--install-dir', args.install_base]
+                self._append_install_layout(args, cmd)
+                completed = await run(
+                    self.context, cmd, cwd=args.build_base, env=env)
+            finally:
+                unlink_temp_symlinks()
 
             if completed.returncode:
                 return completed.returncode
@@ -280,7 +280,7 @@ class PythonBuildTask(TaskExtensionPoint):
         temp_symlinks = []
         for rel_src, rel_dst in renamed_items:
             symlinks.append((
-                os.path.join(args.path, item),
+                os.path.join(args.path, rel_src),
                 os.path.join(args.build_base, rel_dst)))
             # The other loop added an unrenamed symlink that should be removed
             # after the setup.py is invoked
@@ -298,7 +298,12 @@ class PythonBuildTask(TaskExtensionPoint):
             if not os.path.exists(dst):
                 os.symlink(src, dst)
 
-        return temp_symlinks
+        def unlink_symlinks(symlinks):
+            # Remove symlinks that were only needed during build time
+            for symlink in symlinks:  #xxx
+                os.unlink(symlink)
+
+        return functools.partial(unlink_symlinks, temp_symlinks)
 
     def _get_python_lib(self, args):
         path = get_python_lib(prefix=args.install_base)
