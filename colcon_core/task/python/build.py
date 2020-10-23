@@ -7,7 +7,6 @@ with suppress(ImportError):
     # to avoid warning introduced in setuptools 49.2.0
     import setuptools  # noqa: F401
 from distutils.sysconfig import get_python_lib
-import functools
 import locale
 import os
 from pathlib import Path
@@ -95,7 +94,7 @@ class PythonBuildTask(TaskExtensionPoint):
 
         else:
             self._undo_install(pkg, args, setup_py_data, python_lib)
-            unlink_temp_symlinks = self._symlinks_in_build(args, setup_py_data)
+            temp_symlinks = self._symlinks_in_build(args, setup_py_data)
 
             # invoke `setup.py develop` step in build space
             # to avoid placing any files in the source space
@@ -117,7 +116,9 @@ class PythonBuildTask(TaskExtensionPoint):
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
-                unlink_temp_symlinks()
+                # Remove symlinks that were only needed during build time
+                for symlink in temp_symlinks:
+                    os.unlink(symlink)
 
             if completed.returncode:
                 return completed.returncode
@@ -299,12 +300,7 @@ class PythonBuildTask(TaskExtensionPoint):
             if not os.path.exists(dst):
                 os.symlink(src, dst)
 
-        def unlink_symlinks(symlinks):
-            # Remove symlinks that were only needed during build time
-            for symlink in symlinks:
-                os.unlink(symlink)
-
-        return functools.partial(unlink_symlinks, temp_symlinks)
+        return temp_symlinks
 
     def _get_python_lib(self, args):
         path = get_python_lib(prefix=args.install_base)
