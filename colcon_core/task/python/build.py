@@ -300,7 +300,7 @@ class PythonBuildTask(TaskExtensionPoint):
 
         def unlink_symlinks(symlinks):
             # Remove symlinks that were only needed during build time
-            for symlink in symlinks:  #xxx
+            for symlink in symlinks:
                 os.unlink(symlink)
 
         return functools.partial(unlink_symlinks, temp_symlinks)
