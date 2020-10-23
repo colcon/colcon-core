@@ -107,7 +107,8 @@ class PythonBuildTask(TaskExtensionPoint):
                     executable, 'setup.py',
                     'develop', '--prefix', args.install_base,
                     '--editable',
-                    '--build-directory', os.path.join(args.build_base, 'build'),
+                    '--build-directory',
+                    os.path.join(args.build_base, 'build'),
                     '--no-deps',
                 ]
                 if setup_py_data.get('data_files'):
