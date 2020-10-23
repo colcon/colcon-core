@@ -34,6 +34,7 @@ _colcon_prefix_sh_prepend_unique_value() {
   IFS=":"
   # start with the new value
   _all_values="$_value"
+  _contained_value=""
   # iterate over existing values in the variable
   for _item in $_values; do
     # ignore empty strings
@@ -42,12 +43,23 @@ _colcon_prefix_sh_prepend_unique_value() {
     fi
     # ignore duplicates of _value
     if [ "$_item" = "$_value" ]; then
+      _contained_value=1
       continue
     fi
     # keep non-duplicate values
     _all_values="$_all_values:$_item"
   done
   unset _item
+  if [ -z "$_contained_value" ]; then
+    if [ -n "$COLCON_TRACE" ]; then
+      if [ "$_all_values" = "$_value" ]; then
+        echo "export $_listname=$_value"
+      else
+        echo "export $_listname=$_value:\$$_listname"
+      fi
+    fi
+  fi
+  unset _contained_value
   # restore the field separator
   IFS="$_colcon_prefix_sh_prepend_unique_value_IFS"
   unset _colcon_prefix_sh_prepend_unique_value_IFS
@@ -89,7 +101,7 @@ fi
 _colcon_prefix_sh_source_script() {
   if [ -f "$1" ]; then
     if [ -n "$COLCON_TRACE" ]; then
-      echo ". \"$1\""
+      echo "# . \"$1\""
     fi
     . "$1"
   else
@@ -106,10 +118,21 @@ $_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setu
 )"
 unset _colcon_python_executable
 if [ -n "$COLCON_TRACE" ]; then
-  echo "Execute generated script:"
-  echo "<<<"
+  echo "_colcon_prefix_sh_source_script() {
+    if [ -f \"\$1\" ]; then
+      if [ -n \"\$COLCON_TRACE\" ]; then
+        echo \"# . \\\"\$1\\\"\"
+      fi
+      . \"\$1\"
+    else
+      echo \"not found: \\\"\$1\\\"\" 1>&2
+    fi
+  }"
+  echo "# Execute generated script:"
+  echo "# <<<"
   echo "${_colcon_ordered_commands}"
-  echo ">>>"
+  echo "# >>>"
+  echo "unset _colcon_prefix_sh_source_script"
 fi
 eval "${_colcon_ordered_commands}"
 unset _colcon_ordered_commands

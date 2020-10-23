@@ -21,7 +21,7 @@ fi
 _colcon_prefix_chain_sh_source_script() {
   if [ -f "$1" ]; then
     if [ -n "$COLCON_TRACE" ]; then
-      echo ". \"$1\""
+      echo "# . \"$1\""
     fi
     . "$1"
   else

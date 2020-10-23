@@ -70,7 +70,7 @@ unset _colcon_package_sh_COLCON_CURRENT_PREFIX
 _colcon_package_sh_source_script() {
   if [ -f "$1" ]; then
     if [ -n "$COLCON_TRACE" ]; then
-      echo ". \"$1\""
+      echo "# . \"$1\""
     fi
     . "$@@"
   else
