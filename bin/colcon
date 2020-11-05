@@ -53,6 +53,8 @@ from colcon_core.event_handler.log_command \
 from colcon_core.executor \
     import DEFAULT_EXECUTOR_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.executor.sequential import SequentialExecutor  # noqa: E402
+from colcon_core.package_augmentation.python \
+    import PythonPackageAugmentation  # noqa: E402
 from colcon_core.package_discovery.path \
     import PathPackageDiscovery  # noqa: E402
 from colcon_core.package_identification.ignore \
@@ -99,7 +101,9 @@ custom_entry_points.update({
         # there is no point in registering the extension_point extensions here
         # since they can't be queried through pkg_resources without installing
     },
-    'colcon_core.package_augmentation': {},
+    'colcon_core.package_augmentation': {
+        'python': PythonPackageAugmentation,
+    },
     'colcon_core.package_discovery': {
         'path': PathPackageDiscovery,
     },
