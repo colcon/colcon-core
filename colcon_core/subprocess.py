@@ -139,12 +139,13 @@ async def _async_check_call(
         if stderr_callback:
             stderr_descriptor, stderr = pty.openpty()
 
-    if close_fds is None and sys.platform != 'win32':
-        close_fds = True
+    kwargs = {}
+    if close_fds is not None:
+        kwargs['close_fds'] = close_fds
 
     process = await create_subprocess(
         *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr,
-        close_fds=close_fds)
+        **kwargs)
 
     # read pipes concurrently
     callbacks = []
