@@ -49,7 +49,8 @@ async def run(
     cwd: str = None,
     env: Mapping[str, str] = None,
     shell: bool = False,
-    use_pty: Optional[bool] = None
+    use_pty: Optional[bool] = None,
+    close_fds: Optional[bool] = True
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
@@ -65,6 +66,8 @@ async def run(
     :param env: a dictionary with environment variables
     :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
+    :param close_fds: whether descriptors except 0, 1 and 2 will be closed
+      before the child process is executed
     :returns: the result of the completed process
     :rtype subprocess.CompletedProcess
     """
@@ -80,7 +83,7 @@ async def run(
 
     rc, _, _ = await _async_check_call(
         args, stdout_callback, stderr_callback,
-        cwd=cwd, env=env, shell=shell, use_pty=use_pty)
+        cwd=cwd, env=env, shell=shell, use_pty=use_pty, close_fds=close_fds)
     return subprocess.CompletedProcess(args, rc)
 
 
@@ -113,7 +116,7 @@ async def check_output(
 
 async def _async_check_call(
     args, stdout_callback, stderr_callback, *,
-    cwd=None, env=None, shell=False, use_pty=None
+    cwd=None, env=None, shell=False, use_pty=None, close_fds=True
 ):
     """Coroutine running the command and invoking the callbacks."""
     # choose function to create subprocess
@@ -137,7 +140,8 @@ async def _async_check_call(
             stderr_descriptor, stderr = pty.openpty()
 
     process = await create_subprocess(
-        *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr)
+        *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr,
+        close_fds=close_fds)
 
     # read pipes concurrently
     callbacks = []
