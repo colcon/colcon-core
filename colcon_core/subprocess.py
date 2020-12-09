@@ -116,7 +116,7 @@ async def check_output(
 
 async def _async_check_call(
     args, stdout_callback, stderr_callback, *,
-    cwd=None, env=None, shell=False, use_pty=None, close_fds=True
+    cwd=None, env=None, shell=False, use_pty=None, close_fds=None
 ):
     """Coroutine running the command and invoking the callbacks."""
     # choose function to create subprocess
