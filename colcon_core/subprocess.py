@@ -50,7 +50,7 @@ async def run(
     env: Mapping[str, str] = None,
     shell: bool = False,
     use_pty: Optional[bool] = None,
-    close_fds: Optional[bool] = True
+    close_fds: Optional[bool] = None
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
@@ -138,6 +138,9 @@ async def _async_check_call(
             stdout_descriptor, stdout = pty.openpty()
         if stderr_callback:
             stderr_descriptor, stderr = pty.openpty()
+
+    if close_fds is None and sys.platform != 'win32':
+        close_fds = True
 
     process = await create_subprocess(
         *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr,
