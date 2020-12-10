@@ -16,6 +16,7 @@ import platform
 import shlex
 import subprocess
 import sys
+from typing import Any
 from typing import Callable
 from typing import Mapping
 from typing import Optional
@@ -46,28 +47,24 @@ async def run(
     stdout_callback: Callable[[bytes], None],
     stderr_callback: Callable[[bytes], None],
     *,
-    cwd: str = None,
-    env: Mapping[str, str] = None,
-    shell: bool = False,
     use_pty: Optional[bool] = None,
-    close_fds: Optional[bool] = None
+    **kwargs: Mapping[str, Any]
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
 
     Invokes the callbacks for every line read from the subprocess pipes.
 
+    See the documentation of `subprocess.Popen()
+    <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>` for
+    other parameters.
+
     :param args: args should be a sequence of program arguments
     :param stdout_callback: the callable is invoked for every line read from
       the stdout pipe of the process
     :param stderr_callback: the callable is invoked for every line read from
       the stderr pipe of the process
-    :param cwd: the working directory for the subprocess
-    :param env: a dictionary with environment variables
-    :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
-    :param close_fds: whether descriptors except 0, 1 and 2 will be closed
-      before the child process is executed
     :returns: the result of the completed process
     :rtype subprocess.CompletedProcess
     """
@@ -83,30 +80,27 @@ async def run(
 
     rc, _, _ = await _async_check_call(
         args, stdout_callback, stderr_callback,
-        cwd=cwd, env=env, shell=shell, use_pty=use_pty, close_fds=close_fds)
+        use_pty=use_pty, **kwargs)
     return subprocess.CompletedProcess(args, rc)
 
 
 async def check_output(
     args: Sequence[str],
-    *,
-    cwd: str = None,
-    env: Mapping[str, str] = None,
-    shell: bool = False
+    **kwargs: Mapping[str, Any]
 ) -> subprocess.CompletedProcess:
     """
     Get the output of an invoked command.
 
+    See the documentation of `subprocess.Popen()
+    <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>` for
+    other parameters.
+
     :param args: args should be a sequence of program arguments
-    :param cwd: the working directory for the subprocess
-    :param env: a dictionary with environment variables
-    :param shell: whether to use the shell as the program to execute
     :returns: The `stdout` output of the command
     :rtype: str
     """
     rc, stdout_data, stderr_data = await _async_check_call(
-        args, subprocess.PIPE, subprocess.PIPE,
-        cwd=cwd, env=env, shell=shell, use_pty=False)
+        args, subprocess.PIPE, subprocess.PIPE, use_pty=False, **kwargs)
     if rc:
         stderr_data = stderr_data.decode(errors='replace')
     assert not rc, \
@@ -115,12 +109,11 @@ async def check_output(
 
 
 async def _async_check_call(
-    args, stdout_callback, stderr_callback, *,
-    cwd=None, env=None, shell=False, use_pty=None, close_fds=None
+    args, stdout_callback, stderr_callback, *, use_pty=None, **kwargs
 ):
     """Coroutine running the command and invoking the callbacks."""
     # choose function to create subprocess
-    if not shell:
+    if not kwargs.pop('shell', False):
         create_subprocess = asyncio.create_subprocess_exec
     else:
         args = [' '.join([escape_shell_argument(a) for a in args])]
@@ -139,13 +132,8 @@ async def _async_check_call(
         if stderr_callback:
             stderr_descriptor, stderr = pty.openpty()
 
-    kwargs = {}
-    if close_fds is not None:
-        kwargs['close_fds'] = close_fds
-
     process = await create_subprocess(
-        *args, cwd=cwd, env=env, stdout=stdout, stderr=stderr,
-        **kwargs)
+        *args, stdout=stdout, stderr=stderr, **kwargs)
 
     # read pipes concurrently
     callbacks = []
