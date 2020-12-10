@@ -75,11 +75,12 @@ class PythonBuildTask(TaskExtensionPoint):
             if 'egg_info' in available_commands:
                 # `setup.py egg_info` requires the --egg-base to exist
                 os.makedirs(args.build_base, exist_ok=True)
-                # symlinks are resolved for args.path when used as cwd below
+                # symlinks are resolved for the paths when used as cwd below
                 cmd += [
                     'egg_info', '--egg-base',
                     os.path.relpath(
-                        args.build_base, os.path.realpath(args.path))]
+                        os.path.realpath(args.build_base),
+                        os.path.realpath(args.path))]
             cmd += [
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
