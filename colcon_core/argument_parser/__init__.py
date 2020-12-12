@@ -222,6 +222,15 @@ class ArgumentParserDecorator:
         self._recursive_decorators.append(subparser)
         return subparser
 
+    def register(self, *args, **kwargs):
+        """
+        Register a type converter.
+
+        See :class:`argparse.ArgumentParser.register` for the method arguments
+        and return value.
+        """
+        return self._parser.register(*args, **kwargs)
+
 
 class SuppressUsageOutput:
     """Context manager to suppress help action during `parse_known_args`."""
