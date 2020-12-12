@@ -5,7 +5,7 @@ from colcon_core.argument_parser import ArgumentParserDecorator
 
 
 class TypeCollectorDecorator(ArgumentParserDecorator):
-    """Collect the option names and destination of arguments."""
+    """Collect the type conversions of arguments."""
 
     def __init__(self, parser, **kwargs):
         """
@@ -72,25 +72,20 @@ class SuppressTypeConversions:
         """
         self._parsers = parsers
         self._suppressed_types = {}
-        self._types_to_omit = types_to_omit or ()
+        self._types_to_omit = types_to_omit or set()
 
     def __enter__(self):  # noqa: D105
         for p in self._parsers:
             if not issubclass(type(p), TypeCollectorDecorator):
                 continue
             self._suppressed_types[p] = {}
-            for t in getattr(p, '_unique_types', set()):
-                if t in self._types_to_omit:
-                    continue
-                p._parser.register('type', t, str)
-                self._suppressed_types[p][t] = t
             for v, o in getattr(p, '_registered_types', {}).items():
+                if v in self._types_to_omit:
+                    continue
                 p._parser.register('type', v, str)
                 self._suppressed_types[p][v] = o
 
     def __exit__(self, *args):  # noqa: D105
         for p, types in self._suppressed_types.items():
             for v, o in types.items():
-                if v in self._types_to_omit:
-                    continue
                 p.register('type', v, o)
