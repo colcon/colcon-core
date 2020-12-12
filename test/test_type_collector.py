@@ -2,10 +2,17 @@
 # Licensed under the Apache License, Version 2.0
 
 import argparse
+import sys
 
 from colcon_core.argument_parser.type_collector import SuppressTypeConversions
 from colcon_core.argument_parser.type_collector import TypeCollectorDecorator
 import pytest
+
+
+class _RaisingArgumentParser(argparse.ArgumentParser):
+
+    def error(self, message):
+        raise sys.exc_info()[1]
 
 
 def test_type_collector_decorator():
@@ -19,7 +26,7 @@ def test_type_collector_decorator():
 
 
 def test_suppress_type_conversions():
-    parser = argparse.ArgumentParser(exit_on_error=False)
+    parser = _RaisingArgumentParser()
     decorator = TypeCollectorDecorator(parser)
     decorator.add_argument('-f', type=float)
     decorator.add_argument('-i', type=int)
