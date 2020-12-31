@@ -20,11 +20,11 @@ from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
+from colcon_core.subprocess import check_output
 from colcon_core.task import run
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
-from colcon_core.subprocess import check_output
 
 logger = colcon_logger.getChild(__name__)
 
