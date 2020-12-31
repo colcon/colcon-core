@@ -84,7 +84,8 @@ def test_build_package():
             src_base = Path(python_build_task.context.args.path)
 
             source_files_before = set(src_base.rglob('*'))
-            assert not event_loop.run_until_complete(python_build_task.build())
+            rc = event_loop.run_until_complete(python_build_task.build())
+            assert not rc
             source_files_after = set(src_base.rglob('*'))
             assert source_files_before == source_files_after
 
