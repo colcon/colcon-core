@@ -22,7 +22,7 @@ def test_spell_check(known_words):
     source_filenames = [
         Path(__file__).parents[1] / 'bin' / 'colcon',
         Path(__file__).parents[1] / 'setup.py'] + \
-        list((Path(__file__).parents[1] / 'colcon-core').glob('**/*.py')) + \
+        list((Path(__file__).parents[1] / 'colcon_core').glob('**/*.py')) + \
         list((Path(__file__).parents[1] / 'test').glob('**/*.py'))
 
     for source_filename in sorted(source_filenames):
