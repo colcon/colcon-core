@@ -1,7 +1,8 @@
 version: '{build}'
+image: Visual Studio 2019
 environment:
   matrix:
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python39-x64"
 install:
   # avoid warnings which could also be suppressed with --no-warn-script-location
   - set "PATH=%PYTHON%\Scripts;%PATH%"
