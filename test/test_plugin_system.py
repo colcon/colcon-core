@@ -129,7 +129,7 @@ def test_get_first_line_doc():
 
     def multi_line_doc():  # noqa: D400
         """
-        First line
+        First line.
 
         Second line.
         """
