@@ -27,6 +27,8 @@ class BatShell(ShellExtensionPoint):
     FORMAT_STR_INVOKE_SCRIPT = 'call:_colcon_prefix_bat_call_script ' \
         '"{script_path}"'
     # can't use `if` here since each line is being `call`-ed
+    FORMAT_STR_REMOVE_LEADING_SEPARATOR = \
+        'call:_colcon_prefix_bat_strip_leading_semicolon "{name}"'
     FORMAT_STR_REMOVE_TRAILING_SEPARATOR = \
         'call:_colcon_prefix_bat_strip_trailing_semicolon "{name}"'
 
@@ -90,6 +92,21 @@ class BatShell(ShellExtensionPoint):
         expand_template(
             Path(__file__).parent / 'template' / 'hook_set_value.bat.em',
             hook_path, {'name': name, 'value': value})
+        return hook_path
+
+    def create_hook_append_value(  # noqa: D102
+        self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
+    ):
+        hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
+            ('%s.bat' % env_hook_name)
+        logger.info("Creating environment hook '%s'" % hook_path)
+        expand_template(
+            Path(__file__).parent / 'template' / 'hook_append_value.bat.em',
+            hook_path,
+            {
+                'name': name,
+                'subdirectory': subdirectory,
+            })
         return hook_path
 
     def create_hook_prepend_value(  # noqa: D102

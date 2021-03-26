@@ -89,6 +89,17 @@ class ShellExtensionPoint:
     """
     FORMAT_STR_INVOKE_SCRIPT = None
     """
+    The format string to remove a leading separator.
+
+    When appending to an environment variable, a leading separator will be
+    left behind if the variable was not set previously.
+    This command is used to cleanup the leading separarator.
+
+    It must have the placeholder {name} for the environment variable name.
+    This attribute is optionally defined in subclasses.
+    """
+    FORMAT_STR_REMOVE_LEADING_SEPARATOR = None
+    """
     The format string to remove a trailing separator.
 
     When prepending to an environment variable, a trailing separator will be
@@ -181,7 +192,7 @@ class ShellExtensionPoint:
         raise NotImplementedError()
 
     def create_hook_append_value(
-        self, env_hook_name, prefix_path, pkg_name, name, value,
+        self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
     ):
         """
         Create a hook script to append a value to an environment variable.
@@ -192,7 +203,7 @@ class ShellExtensionPoint:
         :param Path prefix_path: The path of the install prefix
         :param str pkg_name: The package name
         :param str name: The name of the environment variable
-        :param str value: The value to be appended
+        :param str subdirectory: The subdirectory of the prefix path
         :returns: The relative path to the created hook script
         :rtype: Path
         """
@@ -368,7 +379,8 @@ def create_environment_hook(
     :param str name: The name of the environment variable
     :param str subdirectory: The value to be appended
     :param str mode: The mode how the new value should be combined with an
-      existing value, currently only the value `prepend` is supported
+      existing value, currently only the values `append` and `prepend` are
+      supported
     :returns: The relative paths to the created hook scripts
     :rtype: list
     """
@@ -384,7 +396,26 @@ def create_environment_hook(
 
         extensions_same_prio = extensions[priority]
         for extension in extensions_same_prio.values():
-            if mode == 'prepend':
+            if mode == 'append':
+                try:
+                    hook = extension.create_hook_append_value(
+                        env_hook_name, prefix_path, pkg_name, name,
+                        subdirectory)
+                    assert isinstance(hook, Path), \
+                        'create_hook_append_value() should return a Path ' \
+                        'object'
+
+                except Exception as e:  # noqa: F841
+                    # catch exceptions raised in shell extension
+                    exc = traceback.format_exc()
+                    logger.error(
+                        'Exception in shell extension '
+                        "'{extension.SHELL_NAME}': {e}\n{exc}"
+                        .format_map(locals()))
+                    # skip failing extension, continue with next one
+                    continue
+                hooks.append(hook)
+            elif mode == 'prepend':
                 try:
                     hook = extension.create_hook_prepend_value(
                         env_hook_name, prefix_path, pkg_name, name,

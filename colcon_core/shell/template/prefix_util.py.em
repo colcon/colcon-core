@@ -16,8 +16,10 @@ FORMAT_STR_SET_ENV_VAR = '@(shell_extension.FORMAT_STR_SET_ENV_VAR)'
 FORMAT_STR_USE_ENV_VAR = '@(shell_extension.FORMAT_STR_USE_ENV_VAR)'
 @{assert shell_extension.FORMAT_STR_INVOKE_SCRIPT is not None}@
 FORMAT_STR_INVOKE_SCRIPT = '@(shell_extension.FORMAT_STR_INVOKE_SCRIPT)'
+FORMAT_STR_REMOVE_LEADING_SEPARATOR = '@(shell_extension.FORMAT_STR_REMOVE_LEADING_SEPARATOR)'
 FORMAT_STR_REMOVE_TRAILING_SEPARATOR = '@(shell_extension.FORMAT_STR_REMOVE_TRAILING_SEPARATOR)'
 
+DSV_TYPE_APPEND_NON_DUPLICATE = 'append-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE = 'prepend-non-duplicate'
 DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS = 'prepend-non-duplicate-if-exists'
 DSV_TYPE_SET = 'set'
@@ -57,7 +59,7 @@ def main(argv=sys.argv[1:]):  # noqa: D103
         ):
             print(line)
 
-    for line in _remove_trailing_separators():
+    for line in _remove_ending_separators():
         print(line)
 
 
@@ -279,6 +281,7 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
         else:
             assert False
     elif type_ in (
+        DSV_TYPE_APPEND_NON_DUPLICATE,
         DSV_TYPE_PREPEND_NON_DUPLICATE,
         DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS
     ):
@@ -304,6 +307,8 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
                 if _include_comments():
                     commands.append(
                         FORMAT_STR_COMMENT_LINE.format_map({'comment': comment}))
+            elif type_ == DSV_TYPE_APPEND_NON_DUPLICATE:
+                commands += _append_unique_value(env_name, value)
             else:
                 commands += _prepend_unique_value(env_name, value)
     else:
@@ -315,6 +320,28 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
 env_state = {}
 
 
+def _append_unique_value(name, value):
+    global env_state
+    if name not in env_state:
+        if os.environ.get(name):
+            env_state[name] = set(os.environ[name].split(os.pathsep))
+        else:
+            env_state[name] = set()
+    # append even if the variable has not been set yet, in case a shell script sets the
+    # same variable without the knowledge of this Python script.
+    # later _remove_ending_separators() will cleanup any unintentional leading separator
+    extend = FORMAT_STR_USE_ENV_VAR.format_map({'name': name}) + os.pathsep
+    line = FORMAT_STR_SET_ENV_VAR.format_map(
+        {'name': name, 'value': extend + value})
+    if value not in env_state[name]:
+        env_state[name].add(value)
+    else:
+        if not _include_comments():
+            return []
+        line = FORMAT_STR_COMMENT_LINE.format_map({'comment': line})
+    return [line]
+
+
 def _prepend_unique_value(name, value):
     global env_state
     if name not in env_state:
@@ -324,7 +351,7 @@ def _prepend_unique_value(name, value):
             env_state[name] = set()
     # prepend even if the variable has not been set yet, in case a shell script sets the
     # same variable without the knowledge of this Python script.
-    # later _remove_trailing_separators() will cleanup any unintentional trailing separator
+    # later _remove_ending_separators() will cleanup any unintentional trailing separator
     extend = os.pathsep + FORMAT_STR_USE_ENV_VAR.format_map({'name': name})
     line = FORMAT_STR_SET_ENV_VAR.format_map(
         {'name': name, 'value': value + extend})
@@ -338,7 +365,7 @@ def _prepend_unique_value(name, value):
 
 
 # generate commands for removing prepended underscores
-def _remove_trailing_separators():
+def _remove_ending_separators():
     # do nothing if the shell extension does not implement the logic
     if FORMAT_STR_REMOVE_TRAILING_SEPARATOR is None:
         return []
@@ -349,8 +376,9 @@ def _remove_trailing_separators():
         # skip variables that already had values before this script started prepending
         if name in os.environ:
             continue
-        commands += [FORMAT_STR_REMOVE_TRAILING_SEPARATOR.format_map(
-            {'name': name})]
+        commands += [
+            FORMAT_STR_REMOVE_LEADING_SEPARATOR.format_map({'name': name}),
+            FORMAT_STR_REMOVE_TRAILING_SEPARATOR.format_map({'name': name})]
     return commands
 
 
