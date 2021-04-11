@@ -1,4 +1,5 @@
 # Copyright 2016-2018 Dirk Thomas
+# Copyright 2021 Ruffin White
 # Licensed under the Apache License, Version 2.0
 
 from collections import OrderedDict
@@ -31,12 +32,12 @@ from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
 
 
-class BuildPackageArguments:
-    """Arguments to build a specific package."""
+class StagePackageArguments:
+    """Arguments to stage a specific package."""
 
     def __init__(self, pkg, args, *, additional_destinations=None):
         """
-        Construct a BuildPackageArguments.
+        Construct a StagePackageArguments.
 
         :param pkg: The package descriptor
         :param args: The parsed command line arguments
@@ -50,11 +51,9 @@ class BuildPackageArguments:
             os.getcwd(), args.build_base, pkg.name))
         self.install_base = os.path.abspath(os.path.join(
             os.getcwd(), args.install_base))
-        self.merge_install = args.merge_install
         if not args.merge_install:
             self.install_base = os.path.join(
                 self.install_base, pkg.name)
-        self.symlink_install = args.symlink_install
         self.test_result_base = os.path.abspath(os.path.join(
             os.getcwd(), args.test_result_base, pkg.name)) \
             if args.test_result_base else None
@@ -65,16 +64,16 @@ class BuildPackageArguments:
             if hasattr(args, dest):
                 update_object(
                     self, dest, getattr(args, dest),
-                    pkg.name, 'build', 'command line')
+                    pkg.name, 'stage', 'command line')
             # from the package metadata
             if dest in pkg.metadata:
                 update_object(
                     self, dest, pkg.metadata[dest],
-                    pkg.name, 'build', 'package metadata')
+                    pkg.name, 'stage', 'package metadata')
 
 
-class BuildVerb(VerbExtensionPoint):
-    """Build a set of packages."""
+class StageVerb(VerbExtensionPoint):
+    """Stage a set of packages."""
 
     def __init__(self):  # noqa: D107
         super().__init__()
@@ -94,18 +93,12 @@ class BuildVerb(VerbExtensionPoint):
             action='store_true',
             help='Merge all install prefixes into a single location')
         parser.add_argument(
-            '--symlink-install',
-            action='store_true',
-            help='Use symlinks instead of copying files where possible')
-        parser.add_argument(
             '--test-result-base',
             help='The base path for all test results (default: --build-base)')
         parser.add_argument(
-            '--continue-on-error',
+            '--tare-changes',
             action='store_true',
-            help='Continue other packages when a package fails to build '
-                 '(packages recursively depending on the failed package are '
-                 'skipped)')
+            help='Tare changes by resets refrence checksums for staging')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -147,8 +140,6 @@ class BuildVerb(VerbExtensionPoint):
             context, jobs, on_error=on_error,
             pre_execution_callback=post_unselected_packages)
 
-        self._create_prefix_scripts(install_base, context.args.merge_install)
-
         return rc
 
     def _create_paths(self, args):
@@ -174,10 +165,10 @@ class BuildVerb(VerbExtensionPoint):
                 unselected_packages.add(pkg)
                 continue
 
-            extension = get_task_extension('colcon_core.task.build', pkg.type)
+            extension = get_task_extension('colcon_core.task.stage', pkg.type)
             if not extension:
                 logger.warning(
-                    "No task extension to 'build' a '{pkg.type}' package"
+                    "No task extension to 'stage' a '{pkg.type}' package"
                     .format_map(locals()))
                 continue
 
@@ -188,7 +179,7 @@ class BuildVerb(VerbExtensionPoint):
                     dep_path = os.path.join(dep_path, dep_name)
                 recursive_dependencies[dep_name] = dep_path
 
-            package_args = BuildPackageArguments(
+            package_args = StagePackageArguments(
                 pkg, args, additional_destinations=self
                 .task_argument_destinations.values())
             ordered_package_args = ', '.join([
@@ -196,7 +187,7 @@ class BuildVerb(VerbExtensionPoint):
                 for k in sorted(package_args.__dict__.keys())
             ])
             logger.debug(
-                "Building package '{pkg.name}' with the following arguments: "
+                "Staging package '{pkg.name}' with the following arguments: "
                 '{{{ordered_package_args}}}'.format_map(locals()))
             task_context = TaskContext(
                 pkg=pkg, args=package_args,
@@ -209,22 +200,3 @@ class BuildVerb(VerbExtensionPoint):
 
             jobs[pkg.name] = job
         return jobs, unselected_packages
-
-    def _create_prefix_scripts(self, install_base, merge_install):
-        extensions = get_shell_extensions()
-        for priority in extensions.keys():
-            extensions_same_prio = extensions[priority]
-            for extension in extensions_same_prio.values():
-                try:
-                    retval = extension.create_prefix_script(
-                        Path(install_base), merge_install)
-                    assert retval is None, \
-                        'create_prefix_script() should return None'
-                except Exception as e:  # noqa: F841
-                    # catch exceptions raised in shell extension
-                    exc = traceback.format_exc()
-                    logger.error(
-                        'Exception in shell extension '
-                        "'{extension.SHELL_NAME}': {e}\n{exc}"
-                        .format_map(locals()))
-                    # skip failing extension, continue with next one
