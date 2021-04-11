@@ -57,6 +57,7 @@ class StagePackageArguments:
         self.test_result_base = os.path.abspath(os.path.join(
             os.getcwd(), args.test_result_base, pkg.name)) \
             if args.test_result_base else None
+        self.tare_changes = args.tare_changes
 
         # set additional arguments
         for dest in (additional_destinations or []):
