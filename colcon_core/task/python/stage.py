@@ -54,8 +54,9 @@ class PythonStageTask(TaskExtensionPoint):
         if jobs is None:
             # the number of cores can't be determined
             jobs = 1
-
-        current_checksum = dirhash(args.path, 'md5', ignore=['./*'], jobs=jobs)
+        
+        # ignore all . files and . folders
+        current_checksum = dirhash(args.path, 'md5', ignore=['.*'], jobs=jobs)
         
         # os.makedirs(args.build_base, exist_ok=True)
         stage_base = Path(args.build_base, 'stage')
