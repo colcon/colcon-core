@@ -11,6 +11,8 @@ callables
 capsys
 catched
 changelog
+checksum
+checksums
 classname
 colcon
 coloredlogs
@@ -28,6 +30,7 @@ defaultdict
 depreated
 deps
 descs
+dirhash
 distlib
 docstring
 executables
@@ -35,6 +38,7 @@ exitstatus
 fdopen
 filterwarnings
 functools
+getaffinity
 getcategory
 getpid
 getpreferredencoding

@@ -6,7 +6,7 @@ from collections import OrderedDict
 import os
 import os.path
 from pathlib import Path
-import traceback
+# import traceback
 
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
@@ -21,7 +21,7 @@ from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
 from colcon_core.package_selection import get_packages
 from colcon_core.plugin_system import satisfies_version
-from colcon_core.shell import get_shell_extensions
+# from colcon_core.shell import get_shell_extensions
 from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
 from colcon_core.task import TaskContext
@@ -99,7 +99,7 @@ class StageVerb(VerbExtensionPoint):
         parser.add_argument(
             '--tare-changes',
             action='store_true',
-            help='Tare changes by resets refrence checksums for staging')
+            help='Tare changes by resets reference checksums for staging')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -127,7 +127,7 @@ class StageVerb(VerbExtensionPoint):
         jobs, unselected_packages = self._get_jobs(
             context.args, decorators, install_base)
 
-        # TODO: OnError.continue_ is a workarround given rc for stage is never 0
+        # TODO: OnError.continue_ is a workaround given rc for stage is never 0
         # on_error = OnError.interrupt \
         #     if not context.args.continue_on_error else OnError.skip_downstream
         on_error = OnError.continue_
@@ -168,7 +168,7 @@ class StageVerb(VerbExtensionPoint):
                 unselected_packages.add(pkg)
                 continue
 
-            # TODO: Workarround by hardcoding pkg.type to default for entry point
+            # TODO: workaround by hard coding pkg.type to default for entry point
             # extension = get_task_extension('colcon_core.task.stage', pkg.type)
             extension = get_task_extension('colcon_core.task.stage', 'default')
             if not extension:

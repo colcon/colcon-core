@@ -22,11 +22,10 @@ from colcon_core.plugin_system import satisfies_version
 # from colcon_core.shell import create_environment_hook
 # from colcon_core.shell import get_command_environment
 # from colcon_core.subprocess import check_output
-from colcon_core.task import run
+# from colcon_core.task import run
 from colcon_core.task import TaskExtensionPoint
 # from colcon_core.task.python import get_data_files_mapping
 # from colcon_core.task.python import get_setup_data
-
 from dirhash import dirhash
 
 logger = colcon_logger.getChild(__name__)
@@ -44,8 +43,8 @@ class PythonStageTask(TaskExtensionPoint):
         args = self.context.args
 
         logger.info(
-            "Stageing Python package in '{args.path}'".format_map(locals()))
-        
+            "Staging Python package in '{args.path}'".format_map(locals()))
+
         # Use the number of CPU cores
         jobs = os.cpu_count()
         with suppress(AttributeError):
@@ -54,10 +53,10 @@ class PythonStageTask(TaskExtensionPoint):
         if jobs is None:
             # the number of cores can't be determined
             jobs = 1
-        
+
         # ignore all . files and . folders
         current_checksum = dirhash(args.path, 'md5', ignore=['.*'], jobs=jobs)
-        
+
         # os.makedirs(args.build_base, exist_ok=True)
         stage_base = Path(args.build_base, 'stage')
         stage_base.mkdir(parents=True, exist_ok=True)
