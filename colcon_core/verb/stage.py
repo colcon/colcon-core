@@ -166,7 +166,9 @@ class StageVerb(VerbExtensionPoint):
                 unselected_packages.add(pkg)
                 continue
 
-            extension = get_task_extension('colcon_core.task.stage', pkg.type)
+            # TODO: Workarround by hardcoding pkg.type to default for entry point
+            # extension = get_task_extension('colcon_core.task.stage', pkg.type)
+            extension = get_task_extension('colcon_core.task.stage', 'default')
             if not extension:
                 logger.warning(
                     "No task extension to 'stage' a '{pkg.type}' package"
