@@ -75,4 +75,4 @@ class PythonStageTask(TaskExtensionPoint):
             return 0
         elif previous_checksum == current_checksum:
             return 0
-        return 'chaged'
+        return 'changed'
