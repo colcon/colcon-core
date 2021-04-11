@@ -127,8 +127,10 @@ class StageVerb(VerbExtensionPoint):
         jobs, unselected_packages = self._get_jobs(
             context.args, decorators, install_base)
 
-        on_error = OnError.interrupt \
-            if not context.args.continue_on_error else OnError.skip_downstream
+        # TODO: OnError.continue_ is a workarround given rc for stage is never 0
+        # on_error = OnError.interrupt \
+        #     if not context.args.continue_on_error else OnError.skip_downstream
+        on_error = OnError.continue_
 
         def post_unselected_packages(*, event_queue):
             nonlocal unselected_packages
