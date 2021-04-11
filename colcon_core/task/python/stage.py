@@ -72,7 +72,7 @@ class PythonStageTask(TaskExtensionPoint):
 
         if args.tare_changes:
             previous_path.write_text(str(current_checksum) + '\n')
-            return 'unchaged'
+            return 0
         elif previous_checksum == current_checksum:
-            return 'unchaged'
+            return 0
         return 'chaged'
