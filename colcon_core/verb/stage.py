@@ -127,7 +127,7 @@ class StageVerb(VerbExtensionPoint):
         jobs, unselected_packages = self._get_jobs(
             context.args, decorators, install_base)
 
-        # TODO: OnError.continue_ is a workaround given rc for stage is never 0
+        # TODO: OnError.continue_ is a workaround given rc need not be 0
         # on_error = OnError.interrupt \
         #     if not context.args.continue_on_error else OnError.skip_downstream
         on_error = OnError.continue_
