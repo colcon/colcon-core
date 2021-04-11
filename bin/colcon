@@ -67,12 +67,14 @@ from colcon_core.shell.bat import BatShell  # noqa: E402
 from colcon_core.shell.dsv import DsvShell  # noqa: E402
 from colcon_core.shell.sh import ShShell  # noqa: E402
 from colcon_core.task.python.build import PythonBuildTask  # noqa: E402
+from colcon_core.task.python.stage import PythonStageTask  # noqa: E402
 from colcon_core.task.python.test import PythonTestTask  # noqa: E402
 from colcon_core.task.python.test.pytest \
     import PytestPythonTestingStep  # noqa: E402
 from colcon_core.task.python.test.setuppy_test \
     import SetuppyPythonTestingStep  # noqa: E402
 from colcon_core.verb.build import BuildVerb  # noqa: E402
+from colcon_core.verb.stage import StageVerb  # noqa: E402
 from colcon_core.verb.test import TestVerb  # noqa: E402
 
 
@@ -127,11 +129,15 @@ custom_entry_points.update({
     'colcon_core.task.build': {
         'python': PythonBuildTask,
     },
+    'colcon_core.task.stage': {
+        'python': PythonStageTask,
+    },
     'colcon_core.task.test': {
         'python': PythonTestTask,
     },
     'colcon_core.verb': {
         'build': BuildVerb,
+        'stage': StageVerb,
         'test': TestVerb,
     },
 })
