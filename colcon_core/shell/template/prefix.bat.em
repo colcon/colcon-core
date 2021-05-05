@@ -78,6 +78,8 @@ goto:eof
     set "_colcon_python_executable=%_colcon_python_executable%"
   )
 
+  :: escape potential closing parenthesis which would break the for loop
+  set "_colcon_python_executable=%_colcon_python_executable:)=^)%"
   for /f "delims=" %%c in ('""%_colcon_python_executable%" "%~1_local_setup_util_bat.py" bat@
 @[if merge_install]@
  --merged-install@
