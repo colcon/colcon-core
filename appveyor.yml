@@ -1,7 +1,8 @@
 version: '{build}'
+image: Visual Studio 2019
 environment:
   matrix:
-    - PYTHON: "C:\\Python36-x64"
+    - PYTHON: "C:\\Python39-x64"
 install:
   # avoid warnings which could also be suppressed with --no-warn-script-location
   - set "PATH=%PYTHON%\Scripts;%PATH%"
@@ -9,7 +10,7 @@ install:
   # install_requires
   - "%PYTHON%\\python.exe -m pip install -U coloredlogs distlib EmPy"
   # tests_require, additionally mock
-  - "%PYTHON%\\python.exe -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-quotes mock pep8-naming pylint pytest pytest-cov scspell3k"
+  - "%PYTHON%\\python.exe -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-import-order flake8-quotes mock pep8-naming pylint pytest pytest-cov scspell3k"
   # for uploading the coverage information to codecov
   - "%PYTHON%\\python.exe -m pip install -U codecov"
 build: off

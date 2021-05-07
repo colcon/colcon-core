@@ -22,9 +22,9 @@ class DsvShell(ShellExtensionPoint):
     def create_prefix_script(self, prefix_path, merge_install):  # noqa: D102
         pass
 
-    def create_package_script(
+    def create_package_script(  # noqa: D102
         self, prefix_path, pkg_name, hooks
-    ):  # noqa: D102
+    ):
         pkg_env_path = prefix_path / 'share' / pkg_name / 'package.dsv'
         logger.info("Creating package descriptor '%s'" % pkg_env_path)
         expand_template(
@@ -34,9 +34,9 @@ class DsvShell(ShellExtensionPoint):
                 'hooks': hooks,
             })
 
-    def create_hook_set_value(
+    def create_hook_set_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, value,
-    ):  # noqa: D102
+    ):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.dsv' % env_hook_name)
         logger.info("Creating environment descriptor '%s'" % hook_path)
@@ -49,9 +49,9 @@ class DsvShell(ShellExtensionPoint):
             })
         return hook_path
 
-    def create_hook_prepend_value(
+    def create_hook_prepend_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
-    ):  # noqa: D102
+    ):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.dsv' % env_hook_name)
         logger.info("Creating environment descriptor '%s'" % hook_path)

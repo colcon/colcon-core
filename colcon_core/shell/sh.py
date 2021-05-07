@@ -67,9 +67,9 @@ class ShShell(ShellExtensionPoint):
                 'prefix_script_no_ext': 'local_setup',
             })
 
-    def create_package_script(
+    def create_package_script(  # noqa: D102
         self, prefix_path, pkg_name, hooks
-    ):  # noqa: D102
+    ):
         pkg_env_path = prefix_path / 'share' / pkg_name / 'package.sh'
         logger.info("Creating package script '%s'" % pkg_env_path)
         expand_template(
@@ -81,9 +81,9 @@ class ShShell(ShellExtensionPoint):
                     lambda hook: str(hook[0]).endswith('.sh'), hooks)),
             })
 
-    def create_hook_set_value(
+    def create_hook_set_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, value,
-    ):  # noqa: D102
+    ):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.sh' % env_hook_name)
         logger.info("Creating environment hook '%s'" % hook_path)
@@ -94,9 +94,9 @@ class ShShell(ShellExtensionPoint):
             hook_path, {'name': name, 'value': value})
         return hook_path
 
-    def create_hook_prepend_value(
+    def create_hook_prepend_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
-    ):  # noqa: D102
+    ):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.sh' % env_hook_name)
         logger.info("Creating environment hook '%s'" % hook_path)
@@ -109,9 +109,9 @@ class ShShell(ShellExtensionPoint):
             })
         return hook_path
 
-    async def generate_command_environment(
+    async def generate_command_environment(  # noqa: D102
         self, task_name, build_base, dependencies,
-    ):  # noqa: D102
+    ):
         if sys.platform == 'win32':
             raise SkipExtensionException('Not usable on Windows systems')
 

@@ -25,9 +25,9 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
     def has_default(self):  # noqa: D102
         return True
 
-    def add_arguments(
+    def add_arguments(  # noqa: D102
         self, *, parser, with_default, single_path=False
-    ):  # noqa: D102
+    ):
         parser.add_argument(
             '--paths',
             nargs='*' if not single_path else '?',

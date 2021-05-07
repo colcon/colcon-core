@@ -34,7 +34,7 @@ if warnings_filters:
         action, message, category, module, line = fields
         try:
             category = warnings._getcategory(category)
-        except Exception:
+        except Exception:  # noqa: B902
             print(
                 "The category field '{category}' must be a valid warnings "
                 'class name'.format_map(locals()), file=sys.stderr)

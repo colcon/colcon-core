@@ -20,11 +20,11 @@ from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
+from colcon_core.subprocess import check_output
 from colcon_core.task import run
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
-from colcon_core.subprocess import check_output
 
 logger = colcon_logger.getChild(__name__)
 
@@ -75,11 +75,12 @@ class PythonBuildTask(TaskExtensionPoint):
             if 'egg_info' in available_commands:
                 # `setup.py egg_info` requires the --egg-base to exist
                 os.makedirs(args.build_base, exist_ok=True)
-                # symlinks are resolved for args.path when used as cwd below
+                # symlinks are resolved for the paths when used as cwd below
                 cmd += [
                     'egg_info', '--egg-base',
                     os.path.relpath(
-                        args.build_base, os.path.realpath(args.path))]
+                        os.path.realpath(args.build_base),
+                        os.path.realpath(args.path))]
             cmd += [
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
