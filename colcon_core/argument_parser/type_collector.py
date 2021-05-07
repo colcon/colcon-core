@@ -35,7 +35,7 @@ class TypeCollectorDecorator(ArgumentParserDecorator):
 
         type_arg = kwargs.get('type')
         if type_arg is not None:
-            self._registered_types[type_arg] = type_arg
+            self._registered_types.setdefault(type_arg, type_arg)
 
         return ret
 

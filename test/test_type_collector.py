@@ -33,6 +33,11 @@ def test_suppress_type_conversions():
     decorator.register('type', 'hex', float.fromhex)
     decorator.add_argument('-x', type='hex', default=None)
 
+    args = parser.parse_args(['-f', '3.14', '-i', '1', '-x', '0x42'])
+    assert 3.14 == args.f
+    assert 1 == args.i
+    assert 0x42 == args.x
+
     with SuppressTypeConversions((decorator,)):
         parser.parse_args(['-f', 'bar', '-i', '1', '-x', '0x42'])
     with pytest.raises(argparse.ArgumentError):
@@ -56,3 +61,8 @@ def test_suppress_type_conversions():
     with pytest.raises(argparse.ArgumentError):
         with SuppressTypeConversions((decorator,), {'hex'}):
             parser.parse_args(['-f', '3.14', '-i', '1', '-x', 'foo'])
+
+    args = parser.parse_args(['-f', '3.14', '-i', '1', '-x', '0x42'])
+    assert 3.14 == args.f
+    assert 1 == args.i
+    assert 0x42 == args.x
