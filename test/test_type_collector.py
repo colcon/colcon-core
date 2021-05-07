@@ -66,3 +66,24 @@ def test_suppress_type_conversions():
     assert 3.14 == args.f
     assert 1 == args.i
     assert 0x42 == args.x
+
+
+def test_suppress_not_decorated():
+    parser = _RaisingArgumentParser()
+    parser.add_argument('-f', type=float)
+    parser.add_argument('-i', type=int)
+    parser.register('type', 'hex', float.fromhex)
+    parser.add_argument('-x', type='hex', default=None)
+
+    args = parser.parse_args(['-f', '3.14', '-i', '1', '-x', '0x42'])
+    assert 3.14 == args.f
+    assert 1 == args.i
+    assert 0x42 == args.x
+
+    with SuppressTypeConversions((parser,)):
+        parser.parse_args(['-f', '3.14', '-i', '1', '-x', '0x42'])
+
+    args = parser.parse_args(['-f', '3.14', '-i', '1', '-x', '0x42'])
+    assert 3.14 == args.f
+    assert 1 == args.i
+    assert 0x42 == args.x
