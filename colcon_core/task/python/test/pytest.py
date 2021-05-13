@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 from pathlib import PurePosixPath
+import re
 import sys
 
 from colcon_core.event.test import TestFailure
@@ -77,6 +78,13 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         ):
             try:
                 from pytest_cov import __version__ as pytest_cov_version
+                # version string might not be simply 'x.y.z' for some versions
+                # https://github.com/pytest-dev/pytest-cov/issues/468
+                alt_version_pattern = re.compile(
+                    r"__version__ = '([0-9]+\.[0-9]+\.[0-9]+)'")
+                alt_version = alt_version_pattern.findall(pytest_cov_version)
+                if alt_version:
+                    pytest_cov_version = alt_version[0]
             except ImportError:
                 logger.warning(
                     'Test coverage will not be produced for package '
