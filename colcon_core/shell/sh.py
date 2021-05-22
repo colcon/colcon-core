@@ -26,6 +26,8 @@ class ShShell(ShellExtensionPoint):
     FORMAT_STR_USE_ENV_VAR = '${name}'
     FORMAT_STR_INVOKE_SCRIPT = 'COLCON_CURRENT_PREFIX="{prefix}" ' \
         '_colcon_prefix_sh_source_script "{script_path}"'
+    FORMAT_STR_REMOVE_LEADING_SEPARATOR = 'if [ "$(echo -n ${name} | ' \
+        'head -c 1)" = ":" ]; then export {name}=${{{name}#?}} ; fi'
     FORMAT_STR_REMOVE_TRAILING_SEPARATOR = 'if [ "$(echo -n ${name} | ' \
         'tail -c 1)" = ":" ]; then export {name}=${{{name}%?}} ; fi'
 
@@ -92,6 +94,21 @@ class ShShell(ShellExtensionPoint):
         expand_template(
             Path(__file__).parent / 'template' / 'hook_set_value.sh.em',
             hook_path, {'name': name, 'value': value})
+        return hook_path
+
+    def create_hook_append_value(  # noqa: D102
+        self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
+    ):
+        hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
+            ('%s.sh' % env_hook_name)
+        logger.info("Creating environment hook '%s'" % hook_path)
+        expand_template(
+            Path(__file__).parent / 'template' / 'hook_append_value.sh.em',
+            hook_path,
+            {
+                'name': name,
+                'subdirectory': subdirectory,
+            })
         return hook_path
 
     def create_hook_prepend_value(  # noqa: D102
