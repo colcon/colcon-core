@@ -3,7 +3,6 @@
 
 from glob import glob
 import os
-import sys
 
 from colcon_core.argument_default import is_default_value
 from colcon_core.argument_default import wrap_default_value
@@ -45,9 +44,9 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
         if args.paths is None:
             return set()
 
-        # on Windows manually check for wildcards and expand them
-        if sys.platform == 'win32':
-            _expand_wildcards(args.paths)
+        # manually check for wildcards and expand them in case
+        # the values were not provided through the shell
+        _expand_wildcards(args.paths)
 
         logger.log(1, 'PathPackageDiscovery.discover(%s)', args.paths)
 

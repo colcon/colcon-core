@@ -63,6 +63,29 @@ def test_discover():
             PackageDescriptor(os.path.realpath('/other/path'))}
 
 
+def test_discover_with_wildcards():
+    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
+        prefix_path = Path(prefix_path)
+        path_one = prefix_path / 'one' / 'path'
+        path_two = prefix_path / 'two' / 'path'
+        path_three = prefix_path / 'three' / 'path'
+        path_one.mkdir(parents=True)
+        path_two.mkdir(parents=True)
+        path_three.mkdir(parents=True)
+
+        extension = PathPackageDiscovery()
+        args = Mock()
+        args.paths = [str(prefix_path / '*' / 'path')]
+        with patch(
+            'colcon_core.package_discovery.path.identify', side_effect=identify
+        ):
+            descs = extension.discover(args=args, identification_extensions={})
+            assert descs == {
+                PackageDescriptor(os.path.realpath(str(path_one))),
+                PackageDescriptor(os.path.realpath(str(path_two))),
+                PackageDescriptor(os.path.realpath(str(path_three)))}
+
+
 def test__expand_wildcards():
     with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
         prefix_path = Path(prefix_path)
