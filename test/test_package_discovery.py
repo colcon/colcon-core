@@ -2,12 +2,15 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_discovery import _discover_packages
 from colcon_core.package_discovery import _get_extensions_with_parameters
 from colcon_core.package_discovery import add_package_discovery_arguments
 from colcon_core.package_discovery import discover_packages
+from colcon_core.package_discovery import expand_wildcards
 from colcon_core.package_discovery import get_package_discovery_extensions
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
 from mock import Mock
@@ -128,6 +131,24 @@ def test_discover_packages():
         assert expected_path in (str(d.path) for d in descs)
         expected_path = '/extension3/pkg2'.replace('/', os.sep)
         assert expected_path in (str(d.path) for d in descs)
+
+
+def test_expand_wildcards():
+    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
+        prefix_path = Path(prefix_path)
+        (prefix_path / 'one').mkdir()
+        (prefix_path / 'two').mkdir()
+        (prefix_path / 'three').touch()
+
+        paths = [
+            '/some/path',
+            str(prefix_path / '*')
+        ]
+        expand_wildcards(paths)
+        assert len(paths) == 3
+        assert paths[0] == '/some/path'
+        assert paths[1] == str((prefix_path / 'one'))
+        assert paths[2] == str((prefix_path / 'two'))
 
 
 def test__get_extensions_with_parameters():

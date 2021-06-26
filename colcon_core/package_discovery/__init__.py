@@ -2,6 +2,8 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import OrderedDict
+from glob import glob
+import os
 import traceback
 
 from colcon_core.logging import colcon_logger
@@ -184,6 +186,31 @@ def discover_packages(
 
     return _discover_packages(
         args, identification_extensions, discovery_extensions)
+
+
+def expand_wildcards(paths):
+    """
+    Expand wildcards explicitly.
+
+    This is only necessary on Windows or when
+    the wildcards are not expanded by the shell.
+
+    :param list paths: The paths to update in place
+    """
+    i = 0
+    while i < len(paths):
+        path = paths[i]
+        if '*' not in path:
+            i += 1
+            continue
+        expanded_paths = [
+            p for p in sorted(glob(path))
+            if os.path.isdir(p)]
+        logger.log(
+            5, "expand_wildcards() expanding '%s' to %s",
+            path, expanded_paths)
+        paths[i:i + 1] = expanded_paths
+        i += len(expanded_paths)
 
 
 def _get_extensions_with_parameters(
