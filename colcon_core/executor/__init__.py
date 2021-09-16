@@ -91,7 +91,7 @@ class Job:
             rc = await self.task(*args, **kwargs)
         except CancelledError:
             rc = SIGINT_RESULT
-        except Exception:
+        except Exception:  # noqa: B902
             rc = 1
             self.put_event_into_queue(
                 StderrLine(traceback.format_exc().encode()))

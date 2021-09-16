@@ -27,6 +27,8 @@ class BatShell(ShellExtensionPoint):
     FORMAT_STR_INVOKE_SCRIPT = 'call:_colcon_prefix_bat_call_script ' \
         '"{script_path}"'
     # can't use `if` here since each line is being `call`-ed
+    FORMAT_STR_REMOVE_LEADING_SEPARATOR = \
+        'call:_colcon_prefix_bat_strip_leading_semicolon "{name}"'
     FORMAT_STR_REMOVE_TRAILING_SEPARATOR = \
         'call:_colcon_prefix_bat_strip_trailing_semicolon "{name}"'
 
@@ -66,9 +68,9 @@ class BatShell(ShellExtensionPoint):
                 'prefix_script_no_ext': 'local_setup',
             })
 
-    def create_package_script(
+    def create_package_script(  # noqa: D102
         self, prefix_path, pkg_name, hooks
-    ):  # noqa: D102
+    ):
         pkg_env_path = prefix_path / 'share' / pkg_name / 'package.bat'
         logger.info("Creating package script '%s'" % pkg_env_path)
         expand_template(
@@ -79,9 +81,9 @@ class BatShell(ShellExtensionPoint):
                     lambda hook: str(hook[0]).endswith('.bat'), hooks)),
             })
 
-    def create_hook_set_value(
+    def create_hook_set_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, value,
-    ):  # noqa: D102
+    ):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.bat' % env_hook_name)
         logger.info("Creating environment hook '%s'" % hook_path)
@@ -92,9 +94,24 @@ class BatShell(ShellExtensionPoint):
             hook_path, {'name': name, 'value': value})
         return hook_path
 
-    def create_hook_prepend_value(
+    def create_hook_append_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
-    ):  # noqa: D102
+    ):
+        hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
+            ('%s.bat' % env_hook_name)
+        logger.info("Creating environment hook '%s'" % hook_path)
+        expand_template(
+            Path(__file__).parent / 'template' / 'hook_append_value.bat.em',
+            hook_path,
+            {
+                'name': name,
+                'subdirectory': subdirectory,
+            })
+        return hook_path
+
+    def create_hook_prepend_value(  # noqa: D102
+        self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
+    ):
         hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
             ('%s.bat' % env_hook_name)
         logger.info("Creating environment hook '%s'" % hook_path)
@@ -107,9 +124,9 @@ class BatShell(ShellExtensionPoint):
             })
         return hook_path
 
-    async def generate_command_environment(
+    async def generate_command_environment(  # noqa: D102
         self, task_name, build_base, dependencies,
-    ):  # noqa: D102
+    ):
         if sys.platform != 'win32':
             raise SkipExtensionException('Not usable on non-Windows systems')
 

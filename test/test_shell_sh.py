@@ -50,6 +50,15 @@ def _test_extension(prefix_path):
     assert 'hookA' in content
     assert 'hookB' not in content
 
+    # create_hook_append_value
+    hook_path = extension.create_hook_append_value(
+        'append_env_hook_name', prefix_path, 'pkg_name',
+        'APPEND_NAME', 'append_subdirectory')
+    assert hook_path.exists()
+    assert hook_path.name == 'append_env_hook_name.sh'
+    content = hook_path.read_text()
+    assert 'APPEND_NAME' in content
+
     # create_hook_prepend_value
     hook_path = extension.create_hook_prepend_value(
         'env_hook_name', prefix_path, 'pkg_name', 'NAME', 'subdirectory')
