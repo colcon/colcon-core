@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{matrix.python}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
       - name: Install dependencies
@@ -30,7 +30,7 @@ jobs:
       - name: Run tests
         run: python -m pytest --cov=colcon_core --cov-branch
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
 
   bootstrap:
     strategy:
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{matrix.python}}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{matrix.python}}
       - name: Install dependencies
@@ -56,12 +56,12 @@ jobs:
         run: |
           python bin/colcon build --build-base ../build --install-base ../install
           python bin/colcon test --build-base ../build --install-base ../install
-      - name: Use the installed package
-        if: ${{runner.os != 'windows'}}
+      - name: Use the installed package (Bash)
+        shell: bash
         run: |
           . ../install/local_setup.sh
           colcon --help
-      - name: Use the installed package (Windows)
+      - name: Use the installed package (CMD)
         if: ${{runner.os == 'windows'}}
         shell: cmd
         run: |
