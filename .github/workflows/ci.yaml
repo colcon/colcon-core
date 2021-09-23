@@ -1,10 +1,9 @@
-name: colcon-core-ci
+name: pytest
 
 on:
   push:
     branches: ['master']
   pull_request:
-    branches: ['*']
 
 jobs:
   pytest:
@@ -13,7 +12,6 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         python: [3.6, 3.7, 3.8, 3.9]
 
-    name: colcon-core pytest
     runs-on: ${{matrix.os}}
 
     steps:
@@ -37,7 +35,6 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
         python: [3.6, 3.7, 3.8, 3.9]
 
-    name: colcon-core bootstrap
     runs-on: ${{matrix.os}}
 
     steps:
