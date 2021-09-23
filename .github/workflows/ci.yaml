@@ -25,8 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip setuptools
-          python -m pip install -U coloredlogs distlib EmPy mock pytest pytest-cov pytest-repeat pytest-rerunfailures
-          python -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-import-order flake8-quotes pep8-naming pylint scspell3k
+          python -m pip install -U -e .[test]
       - name: Run tests
         run: python -m pytest --cov=colcon_core --cov-branch
       - name: Upload coverage to Codecov
@@ -50,8 +49,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -U pip setuptools
-          python -m pip install -U coloredlogs distlib EmPy mock pytest pytest-cov pytest-repeat pytest-rerunfailures
-          python -m pip install -U flake8-blind-except flake8-builtins flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings flake8-import-order flake8-quotes pep8-naming pylint scspell3k
+          python -m pip install -U -e .[test]
       - name: Build and test
         run: |
           python bin/colcon build --build-base ../build --install-base ../install
