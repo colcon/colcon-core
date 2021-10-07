@@ -155,18 +155,24 @@ class BuildVerb(VerbExtensionPoint):
             if overlay_package in underlay_packages:
                 if overlay_package not in context.args.allow_overriding:
                     override_messages[overlay_package] = (
-                        "'{overlay_package}' is selected,"
-                        ' but it already exists in one or more underlay'
-                        ' workspaces:\n\t'.format_map(locals()) +
+                        "'{overlay_package}'".format_map(locals()) +
+                        ' is selected and already exists in'
+                        '\n\t' +
                         '\n\t'.join(underlay_packages[overlay_package]))
 
         if override_messages:
-            override_msg = ('\n'.join(override_messages.values()) +
-                '\nNon-leaf overriden packages must be API and ABI compatible'
-                " with the package they're overriding, and other packages in"
-                ' the overlay must have special knowledge of how to handle'
-                ' include directories from merged underlay workspaces or else'
-                ' undefined behavior at runtime may occur.'
+            override_msg = ('Some packages already exist in one or more'
+                ' underlay workspaces.'
+                '\n' +
+                '\n'.join(override_messages.values()) +
+                '\nIf the overridden package is in a merged underlay workspace'
+                ' and it installs headers, then all packages in the overlay'
+                ' must specially order its include directories or undefined'
+                ' behavior at run time may occur.'
+                '\nIf the overridden package is used by a different package'
+                ' in any underlay, then the overriding package in the'
+                ' overlay must be API and ABI compatible or undefined'
+                ' behavior at run time may occur.'
                 '\nIf you understand the risks and want to override a'
                 ' package anyways, add the following to the command'
                 ' line:'
