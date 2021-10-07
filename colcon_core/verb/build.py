@@ -167,7 +167,7 @@ class BuildVerb(VerbExtensionPoint):
                 '\n'.join(override_messages.values()) +
                 '\nIf the overridden package is in a merged underlay workspace'
                 ' and it installs headers, then all packages in the overlay'
-                ' must specially order its include directories or undefined'
+                ' must specially order their include directories or undefined'
                 ' behavior at run time may occur.'
                 '\nIf the overridden package is used by a different package'
                 ' in any underlay, then the overriding package in the'
