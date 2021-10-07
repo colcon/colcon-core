@@ -161,8 +161,9 @@ class BuildVerb(VerbExtensionPoint):
                         '\n\t'.join(underlay_packages[overlay_package]))
 
         if override_messages:
-            override_msg = ('Some packages already exist in one or more'
-                ' underlay workspaces.'
+            override_msg = (
+                'Some packages already exist in one or more underlay '
+                ' workspaces.'
                 '\n' +
                 '\n'.join(override_messages.values()) +
                 '\nIf the overridden package is in a merged underlay workspace'

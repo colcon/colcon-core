@@ -11,11 +11,12 @@ class IsolatedInstalledPackageFinder(FindInstalledPackagesExtensionPoint):
     """Find installed packages in colcon isolated install spaces."""
 
     def find_installed_packages(self, install_base: Path):
+        """Find installed packages in colcon isolated install spaces."""
         marker_file = install_base / '.colcon_install_layout'
         if not marker_file.is_file():
             return None
         install_layout = marker_file.read_text().rstrip()
-        if install_layout == 'isolated':
+        if install_layout != 'isolated':
             return None
 
         packages = {}
@@ -35,11 +36,12 @@ class MergedInstalledPackageFinder(FindInstalledPackagesExtensionPoint):
     """Find installed packages in colcon merged install spaces."""
 
     def find_installed_packages(self, install_base: Path):
+        """Find installed packages in colcon isolated install spaces."""
         marker_file = install_base / '.colcon_install_layout'
         if not marker_file.is_file():
             return None
         install_layout = marker_file.read_text().rstrip()
-        if install_layout == 'merged':
+        if install_layout != 'merged':
             return None
 
         packages = {}

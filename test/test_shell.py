@@ -356,7 +356,8 @@ def test_find_installed_packages():
         assert len(packages) == 0
 
         with patch(
-            'colcon_core.shell.get_relative_package_index_path',
+            'colcon_core.shell.installed_packages'
+            '.get_relative_package_index_path',
             return_value=Path('relative/package/index')
         ) as rel_path:
             # setup for isolated case

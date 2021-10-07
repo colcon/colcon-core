@@ -12,7 +12,6 @@ import traceback
 import warnings
 
 from colcon_core.environment_variable import EnvironmentVariable
-from colcon_core.location import get_relative_package_index_path
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_grouped_by_priority
@@ -619,7 +618,6 @@ def find_installed_packages(install_base: Path):
       layout
     :rtype: Dict or None
     """
-
     # priority means getting invoked first, but maybe that doesn't matter
     extensions = []
     prioritized_extensions = get_find_installed_packages_extensions()
@@ -643,12 +641,12 @@ def find_installed_packages(install_base: Path):
                     ' does not exist.'.format_map(locals()))
                 continue
             if pkg in packages and not path.samefile(packages[pkg]):
-                    # Same package found at different paths in the same prefix
-                    first_path = packages[pkg]
-                    logger.warning(
-                        "The package '{pkg}' previously found at "
-                        "'{first_path}' was found again at '{path}'."
-                        " Ignoring '{path}'".format_map(locals()))
+                # Same package found at different paths in the same prefix
+                first_path = packages[pkg]
+                logger.warning(
+                    "The package '{pkg}' previously found at "
+                    "'{first_path}' was found again at '{path}'."
+                    " Ignoring '{path}'".format_map(locals()))
             else:
                 packages[pkg] = path
 
