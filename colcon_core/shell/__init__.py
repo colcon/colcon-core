@@ -563,7 +563,7 @@ def find_installed_packages_in_environment():
     return packages
 
 
-def find_installed_packages(install_base):
+def find_installed_packages(install_base: Path):
     """
     Find install packages under the install base path.
 
@@ -577,32 +577,81 @@ def find_installed_packages(install_base):
       layout
     :rtype: OrderedDict or None
     """
-    marker_file = install_base / '.colcon_install_layout'
-    if not marker_file.is_file():
-        return None
-    install_layout = marker_file.read_text().rstrip()
-    if install_layout not in ('isolated', 'merged'):
-        return None
 
-    packages = {}
-    if install_layout == 'isolated':
-        # for each subdirectory look for the package specific file
-        for p in install_base.iterdir():
-            if not p.is_dir():
-                continue
-            if p.name.startswith('.'):
-                continue
-            marker = p / get_relative_package_index_path() / p.name
-            if marker.is_file():
-                packages[p.name] = p
-    else:
-        # find all files in the subdirectory
-        if (install_base / get_relative_package_index_path()).is_dir():
-            package_index = install_base / get_relative_package_index_path()
-            for p in package_index.iterdir():
-                if not p.is_file():
+    def colcon_installspace(install_base: Path):
+        marker_file = install_base / '.colcon_install_layout'
+        if not marker_file.is_file():
+            return None
+        install_layout = marker_file.read_text().rstrip()
+        if install_layout not in ('isolated', 'merged'):
+            return None
+
+        packages = {}
+        if install_layout == 'isolated':
+            # for each subdirectory look for the package specific file
+            for p in install_base.iterdir():
+                if not p.is_dir():
                     continue
                 if p.name.startswith('.'):
                     continue
-                packages[p.name] = install_base
+                marker = p / get_relative_package_index_path() / p.name
+                if marker.is_file():
+                    packages[p.name] = p
+        else:
+            # find all files in the subdirectory
+            if (install_base / get_relative_package_index_path()).is_dir():
+                package_index = install_base / get_relative_package_index_path()
+                for p in package_index.iterdir():
+                    if not p.is_file():
+                        continue
+                    if p.name.startswith('.'):
+                        continue
+                    packages[p.name] = install_base
+        return packages
+
+
+    def ament_workspace(install_base: Path):
+        package_index = install_base.joinpath(
+                'share', 'ament_index', 'resource_index', 'packages')
+
+        if not package_index.exists() or not package_index.is_dir():
+            return None
+
+        packages = {}
+        for marker_path in package_index.iterdir():
+            packages[marker_path.name] = install_base
+
+        return packages
+
+    extensions = [colcon_installspace, ament_workspace]
+
+    # Combine packages found by all extensions
+    packages = {}
+    valid_prefix = False
+
+    for ext in extensions:
+        ext_packages = ext(install_base)
+        if ext_packages is None:
+            continue
+
+        valid_prefix = True
+        for pkg, path in ext_packages.items():
+            if not path.exists():
+                logger.warning(
+                    "Ignoring '{pkg}' found at '{path}' because the path"
+                    ' does not exist.'.format_map(locals()))
+                continue
+            if pkg in packages and not path.samefile(packages[pkg]):
+                    # Same package found at different paths in the same prefix
+                    first_path = packages[pkg]
+                    logger.warning(
+                        "The package '{pkg}' previously found at "
+                        "'{first_path}' was found again at '{path}'."
+                        " Ignoring '{path}'".format_map(locals()))
+            else:
+                packages[pkg] = path
+
+    if not valid_prefix:
+        # No extension said this was a valid prefix
+        return None
     return packages

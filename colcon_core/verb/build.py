@@ -20,6 +20,8 @@ from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
 from colcon_core.package_selection import get_packages
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.prefix_path import get_chained_prefix_path
+from colcon_core.shell import find_installed_packages
 from colcon_core.shell import get_shell_extensions
 from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
@@ -106,6 +108,13 @@ class BuildVerb(VerbExtensionPoint):
             help='Continue other packages when a package fails to build '
                  '(packages recursively depending on the failed package are '
                  'skipped)')
+        parser.add_argument(
+            '--allow-overriding',
+            action='extend',
+            default=[],
+            metavar='PKG_NAME',
+            nargs='+',
+            help='Allow building packages that exist in an underlay workspace')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -132,6 +141,38 @@ class BuildVerb(VerbExtensionPoint):
             os.getcwd(), context.args.install_base))
         jobs, unselected_packages = self._get_jobs(
             context.args, decorators, install_base)
+
+        underlay_packages = {}
+        for prefix_path in get_chained_prefix_path():
+            packages = find_installed_packages(Path(prefix_path))
+            for pkg, path in packages.items():
+                if pkg not in underlay_packages:
+                    underlay_packages[pkg] = []
+                underlay_packages[pkg].append(str(path))
+
+        override_messages = {}
+        for overlay_package in jobs.keys():
+            if overlay_package in underlay_packages:
+                if overlay_package not in context.args.allow_overriding:
+                    override_messages[overlay_package] = (
+                        "'{overlay_package}' is selected,"
+                        ' but it already exists in one or more underlay'
+                        ' workspaces:\n\t'.format_map(locals()) +
+                        '\n\t'.join(underlay_packages[overlay_package]))
+
+        if override_messages:
+            override_msg = ('\n'.join(override_messages.values()) +
+                '\nNon-leaf overriden packages must be API and ABI compatible'
+                " with the package they're overriding, and other packages in"
+                ' the overlay must have special knowledge of how to handle'
+                ' include directories from merged underlay workspaces or else'
+                ' undefined behavior at runtime may occur.'
+                '\nIf you understand the risks and want to override a'
+                ' package anyways, add the following to the command'
+                ' line:'
+                '\n\t--allow-overriding ' +
+                ' '.join(sorted(override_messages.keys())))
+            raise RuntimeError(override_msg)
 
         on_error = OnError.interrupt \
             if not context.args.continue_on_error else OnError.skip_downstream
