@@ -608,14 +608,12 @@ def find_installed_packages(install_base: Path):
     """
     Find install packages under the install base path.
 
-    The path must contain a marker file with the install layout.
-    Based on the install layout the packages are discovered i different
+    Based on the install layout the packages may be discovered in different
     locations.
 
     :param Path install_base: The base path to find installed packages in
     :returns: The mapping from a package name to the prefix path, None if the
-      path doesn't exist or doesn't contain a marker file with a valid install
-      layout
+      path doesn't exist or doesn't a valid install layout
     :rtype: Dict or None
     """
     # priority means getting invoked first, but maybe that doesn't matter
