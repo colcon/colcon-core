@@ -6,22 +6,21 @@ on:
   pull_request:
 
 jobs:
-  matrix:
+  setup:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{steps.load.outputs.matrix}}
+      strategy: ${{steps.load.outputs.strategy}}
 
     steps:
       - uses: actions/checkout@v2
         with:
           repository: colcon/ci
       - id: load
-        run: echo "::set-output name=matrix::$(echo $(cat matrix.json))"
+        run: echo "::set-output name=strategy::$(echo $(cat strategy.json))"
 
   pytest:
-    needs: [matrix]
-    strategy:
-      matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
+    needs: [setup]
+    strategy: ${{fromJson(needs.setup.outputs.strategy)}}
     runs-on: ${{matrix.os}}
 
     steps:
@@ -33,9 +32,8 @@ jobs:
       - uses: codecov/codecov-action@v2
 
   bootstrap:
-    needs: [matrix]
-    strategy:
-      matrix: ${{fromJson(needs.matrix.outputs.matrix)}}
+    needs: [setup]
+    strategy: ${{fromJson(needs.setup.outputs.strategy)}}
     runs-on: ${{matrix.os}}
 
     steps:
