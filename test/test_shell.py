@@ -14,8 +14,12 @@ from colcon_core.shell import find_installed_packages_in_environment
 from colcon_core.shell import get_colcon_prefix_path
 from colcon_core.shell import get_command_environment
 from colcon_core.shell import get_environment_variables
+from colcon_core.shell import get_find_installed_packages_extensions
 from colcon_core.shell import get_shell_extensions
+from colcon_core.shell import FindInstalledPackagesExtensionPoint
 from colcon_core.shell import ShellExtensionPoint
+from colcon_core.shell.installed_packages import IsolatedInstalledPackageFinder
+from colcon_core.shell.installed_packages import MergedInstalledPackageFinder
 from mock import Mock
 from mock import patch
 import pytest
@@ -312,6 +316,22 @@ def test_check_dependency_availability():
         assert '--packages-ignore pkgA' in warn.call_args[0][0]
 
 
+class FIExtension1(FindInstalledPackagesExtensionPoint):
+    PRIORITY = 90
+
+
+class FIExtension2(FindInstalledPackagesExtensionPoint):
+    pass
+
+
+def test_get_find_installed_packages_extensions():
+    with EntryPointContext(extension1=FIExtension1, extension2=FIExtension2):
+        extensions = get_find_installed_packages_extensions()
+    assert list(extensions.keys()) == [100, 90]
+    assert list(extensions[100].keys()) == ['extension2']
+    assert list(extensions[90].keys()) == ['extension1']
+
+
 def test_find_installed_packages_in_environment():
     with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
         prefix_path = Path(prefix_path)
@@ -339,51 +359,55 @@ def test_find_installed_packages_in_environment():
 
 
 def test_find_installed_packages():
-    with TemporaryDirectory(prefix='test_colcon_') as install_base:
-        install_base = Path(install_base)
+    with EntryPointContext(
+        colcon_isolated=IsolatedInstalledPackageFinder,
+        colcon_merged=MergedInstalledPackageFinder
+    ):
+        with TemporaryDirectory(prefix='test_colcon_') as install_base:
+            install_base = Path(install_base)
 
-        # install base doesn't exist
-        assert find_installed_packages(install_base) is None
+            # install base doesn't exist
+            assert find_installed_packages(install_base) is None
 
-        # unknown install layout
-        marker_file = install_base / '.colcon_install_layout'
-        marker_file.write_text('unknown')
-        assert find_installed_packages(install_base) is None
+            # unknown install layout
+            marker_file = install_base / '.colcon_install_layout'
+            marker_file.write_text('unknown')
+            assert find_installed_packages(install_base) is None
 
-        # package index directory doesn't exist
-        marker_file.write_text('merged')
-        packages = find_installed_packages(install_base)
-        assert len(packages) == 0
-
-        with patch(
-            'colcon_core.shell.installed_packages'
-            '.get_relative_package_index_path',
-            return_value=Path('relative/package/index')
-        ) as rel_path:
-            # setup for isolated case
-            (install_base / 'dummy_file').write_text('')
-            (install_base / '.hidden_dir').mkdir()
-            (install_base / 'dummy_dir' / rel_path() / 'dummy_dir').mkdir(
-                parents=True)
-            (install_base / 'pkgA' / rel_path()).mkdir(parents=True)
-            (install_base / 'pkgA' / rel_path() / 'pkgA').write_text('')
-
-            # setup for merged case
-            (install_base / rel_path() / 'dummy_dir').mkdir(parents=True)
-            (install_base / rel_path() / '.dummy').write_text('')
-            (install_base / rel_path() / 'pkgB').write_text('')
-            (install_base / rel_path() / 'pkgC').write_text('')
-
-            marker_file.write_text('isolated')
-            packages = find_installed_packages(install_base)
-            assert len(packages) == 1
-            assert 'pkgA' in packages.keys()
-            assert packages['pkgA'] == install_base / 'pkgA'
-
+            # package index directory doesn't exist
             marker_file.write_text('merged')
             packages = find_installed_packages(install_base)
-            assert len(packages) == 2
-            assert 'pkgB' in packages.keys()
-            assert packages['pkgC'] == install_base
-            assert 'pkgC' in packages.keys()
-            assert packages['pkgB'] == install_base
+            assert len(packages) == 0
+
+            with patch(
+                'colcon_core.shell.installed_packages'
+                '.get_relative_package_index_path',
+                return_value=Path('relative/package/index')
+            ) as rel_path:
+                # setup for isolated case
+                (install_base / 'dummy_file').write_text('')
+                (install_base / '.hidden_dir').mkdir()
+                (install_base / 'dummy_dir' / rel_path() / 'dummy_dir').mkdir(
+                    parents=True)
+                (install_base / 'pkgA' / rel_path()).mkdir(parents=True)
+                (install_base / 'pkgA' / rel_path() / 'pkgA').write_text('')
+
+                # setup for merged case
+                (install_base / rel_path() / 'dummy_dir').mkdir(parents=True)
+                (install_base / rel_path() / '.dummy').write_text('')
+                (install_base / rel_path() / 'pkgB').write_text('')
+                (install_base / rel_path() / 'pkgC').write_text('')
+
+                marker_file.write_text('isolated')
+                packages = find_installed_packages(install_base)
+                assert len(packages) == 1
+                assert 'pkgA' in packages.keys()
+                assert packages['pkgA'] == install_base / 'pkgA'
+
+                marker_file.write_text('merged')
+                packages = find_installed_packages(install_base)
+                assert len(packages) == 2
+                assert 'pkgB' in packages.keys()
+                assert packages['pkgC'] == install_base
+                assert 'pkgC' in packages.keys()
+                assert packages['pkgB'] == install_base
