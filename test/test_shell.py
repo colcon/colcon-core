@@ -332,6 +332,11 @@ def test_get_find_installed_packages_extensions():
     assert list(extensions[90].keys()) == ['extension1']
 
 
+def test_find_installed_packages_extension_not_implemented():
+    with pytest.raises(NotImplementedError):
+        FindInstalledPackagesExtensionPoint().find_installed_packages(Path())
+
+
 def test_find_installed_packages_in_environment():
     with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
         prefix_path = Path(prefix_path)
