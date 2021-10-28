@@ -11,12 +11,12 @@ from colcon_core.shell import check_dependency_availability
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import find_installed_packages
 from colcon_core.shell import find_installed_packages_in_environment
+from colcon_core.shell import FindInstalledPackagesExtensionPoint
 from colcon_core.shell import get_colcon_prefix_path
 from colcon_core.shell import get_command_environment
 from colcon_core.shell import get_environment_variables
 from colcon_core.shell import get_find_installed_packages_extensions
 from colcon_core.shell import get_shell_extensions
-from colcon_core.shell import FindInstalledPackagesExtensionPoint
 from colcon_core.shell import ShellExtensionPoint
 from colcon_core.shell.installed_packages import IsolatedInstalledPackageFinder
 from colcon_core.shell.installed_packages import MergedInstalledPackageFinder
