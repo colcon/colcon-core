@@ -47,7 +47,7 @@ jobs:
           python -m pip install -U -e .[test]
       - name: Build and test
         env:
-          COLCON_ALL_SHELLS: True
+          COLCON_ALL_SHELLS: 'TRUE'
         run: |
           python bin/colcon build --build-base ../build --install-base ../install
           python bin/colcon test --build-base ../build --install-base ../install
