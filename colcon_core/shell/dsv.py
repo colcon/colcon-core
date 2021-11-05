@@ -49,6 +49,22 @@ class DsvShell(ShellExtensionPoint):
             })
         return hook_path
 
+    def create_hook_append_value(  # noqa: D102
+        self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
+    ):
+        hook_path = prefix_path / 'share' / pkg_name / 'hook' / \
+            ('%s.dsv' % env_hook_name)
+        logger.info("Creating environment descriptor '%s'" % hook_path)
+        expand_template(
+            Path(__file__).parent / 'template' / 'hook_append_value.dsv.em',
+            hook_path,
+            {
+                'type_': 'append-non-duplicate',
+                'name': name,
+                'value': subdirectory,
+            })
+        return hook_path
+
     def create_hook_prepend_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, subdirectory,
     ):

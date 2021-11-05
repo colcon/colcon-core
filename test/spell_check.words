@@ -1,6 +1,5 @@
 addopts
 apache
-appveyor
 argcomplete
 argparse
 asyncio
@@ -122,6 +121,5 @@ unittest
 unittests
 unlinking
 unrenamed
-veyor
 wildcards
 workaround

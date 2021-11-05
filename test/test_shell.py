@@ -176,7 +176,26 @@ def test_create_environment_hook():
     ):
         extensions = get_shell_extensions()
 
-        # one invalid, two valid return values
+        # append: one invalid, two valid return values
+        extensions[105]['extension3'].create_hook_append_value = Mock()
+        extensions[101]['extension4'].create_hook_append_value = Mock(
+            return_value=Path('/some/path/sub/hookA'))
+        extensions[110]['extension5'].create_hook_append_value = Mock(
+            return_value=Path('/some/path/sub/hookB'))
+        with patch('colcon_core.shell.logger.error') as error:
+            hooks = create_environment_hook(
+                None, None, None, None, None, mode='append')
+        assert len(hooks) == 2
+        assert str(hooks[0]) == '/some/path/sub/hookB'.replace('/', os.sep)
+        assert str(hooks[1]) == '/some/path/sub/hookA'.replace('/', os.sep)
+        # the raised exception is caught and results in an error message
+        assert error.call_count == 1
+        assert len(error.call_args[0]) == 1
+        assert error.call_args[0][0].startswith(
+            "Exception in shell extension 'extension3': "
+            'create_hook_append_value() should return a Path object')
+
+        # prepend: one invalid, two valid return values
         extensions[105]['extension3'].create_hook_prepend_value = Mock()
         extensions[101]['extension4'].create_hook_prepend_value = Mock(
             return_value=Path('/some/path/sub/hookA'))
@@ -187,7 +206,7 @@ def test_create_environment_hook():
         assert len(hooks) == 2
         assert str(hooks[0]) == '/some/path/sub/hookB'.replace('/', os.sep)
         assert str(hooks[1]) == '/some/path/sub/hookA'.replace('/', os.sep)
-        # the raised exception is catched and results in an error message
+        # the raised exception is caught and results in an error message
         assert error.call_count == 1
         assert len(error.call_args[0]) == 1
         assert error.call_args[0][0].startswith(
