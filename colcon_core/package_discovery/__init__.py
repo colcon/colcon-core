@@ -188,9 +188,12 @@ def discover_packages(
         args, identification_extensions, discovery_extensions)
 
 
-def expand_wildcards(paths):
+def expand_dir_wildcards(paths):
     """
-    Expand wildcards explicitly.
+    Expand wildcards explicitly to match directories.
+
+    This function does not match files.
+    Also, unlike shells, it does not keep patterns that yield no matches.
 
     This is only necessary on Windows or when
     the wildcards are not expanded by the shell.
@@ -207,7 +210,7 @@ def expand_wildcards(paths):
             p for p in sorted(glob(path))
             if os.path.isdir(p)]
         logger.log(
-            5, "expand_wildcards() expanding '%s' to %s",
+            5, "expand_dir_wildcards() expanding '%s' to %s",
             path, expanded_paths)
         paths[i:i + 1] = expanded_paths
         i += len(expanded_paths)

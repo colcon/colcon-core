@@ -10,7 +10,7 @@ from colcon_core.package_discovery import _discover_packages
 from colcon_core.package_discovery import _get_extensions_with_parameters
 from colcon_core.package_discovery import add_package_discovery_arguments
 from colcon_core.package_discovery import discover_packages
-from colcon_core.package_discovery import expand_wildcards
+from colcon_core.package_discovery import expand_dir_wildcards
 from colcon_core.package_discovery import get_package_discovery_extensions
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
 from mock import Mock
@@ -133,7 +133,7 @@ def test_discover_packages():
         assert expected_path in (str(d.path) for d in descs)
 
 
-def test_expand_wildcards():
+def test_expand_dir_wildcards():
     with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
         prefix_path = Path(prefix_path)
         (prefix_path / 'one').mkdir()
@@ -144,7 +144,7 @@ def test_expand_wildcards():
             '/some/path',
             str(prefix_path / '*')
         ]
-        expand_wildcards(paths)
+        expand_dir_wildcards(paths)
         assert len(paths) == 3
         assert paths[0] == '/some/path'
         assert paths[1] == str((prefix_path / 'one'))
