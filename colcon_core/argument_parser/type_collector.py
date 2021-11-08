@@ -1,4 +1,4 @@
-# Copyright 2020 Scott K Logan
+# Copyright 2021 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
 from colcon_core.argument_parser import ArgumentParserDecorator
