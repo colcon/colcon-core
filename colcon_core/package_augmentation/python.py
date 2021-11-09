@@ -80,6 +80,15 @@ def extract_dependencies(options):
         for dep in options.get(option_name, []):
             dependencies[dependency_type].add(
                 create_dependency_descriptor(dep))
+
+    extras_mapping = {
+        'test': 'test',
+    }
+    extras_require = options.get('extras_require', {})
+    for option_name, dependency_type in extras_mapping.items():
+        for dep in extras_require.get(option_name, []):
+            dependencies[dependency_type].add(
+                create_dependency_descriptor(dep))
     return dependencies
 
 

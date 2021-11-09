@@ -222,8 +222,9 @@ def has_test_dependency(setup_py_data, name):
       False otherwise
     :rtype: bool
     """
-    tests_require = setup_py_data.get('tests_require')
-    for d in tests_require or []:
+    tests_require = setup_py_data.get('tests_require', [])
+    tests_require += setup_py_data.get('extras_require', {}).get('test', [])
+    for d in tests_require:
         # the name might be followed by a version
         # separated by any of the following: ' ', <, >, <=, >=, ==, !=
         parts = re.split(r' |<|=|>|!', d)
