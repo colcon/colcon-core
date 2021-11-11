@@ -40,7 +40,7 @@ def test_pytest_match():
     }
     assert extension.match(context, env, get_setup_data(desc, env))
 
-    # pytest not in extras_require.test
+    # pytest in extras_require.test
     desc.metadata['get_python_setup_options'] = lambda env: {
         'extras_require': {
             'test': ['pytest']
