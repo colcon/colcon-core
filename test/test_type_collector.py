@@ -30,6 +30,7 @@ def test_suppress_type_conversions():
     decorator = TypeCollectorDecorator(parser)
     decorator.add_argument('-f', type=float)
     decorator.add_argument('-i', type=int)
+    decorator.register('action', 'not_implemented', argparse.Action)
     decorator.register('type', 'hex', float.fromhex)
     decorator.add_argument('-x', type='hex', default=None)
 
@@ -72,6 +73,7 @@ def test_suppress_not_decorated():
     parser = _RaisingArgumentParser()
     parser.add_argument('-f', type=float)
     parser.add_argument('-i', type=int)
+    parser.register('action', 'not_implemented', argparse.Action)
     parser.register('type', 'hex', float.fromhex)
     parser.add_argument('-x', type='hex', default=None)
 
