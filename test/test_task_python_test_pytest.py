@@ -9,7 +9,7 @@ from colcon_core.task.python.test.pytest import PytestPythonTestingStep
 
 def test_pytest_match():
     extension = PytestPythonTestingStep()
-    env = dict()
+    env = {}
     desc = PackageDescriptor('/dev/null')
     context = TaskContext(pkg=desc, args=None, dependencies=None)
 
@@ -17,7 +17,7 @@ def test_pytest_match():
     desc.type = 'python'
 
     # no test requirements
-    desc.metadata['get_python_setup_options'] = lambda env: dict()
+    desc.metadata['get_python_setup_options'] = lambda env: {}
     assert not extension.match(context, env, get_setup_data(desc, env))
 
     # pytest not in tests_require
