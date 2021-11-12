@@ -28,7 +28,6 @@ class PythonTestTask(TaskExtensionPoint):
         add_python_testing_step_arguments(parser)
 
     async def test(self, *, additional_hooks=None):  # noqa: D102
-        pkg = self.context.pkg
         args = self.context.args
 
         logger.info(
@@ -65,8 +64,7 @@ class PythonTestTask(TaskExtensionPoint):
                         'Exception in Python testing step extension '
                         "'{extension.STEP_TYPE}': {e}\n{exc}"
                         .format_map(locals()))
-                    # skip failing extension, continue with next one
-                    continue
+                    return 1
                 if matched:
                     break
             else:
