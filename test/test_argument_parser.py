@@ -92,11 +92,11 @@ def test_argument_parser_decorator():
 
     # __getattr__
     decorator = ArgumentParserDecorator(parser)
-    assert decorator.add_argument == parser.add_argument
+    assert decorator.format_help == parser.format_help
 
     del decorator.__dict__['_parser']
     with pytest.raises(AttributeError):
-        decorator.add_argument
+        decorator.format_help
 
     # __setattr__
     decorator = Decorator(parser)

@@ -33,6 +33,7 @@ executables
 exitstatus
 fdopen
 filterwarnings
+fromhex
 functools
 getcategory
 getpid
