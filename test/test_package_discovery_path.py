@@ -6,7 +6,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from colcon_core.package_descriptor import PackageDescriptor
-from colcon_core.package_discovery.path import _expand_wildcards
 from colcon_core.package_discovery.path import PathPackageDiscovery
 from colcon_core.package_identification import IgnoreLocationException
 from mock import Mock
@@ -63,19 +62,24 @@ def test_discover():
             PackageDescriptor(os.path.realpath('/other/path'))}
 
 
-def test__expand_wildcards():
+def test_discover_with_wildcards():
     with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
         prefix_path = Path(prefix_path)
-        (prefix_path / 'one').mkdir()
-        (prefix_path / 'two').mkdir()
-        (prefix_path / 'three').touch()
+        path_one = prefix_path / 'one' / 'path'
+        path_two = prefix_path / 'two' / 'path'
+        path_three = prefix_path / 'three' / 'path'
+        path_one.mkdir(parents=True)
+        path_two.mkdir(parents=True)
+        path_three.mkdir(parents=True)
 
-        paths = [
-            '/some/path',
-            str(prefix_path / '*')
-        ]
-        _expand_wildcards(paths)
-        assert len(paths) == 3
-        assert paths[0] == '/some/path'
-        assert paths[1] == str((prefix_path / 'one'))
-        assert paths[2] == str((prefix_path / 'two'))
+        extension = PathPackageDiscovery()
+        args = Mock()
+        args.paths = [str(prefix_path / '*' / 'path')]
+        with patch(
+            'colcon_core.package_discovery.path.identify', side_effect=identify
+        ):
+            descs = extension.discover(args=args, identification_extensions={})
+            assert descs == {
+                PackageDescriptor(os.path.realpath(str(path_one))),
+                PackageDescriptor(os.path.realpath(str(path_two))),
+                PackageDescriptor(os.path.realpath(str(path_three)))}
