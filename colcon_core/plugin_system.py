@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import OrderedDict
-import traceback
 
 from colcon_core.entry_point import load_entry_points
 from colcon_core.logging import colcon_logger
@@ -65,12 +64,11 @@ def _instantiate_extension(
             "Skipping extension '{group_name}.{extension_name}': {e}"
             .format_map(locals()))
         extension_instance = None
-    except Exception as e:  # noqa: F841
+    except Exception:
         # catch exceptions raised in extension constructor
-        exc = traceback.format_exc()
-        logger.error(
+        logger.exception(
             'Exception instantiating extension '
-            "'{group_name}.{extension_name}': {e}\n{exc}".format_map(locals()))
+            "'{group_name}.{extension_name}'".format_map(locals()))
         extension_instance = None
     if not unique_instance:
         _extension_instances[extension_class] = extension_instance
