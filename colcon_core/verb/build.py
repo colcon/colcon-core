@@ -132,7 +132,7 @@ class BuildVerb(VerbExtensionPoint):
             default=[],
             metavar='PKG_NAME',
             nargs='+',
-            help='Allow building packages that exist in an underlay workspace')
+            help='Allow building packages that exist in underlay workspaces')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -174,25 +174,25 @@ class BuildVerb(VerbExtensionPoint):
                 if overlay_package not in context.args.allow_overriding:
                     override_messages[overlay_package] = (
                         "'{overlay_package}'".format_map(locals()) +
-                        ' is selected and already exists in'
-                        '\n\t' +
-                        '\n\t'.join(underlay_packages[overlay_package]))
+                        ' is in: ' +
+                        ', '.join(underlay_packages[overlay_package]))
 
         if override_messages:
             override_msg = (
-                'Some packages already exist in one or more underlay '
-                ' workspaces.'
-                '\n' +
-                '\n'.join(override_messages.values()) +
-                '\nIf the overridden package is in a merged underlay workspace'
+                'Some selected packages are already built in one or more'
+                ' underlay workspaces:'
+                '\n\t' +
+                '\n\t'.join(override_messages.values()) +
+                '\nIf a package in a merged underlay workspace is overridden'
                 ' and it installs headers, then all packages in the overlay'
-                ' must specially order their include directories or undefined'
-                ' behavior at run time may occur.'
-                '\nIf the overridden package is used by a different package'
+                ' must sort their include directories by workspace order.'
+                ' Failure to do so may result in build failures or undefined'
+                ' behavior at run time.'
+                '\nIf the overridden package is used by another package'
                 ' in any underlay, then the overriding package in the'
                 ' overlay must be API and ABI compatible or undefined'
                 ' behavior at run time may occur.'
-                '\nIf you understand the risks and want to override a'
+                '\n\nIf you understand the risks and want to override a'
                 ' package anyways, add the following to the command'
                 ' line:'
                 '\n\t--allow-overriding ' +
