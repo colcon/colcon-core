@@ -1,6 +1,5 @@
 addopts
 apache
-appveyor
 argcomplete
 argparse
 asyncio
@@ -95,7 +94,9 @@ setupscript
 setuptools
 shlex
 sigint
+sloretz
 stacklevel
+stackoverflow
 staticmethod
 stdeb
 stringify
@@ -120,7 +121,6 @@ unittest
 unittests
 unlinking
 unrenamed
-veyor
 wildcards
 workaround
 workspaces
