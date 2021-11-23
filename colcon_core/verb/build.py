@@ -35,7 +35,7 @@ from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
 
 
-if sys.version_info < (3,8):
+if sys.version_info < (3, 8):
     # TODO(sloretz) remove when minimum supported Python version is 3.8
     # https://stackoverflow.com/a/41153081
     class _ExtendAction(argparse.Action):
@@ -98,7 +98,7 @@ class BuildVerb(VerbExtensionPoint):
         satisfies_version(VerbExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def add_arguments(self, *, parser):  # noqa: D102
-        if sys.version_info < (3,8):
+        if sys.version_info < (3, 8):
             # TODO(sloretz) remove when minimum supported Python version is 3.8
             parser.register('action', 'extend', _ExtendAction)
         parser.add_argument(
