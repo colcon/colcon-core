@@ -1,10 +1,12 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import argparse
 from collections import OrderedDict
 import os
 import os.path
 from pathlib import Path
+import sys
 import traceback
 
 from colcon_core.argument_parser.destination_collector \
@@ -31,6 +33,19 @@ from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import logger
 from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
+
+
+if sys.version_info < (3,8):
+    # TODO(sloretz) remove when minimum supported Python version is 3.8
+    # https://stackoverflow.com/a/41153081
+    class _ExtendAction(argparse.Action):
+        """Add argparse action to extend a list."""
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            """Extend the list with new arguments."""
+            items = getattr(namespace, self.dest) or []
+            items.extend(values)
+            setattr(namespace, self.dest, items)
 
 
 class BuildPackageArguments:
@@ -83,6 +98,9 @@ class BuildVerb(VerbExtensionPoint):
         satisfies_version(VerbExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def add_arguments(self, *, parser):  # noqa: D102
+        if sys.version_info < (3,8):
+            # TODO(sloretz) remove when minimum supported Python version is 3.8
+            parser.register('action', 'extend', _ExtendAction)
         parser.add_argument(
             '--build-base',
             default='build',
