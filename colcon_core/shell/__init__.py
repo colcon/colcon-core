@@ -613,7 +613,7 @@ def find_installed_packages(install_base: Path):
 
     :param Path install_base: The base path to find installed packages in
     :returns: The mapping from a package name to the prefix path, None if the
-      path doesn't exist or doesn't a valid install layout
+      path is not a supported install layout or it doesn't exist
     :rtype: Dict or None
     """
     # priority means getting invoked first, but maybe that doesn't matter
