@@ -163,10 +163,11 @@ class BuildVerb(VerbExtensionPoint):
         underlay_packages = {}
         for prefix_path in get_chained_prefix_path():
             packages = find_installed_packages(Path(prefix_path))
-            for pkg, path in packages.items():
-                if pkg not in underlay_packages:
-                    underlay_packages[pkg] = []
-                underlay_packages[pkg].append(str(path))
+            if packages:
+                for pkg, path in packages.items():
+                    if pkg not in underlay_packages:
+                        underlay_packages[pkg] = []
+                    underlay_packages[pkg].append(str(path))
 
         override_messages = {}
         for overlay_package in jobs.keys():
