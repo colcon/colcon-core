@@ -68,7 +68,8 @@ def test_identify():
             '[options.extras_require]\n'
             'test = test2 == 3.0.0\n'
             'tests = test3\n'
-            'testing = test4\n')
+            'testing = test4\n'
+            'other = not-test\n')
         assert extension.identify(desc) is None
         assert desc.name == 'other-name'
         assert desc.type == 'python'
