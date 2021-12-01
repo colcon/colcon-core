@@ -430,9 +430,10 @@ def test_inconsistent_package_finding_extensions():
             install_base = Path(install_base)
             with patch('colcon_core.shell.logger.warning') as mock_warn:
                 assert {} == find_installed_packages(install_base)
+                dne_path = Path('/does/not/exist')
                 mock_warn.assert_called_once_with(
-                    "Ignoring 'pkgA' found at '/does/not/exist'"
-                    ' because the path does not exist.')
+                    "Ignoring 'pkgA' found at '{0}'"
+                    ' because the path does not exist.'.format(dne_path))
 
 
 def test_find_package_two_locations():
