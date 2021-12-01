@@ -3,6 +3,8 @@
 
 from argparse import ArgumentParser
 from asyncio import CancelledError
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.event.job import JobEnded
 from colcon_core.event.job import JobQueued
@@ -17,8 +19,6 @@ from colcon_core.executor import get_executor_extensions
 from colcon_core.executor import Job
 from colcon_core.executor import OnError
 from colcon_core.subprocess import SIGINT_RESULT
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

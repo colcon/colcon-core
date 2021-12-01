@@ -2,13 +2,13 @@
 # Licensed under the Apache License, Version 2.0
 
 import argparse
+from unittest.mock import Mock
 
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.event_handler import apply_event_handler_arguments
 from colcon_core.event_handler import EventHandlerExtensionPoint
 from colcon_core.event_handler import format_duration
 from colcon_core.event_handler import get_event_handler_extensions
-from mock import Mock
 import pytest
 
 from .entry_point_context import EntryPointContext

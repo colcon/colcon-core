@@ -2,14 +2,14 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.entry_point import EXTENSION_POINT_GROUP_NAME
 from colcon_core.entry_point import get_all_entry_points
 from colcon_core.entry_point import get_entry_points
 from colcon_core.entry_point import load_entry_point
 from colcon_core.entry_point import load_entry_points
-from mock import Mock
-from mock import patch
 import pytest
 
 from .environment_context import EnvironmentContext

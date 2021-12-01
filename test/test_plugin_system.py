@@ -1,6 +1,8 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from unittest.mock import patch
+
 from colcon_core.plugin_system import get_first_line_doc
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_name
@@ -8,7 +10,6 @@ from colcon_core.plugin_system import order_extensions_by_priority
 from colcon_core.plugin_system import order_extensions_grouped_by_priority
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

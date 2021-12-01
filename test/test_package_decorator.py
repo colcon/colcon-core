@@ -1,11 +1,12 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from unittest.mock import Mock
+
 from colcon_core.package_decorator import add_recursive_dependencies
 from colcon_core.package_decorator import get_decorators
 from colcon_core.package_decorator import PackageDecorator
 from colcon_core.package_descriptor import PackageDescriptor
-from mock import Mock
 
 
 def test_constructor():

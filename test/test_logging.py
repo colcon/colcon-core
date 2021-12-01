@@ -2,10 +2,10 @@
 # Licensed under the Apache License, Version 2.0
 
 import logging
+from unittest.mock import Mock
 
 from colcon_core.logging import get_numeric_log_level
 from colcon_core.logging import set_logger_level_from_env
-from mock import Mock
 import pytest
 
 from .environment_context import EnvironmentContext

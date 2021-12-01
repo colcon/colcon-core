@@ -4,12 +4,12 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_discovery.path import PathPackageDiscovery
 from colcon_core.package_identification import IgnoreLocationException
-from mock import Mock
-from mock import patch
 
 
 def test_path_package_discovery():

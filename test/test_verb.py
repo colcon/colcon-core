@@ -5,13 +5,13 @@ import argparse
 import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import get_verb_extensions
 from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext
