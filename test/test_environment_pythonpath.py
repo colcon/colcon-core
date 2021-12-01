@@ -4,9 +4,9 @@
 from distutils.sysconfig import get_python_lib
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core.environment.pythonpath import PythonPathEnvironment
-from mock import patch
 
 
 def test_pythonpath():

@@ -5,6 +5,8 @@ import shutil
 import signal
 import sys
 from tempfile import mkdtemp
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.command import CommandContext
 from colcon_core.command import create_parser
@@ -12,8 +14,6 @@ from colcon_core.command import main
 from colcon_core.command import verb_main
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.verb import VerbExtensionPoint
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

@@ -5,6 +5,8 @@ import os
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.event.command import Command
 from colcon_core.event.job import JobProgress
@@ -19,8 +21,6 @@ from colcon_core.task import install
 from colcon_core.task import run
 from colcon_core.task import TaskContext
 from colcon_core.task import TaskExtensionPoint
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

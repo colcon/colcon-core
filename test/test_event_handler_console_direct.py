@@ -1,10 +1,11 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from unittest.mock import patch
+
 from colcon_core.event.output import StderrLine
 from colcon_core.event.output import StdoutLine
 from colcon_core.event_handler.console_direct import ConsoleDirectEventHandler
-from mock import patch
 
 
 def test_console_direct():

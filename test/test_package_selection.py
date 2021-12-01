@@ -3,6 +3,8 @@
 
 from argparse import Namespace
 import os
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_selection import _add_package_selection_arguments
@@ -12,8 +14,6 @@ from colcon_core.package_selection import get_package_selection_extensions
 from colcon_core.package_selection import get_packages
 from colcon_core.package_selection import PackageSelectionExtensionPoint
 from colcon_core.package_selection import select_package_decorators
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

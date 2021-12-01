@@ -2,6 +2,8 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification import _identify
@@ -11,8 +13,6 @@ from colcon_core.package_identification import identify
 from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

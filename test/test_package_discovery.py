@@ -4,6 +4,8 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_discovery import _discover_packages
@@ -13,8 +15,6 @@ from colcon_core.package_discovery import discover_packages
 from colcon_core.package_discovery import expand_dir_wildcards
 from colcon_core.package_discovery import get_package_discovery_extensions
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
-from mock import Mock
-from mock import patch
 
 from .entry_point_context import EntryPointContext
 
