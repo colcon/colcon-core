@@ -433,3 +433,30 @@ def test_inconsistent_package_finding_extensions():
                 mock_warn.assert_called_once_with(
                     "Ignoring 'pkgA' found at '/does/not/exist'"
                     ' because the path does not exist.')
+
+
+def test_find_package_two_locations():
+    with TemporaryDirectory(prefix='test_colcon_') as base:
+        base = Path(base)
+        location1 = base / 'pkgA'
+        location2 = base / 'pkgB'
+        location1.mkdir()
+        location2.mkdir()
+
+        class PackageLocation1(FindInstalledPackagesExtensionPoint):
+
+            def find_installed_packages(self, base: Path):
+                return {'pkgA': location1}
+
+        class PackageLocation2(FindInstalledPackagesExtensionPoint):
+
+            def find_installed_packages(self, base: Path):
+                return {'pkgA': location2}
+
+        with EntryPointContext(loc1=PackageLocation1, loc2=PackageLocation2):
+            with patch('colcon_core.shell.logger.warning') as mock_warn:
+                assert {'pkgA': location1} == find_installed_packages(base)
+                mock_warn.assert_called_once_with(
+                    "The package 'pkgA' previously found at"
+                    " '{location1}' was found again at '{location2}'."
+                    " Ignoring '{location2}'".format_map(locals()))
