@@ -66,7 +66,9 @@ def test_identify():
             'tests_require = test == 2.0.0\n'
             'zip_safe = false\n'
             '[options.extras_require]\n'
-            'test = test2 == 3.0.0\n')
+            'test = test2 == 3.0.0\n'
+            'tests = test3\n'
+            'testing = test4\n')
         assert extension.identify(desc) is None
         assert desc.name == 'other-name'
         assert desc.type == 'python'
@@ -79,7 +81,7 @@ def test_identify():
         assert desc.dependencies['run'] == {'runA', 'runB'}
         dep = next(x for x in desc.dependencies['run'] if x == 'runA')
         assert dep.metadata['version_gt'] == '1.2.3'
-        assert desc.dependencies['test'] == {'test', 'test2'}
+        assert desc.dependencies['test'] == {'test', 'test2', 'test3', 'test4'}
 
         assert callable(desc.metadata['get_python_setup_options'])
         options = desc.metadata['get_python_setup_options'](None)

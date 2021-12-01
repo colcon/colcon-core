@@ -75,19 +75,21 @@ def extract_dependencies(options):
         'tests_require': 'test',
     }
     dependencies = {}
-    _map_dependencies(mapping, options, dependencies)
+    _map_dependencies(options, mapping, dependencies)
 
     extras_mapping = {
         'test': 'test',
+        'tests': 'test',
+        'testing': 'test',
     }
     _map_dependencies(
-        extras_mapping, options.get('extras_require', {}),
+        options.get('extras_require', {}), extras_mapping,
         dependencies)
 
     return dependencies
 
 
-def _map_dependencies(mapping, options, dependencies):
+def _map_dependencies(options, mapping, dependencies):
     for option_name, dependency_type in mapping.items():
         dependencies.setdefault(dependency_type, set())
         for dep in options.get(option_name, []):

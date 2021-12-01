@@ -6,6 +6,7 @@ import traceback
 
 from colcon_core.entry_point import load_entry_points
 from colcon_core.logging import colcon_logger
+from colcon_core.package_augmentation.python import extract_dependencies
 from colcon_core.plugin_system import get_first_line_doc
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_priority
@@ -222,8 +223,7 @@ def has_test_dependency(setup_py_data, name):
       False otherwise
     :rtype: bool
     """
-    tests_require = setup_py_data.get('tests_require') or []
-    tests_require += setup_py_data.get('extras_require', {}).get('test') or []
+    tests_require = extract_dependencies(setup_py_data).get('test') or []
     for d in tests_require:
         # the name might be followed by a version
         # separated by any of the following: ' ', <, >, <=, >=, ==, !=
