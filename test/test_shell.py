@@ -416,3 +416,20 @@ def test_find_installed_packages():
                 assert packages['pkgC'] == install_base
                 assert 'pkgC' in packages.keys()
                 assert packages['pkgB'] == install_base
+
+
+class FIExtensionPathNotExist(FindInstalledPackagesExtensionPoint):
+
+    def find_installed_packages(self, install_base: Path):
+        return {'pkgA': Path('/does/not/exist')}
+
+
+def test_inconsistent_package_finding_extensions():
+    with EntryPointContext(dne=FIExtensionPathNotExist):
+        with TemporaryDirectory(prefix='test_colcon_') as install_base:
+            install_base = Path(install_base)
+            with patch('colcon_core.shell.logger.warning') as mock_warn:
+                assert {} == find_installed_packages(install_base)
+                mock_warn.assert_called_once_with(
+                    "Ignoring 'pkgA' found at '/does/not/exist'"
+                    ' because the path does not exist.')
