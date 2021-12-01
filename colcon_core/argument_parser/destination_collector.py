@@ -43,7 +43,7 @@ class DestinationCollectorDecorator(ArgumentParserDecorator):
 
     def add_argument(self, *args, **kwargs):
         """Collect option names and destination for all added arguments."""
-        argument = self._parser.add_argument(*args, **kwargs)
+        argument = super().add_argument(*args, **kwargs)
 
         for arg in args:
             if not arg.startswith('-'):

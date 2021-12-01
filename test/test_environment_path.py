@@ -3,9 +3,9 @@
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core.environment.path import PathEnvironment
-from mock import patch
 
 
 def test_path():

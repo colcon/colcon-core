@@ -4,6 +4,8 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
@@ -11,8 +13,6 @@ from colcon_core.environment import EnvironmentExtensionPoint
 from colcon_core.environment import get_environment_extensions
 from colcon_core.shell import get_shell_extensions
 from colcon_core.shell import ShellExtensionPoint
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

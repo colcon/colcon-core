@@ -1,12 +1,11 @@
 # Copyright 2016-2020 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-from glob import glob
 import os
-import sys
 
 from colcon_core.argument_default import is_default_value
 from colcon_core.argument_default import wrap_default_value
+from colcon_core.package_discovery import expand_dir_wildcards
 from colcon_core.package_discovery import logger
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
 from colcon_core.package_identification import identify
@@ -45,9 +44,9 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
         if args.paths is None:
             return set()
 
-        # on Windows manually check for wildcards and expand them
-        if sys.platform == 'win32':
-            _expand_wildcards(args.paths)
+        # manually check for wildcards and expand them in case
+        # the values were not provided through the shell
+        expand_dir_wildcards(args.paths)
 
         logger.log(1, 'PathPackageDiscovery.discover(%s)', args.paths)
 
@@ -68,27 +67,3 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
                 descs.add(result)
 
         return descs
-
-
-def _expand_wildcards(paths):
-    """
-    Expand wildcards explicitly.
-
-    This is only necessary on Windows.
-
-    :param list paths: The paths to update in place
-    """
-    i = 0
-    while i < len(paths):
-        path = paths[i]
-        if '*' not in path:
-            i += 1
-            continue
-        expanded_paths = [
-            p for p in sorted(glob(path))
-            if os.path.isdir(p)]
-        logger.log(
-            5, "PathPackageDiscovery.discover() expanding '%s' to %s",
-            path, expanded_paths)
-        paths[i:i + 1] = expanded_paths
-        i += len(expanded_paths)

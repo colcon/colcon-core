@@ -5,6 +5,8 @@ from collections import OrderedDict
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.shell import check_dependency_availability
@@ -20,8 +22,6 @@ from colcon_core.shell import get_shell_extensions
 from colcon_core.shell import ShellExtensionPoint
 from colcon_core.shell.installed_packages import IsolatedInstalledPackageFinder
 from colcon_core.shell.installed_packages import MergedInstalledPackageFinder
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

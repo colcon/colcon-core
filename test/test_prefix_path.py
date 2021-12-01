@@ -4,13 +4,13 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.prefix_path import get_chained_prefix_path
 from colcon_core.prefix_path import get_prefix_path_extensions
 from colcon_core.prefix_path import PrefixPathExtensionPoint
 from colcon_core.prefix_path.colcon import ColconPrefixPath
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext

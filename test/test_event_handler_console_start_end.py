@@ -1,13 +1,14 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from unittest.mock import patch
+
 from colcon_core.event.job import JobEnded
 from colcon_core.event.job import JobStarted
 from colcon_core.event.test import TestFailure
 from colcon_core.event_handler.console_start_end \
     import ConsoleStartEndEventHandler
 from colcon_core.subprocess import SIGINT_RESULT
-from mock import patch
 
 
 def test_console_start_end():
