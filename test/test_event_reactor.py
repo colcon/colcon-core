@@ -3,13 +3,13 @@
 
 from queue import Queue
 import time
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.event.timer import TimerEvent
 from colcon_core.event_handler import EventHandlerExtensionPoint
 from colcon_core.event_reactor import create_event_reactor
 from colcon_core.event_reactor import EventReactorShutdown
-from mock import Mock
-from mock import patch
 
 from .entry_point_context import EntryPointContext
 

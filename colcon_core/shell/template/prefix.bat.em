@@ -78,6 +78,8 @@ goto:eof
     set "_colcon_python_executable=%_colcon_python_executable%"
   )
 
+  :: escape potential closing parenthesis which would break the for loop
+  set "_colcon_python_executable=%_colcon_python_executable:)=^)%"
   for /f "delims=" %%c in ('""%_colcon_python_executable%" "%~1_local_setup_util_bat.py" bat@
 @[if merge_install]@
  --merged-install@
@@ -104,6 +106,20 @@ goto:eof
     call "%~1%"
   ) else (
     echo not found: "%~1" 1>&2
+  )
+goto:eof
+
+
+:: strip a leading semicolon from an environment variable if applicable
+:: first argument: the environment variable name
+:_colcon_prefix_bat_strip_leading_semicolon
+  setlocal enabledelayedexpansion
+  set "name=%~1"
+  set "value=!%name%!"
+  if "%value:~0,1%"==";" set "value=%value:~1%"
+  :: set result variable in parent scope
+  endlocal & (
+    set "%~1=%value%"
   )
 goto:eof
 

@@ -4,10 +4,10 @@
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core.shell.template import expand_template
 from em import TransientParseError
-from mock import patch
 import pytest
 
 

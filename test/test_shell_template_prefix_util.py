@@ -4,13 +4,13 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core.location import get_relative_package_index_path
 from colcon_core.shell.template.prefix_util import get_packages
 from colcon_core.shell.template.prefix_util import main
 from colcon_core.shell.template.prefix_util import order_packages
 from colcon_core.shell.template.prefix_util import reduce_cycle_set
-from mock import patch
 import pytest
 
 

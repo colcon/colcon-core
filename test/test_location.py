@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core import location
 from colcon_core.location import _create_symlink
@@ -12,7 +13,6 @@ from colcon_core.location import get_config_path
 from colcon_core.location import get_log_path
 from colcon_core.location import set_default_config_path
 from colcon_core.location import set_default_log_path
-from mock import patch
 import pytest
 
 from .environment_context import EnvironmentContext

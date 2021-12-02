@@ -2,13 +2,13 @@
 # Licensed under the Apache License, Version 2.0
 
 from argparse import ArgumentParser
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.argument_parser import ArgumentParserDecorator
 from colcon_core.argument_parser import ArgumentParserDecoratorExtensionPoint
 from colcon_core.argument_parser import decorate_argument_parser
 from colcon_core.argument_parser import get_argument_parser_extensions
-from mock import Mock
-from mock import patch
 import pytest
 
 from .entry_point_context import EntryPointContext
@@ -92,11 +92,11 @@ def test_argument_parser_decorator():
 
     # __getattr__
     decorator = ArgumentParserDecorator(parser)
-    assert decorator.add_argument == parser.add_argument
+    assert decorator.format_help == parser.format_help
 
     del decorator.__dict__['_parser']
     with pytest.raises(AttributeError):
-        decorator.add_argument
+        decorator.format_help
 
     # __setattr__
     decorator = Decorator(parser)

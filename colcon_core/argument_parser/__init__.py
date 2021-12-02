@@ -161,6 +161,15 @@ class ArgumentParserDecorator:
         # get attribute on decoree
         setattr(self.__dict__['_parser'], name, value)
 
+    def add_argument(self, *args, **kwargs):
+        """
+        Add an argument.
+
+        See :class:`argparse.ArgumentParser.add_argument` for the method
+        arguments and return value.
+        """
+        return self._parser.add_argument(*args, **kwargs)
+
     def add_argument_group(self, *args, **kwargs):
         """
         Decorate group parser before adding.
@@ -212,6 +221,15 @@ class ArgumentParserDecorator:
         self._nested_decorators_.append(subparser)
         self._recursive_decorators.append(subparser)
         return subparser
+
+    def register(self, *args, **kwargs):
+        """
+        Register a type converter.
+
+        See :class:`argparse.ArgumentParser.register` for the method arguments
+        and return value.
+        """
+        return self._parser.register(*args, **kwargs)
 
 
 class SuppressUsageOutput:

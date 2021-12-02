@@ -2,6 +2,8 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+from unittest.mock import Mock
+from unittest.mock import patch
 
 from colcon_core.package_augmentation import augment_packages
 from colcon_core.package_augmentation \
@@ -10,8 +12,6 @@ from colcon_core.package_augmentation import PackageAugmentationExtensionPoint
 from colcon_core.package_augmentation import update_descriptor
 from colcon_core.package_augmentation import update_metadata
 from colcon_core.package_descriptor import PackageDescriptor
-from mock import Mock
-from mock import patch
 
 from .entry_point_context import EntryPointContext
 

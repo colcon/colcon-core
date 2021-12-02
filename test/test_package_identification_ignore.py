@@ -3,12 +3,12 @@
 
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock
 
 from colcon_core.package_identification import IgnoreLocationException
 from colcon_core.package_identification.ignore import IGNORE_MARKER
 from colcon_core.package_identification.ignore \
     import IgnorePackageIdentification
-from mock import Mock
 import pytest
 
 
