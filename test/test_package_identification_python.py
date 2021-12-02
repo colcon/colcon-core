@@ -46,7 +46,16 @@ def test_identify():
         assert extension.identify(desc) is None
         assert desc.name == 'pkg-name'
         assert desc.type == 'python'
+        assert not desc.dependencies
+        assert not desc.metadata
 
+        augmentation_extension.augment_package(desc)
+        assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
+        assert not desc.dependencies['build']
+        assert not desc.dependencies['run']
+        assert not desc.dependencies['test']
+
+        desc = PackageDescriptor(basepath)
         desc.name = 'other-name'
         with pytest.raises(RuntimeError) as e:
             extension.identify(desc)
