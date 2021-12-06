@@ -12,7 +12,6 @@ import traceback
 import warnings
 
 from colcon_core.environment_variable import EnvironmentVariable
-from colcon_core.location import get_relative_package_index_path
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_grouped_by_priority
@@ -563,46 +562,93 @@ def find_installed_packages_in_environment():
     return packages
 
 
-def find_installed_packages(install_base):
+class FindInstalledPackagesExtensionPoint:
+    """
+    The interface for extensions to find installed packages.
+
+    This type of extension locates installed packages inside a prefix path.
+    """
+
+    """The version of this extension interface."""
+    EXTENSION_POINT_VERSION = '1.0'
+
+    """The default priority of an extension."""
+    PRIORITY = 100
+
+    def find_installed_packages(self, install_base: Path):
+        """
+        Find installed packages in an install path.
+
+        This method must be overridden in a subclass.
+
+        :param Path prefix_path: The path of the install prefix
+        :returns: The mapping from a package name to the prefix path, or None
+            if the path is not an install layout supported by this extension.
+        :rtype: Dict or None
+        """
+        raise NotImplementedError()
+
+
+def get_find_installed_packages_extensions():
+    """
+    Get the available package identification extensions.
+
+    The extensions are grouped by their priority and each group is ordered by
+    the entry point name.
+
+    :rtype: OrderedDict
+    """
+    extensions = instantiate_extensions(__name__ + '.find_installed_packages')
+    for name, extension in extensions.items():
+        extension.PACKAGE_IDENTIFICATION_NAME = name
+    return order_extensions_grouped_by_priority(extensions)
+
+
+def find_installed_packages(install_base: Path):
     """
     Find install packages under the install base path.
 
-    The path must contain a marker file with the install layout.
-    Based on the install layout the packages are discovered i different
+    Based on the install layout the packages may be discovered in different
     locations.
 
     :param Path install_base: The base path to find installed packages in
     :returns: The mapping from a package name to the prefix path, None if the
-      path doesn't exist or doesn't contain a marker file with a valid install
-      layout
-    :rtype: OrderedDict or None
+      path is not a supported install layout or it doesn't exist
+    :rtype: Dict or None
     """
-    marker_file = install_base / '.colcon_install_layout'
-    if not marker_file.is_file():
-        return None
-    install_layout = marker_file.read_text().rstrip()
-    if install_layout not in ('isolated', 'merged'):
-        return None
+    # priority means getting invoked first, but maybe that doesn't matter
+    extensions = []
+    prioritized_extensions = get_find_installed_packages_extensions()
+    for ext_list in prioritized_extensions.values():
+        extensions.extend(ext_list.values())
 
+    # Combine packages found by all extensions
     packages = {}
-    if install_layout == 'isolated':
-        # for each subdirectory look for the package specific file
-        for p in install_base.iterdir():
-            if not p.is_dir():
+    valid_prefix = False
+
+    for ext in extensions:
+        ext_packages = ext.find_installed_packages(install_base)
+        if ext_packages is None:
+            continue
+
+        valid_prefix = True
+        for pkg, path in ext_packages.items():
+            if not path.exists():
+                logger.warning(
+                    "Ignoring '{pkg}' found at '{path}' because the path"
+                    ' does not exist.'.format_map(locals()))
                 continue
-            if p.name.startswith('.'):
-                continue
-            marker = p / get_relative_package_index_path() / p.name
-            if marker.is_file():
-                packages[p.name] = p
-    else:
-        # find all files in the subdirectory
-        if (install_base / get_relative_package_index_path()).is_dir():
-            package_index = install_base / get_relative_package_index_path()
-            for p in package_index.iterdir():
-                if not p.is_file():
-                    continue
-                if p.name.startswith('.'):
-                    continue
-                packages[p.name] = install_base
+            if pkg in packages and not path.samefile(packages[pkg]):
+                # Same package found at different paths in the same prefix
+                first_path = packages[pkg]
+                logger.warning(
+                    "The package '{pkg}' previously found at "
+                    "'{first_path}' was found again at '{path}'."
+                    " Ignoring '{path}'".format_map(locals()))
+            else:
+                packages[pkg] = path
+
+    if not valid_prefix:
+        # No extension said this was a valid prefix
+        return None
     return packages
