@@ -48,7 +48,7 @@ async def run(
     stderr_callback: Callable[[bytes], None],
     *,
     use_pty: Optional[bool] = None,
-    **kwargs: Mapping[str, Any]
+    **other_popen_kwargs: Mapping[str, Any]
 ) -> subprocess.CompletedProcess:
     """
     Run the command described by args.
@@ -80,13 +80,13 @@ async def run(
 
     rc, _, _ = await _async_check_call(
         args, stdout_callback, stderr_callback,
-        use_pty=use_pty, **kwargs)
+        use_pty=use_pty, **other_popen_kwargs)
     return subprocess.CompletedProcess(args, rc)
 
 
 async def check_output(
     args: Sequence[str],
-    **kwargs: Mapping[str, Any]
+    **other_popen_kwargs: Mapping[str, Any]
 ) -> subprocess.CompletedProcess:
     """
     Get the output of an invoked command.
@@ -100,7 +100,8 @@ async def check_output(
     :rtype: str
     """
     rc, stdout_data, stderr_data = await _async_check_call(
-        args, subprocess.PIPE, subprocess.PIPE, use_pty=False, **kwargs)
+        args, subprocess.PIPE, subprocess.PIPE, use_pty=False,
+        **other_popen_kwargs)
     if rc:
         stderr_data = stderr_data.decode(errors='replace')
     assert not rc, \
@@ -109,11 +110,12 @@ async def check_output(
 
 
 async def _async_check_call(
-    args, stdout_callback, stderr_callback, *, use_pty=None, **kwargs
+    args, stdout_callback, stderr_callback, *, use_pty=None,
+    **other_popen_kwargs
 ):
     """Coroutine running the command and invoking the callbacks."""
     # choose function to create subprocess
-    if not kwargs.pop('shell', False):
+    if not other_popen_kwargs.pop('shell', False):
         create_subprocess = asyncio.create_subprocess_exec
     else:
         args = [' '.join([escape_shell_argument(a) for a in args])]
@@ -133,7 +135,7 @@ async def _async_check_call(
             stderr_descriptor, stderr = pty.openpty()
 
     process = await create_subprocess(
-        *args, stdout=stdout, stderr=stderr, **kwargs)
+        *args, stdout=stdout, stderr=stderr, **other_popen_kwargs)
 
     # read pipes concurrently
     callbacks = []
