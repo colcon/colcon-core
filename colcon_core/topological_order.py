@@ -1,9 +1,8 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-from collections import OrderedDict
-
-from colcon_core.package_decorator import PackageDecorator
+from colcon_core.package_decorator import add_recursive_dependencies
+from colcon_core.package_decorator import get_decorators
 
 
 def topological_order_packages(
@@ -19,34 +18,45 @@ def topological_order_packages(
     :returns: list of package decorators
     :rtype: list of :py:class:`colcon_core.package_decorator.PackageDecorator`
     """
-    # get recursive dependencies for all packages
-    queued = set()
-    for descriptor in descriptors:
-        rec_deps = descriptor.get_recursive_dependencies(
-            descriptors,
-            direct_categories=direct_categories,
-            recursive_categories=recursive_categories)
-        d = _PackageDependencies(
-            descriptor=descriptor,
-            recursive_dependencies=rec_deps,
-            remaining_dependencies={d.name for d in rec_deps},
-        )
-        queued.add(d)
+    decorators = get_decorators(descriptors)
+    add_recursive_dependencies(
+        decorators, direct_categories=direct_categories,
+        recursive_categories=recursive_categories)
+    return topological_order_decorators(decorators)
 
-    ordered = OrderedDict()
-    while len(ordered) < len(descriptors):
+
+def topological_order_decorators(decorators):
+    """
+    Order decorated package descriptors topologically.
+
+    :param decorators: the decorated package descriptors
+    :type decorators: list of
+      :py:class:`colcon_core.package_decorator.PackageDecorator`
+
+    :returns: list of package decorators
+    :rtype: list of :py:class:`colcon_core.package_decorator.PackageDecorator`
+    """
+    # map the set of remaining dependencies for each decorator
+    queued = {}
+    for decorator in decorators:
+        queued[decorator] = {
+            d.name for d in decorator.recursive_dependencies
+        }
+
+    ordered = []
+    while len(ordered) < len(decorators):
         # remove dependencies on already ordered packages
-        ordered_names = {descriptor.name for descriptor in ordered.keys()}
-        for q in queued:
-            q.remaining_dependencies -= ordered_names
+        ordered_names = {d.descriptor.name for d in ordered}
+        for q in queued.values():
+            q.difference_update(ordered_names)
 
         # find all queued packages without remaining dependencies
-        ready = list(filter(lambda q: not q.remaining_dependencies, queued))
+        ready = [decorator for decorator, r in queued.items() if not r]
         if not ready:
             lines = [
                 '%s: %s' % (
-                    q.descriptor.name, sorted(q.remaining_dependencies))
-                for q in queued]
+                    decorator.descriptor.name, sorted(r))
+                for decorator, r in queued.items()]
             lines.sort()
             raise RuntimeError(
                 'Unable to order packages topologically:\n' + '\n'.join(lines))
@@ -54,33 +64,15 @@ def topological_order_packages(
         # order ready jobs alphabetically for a deterministic order
         ready.sort(key=lambda d: d.descriptor.name)
 
-        # add all ready jobs to ordered dictionary
+        # add all ready jobs to ordered list
         for r in ready:
-            ordered[r.descriptor] = r.recursive_dependencies
-            queued.remove(r)
+            ordered.append(r)
+            queued.pop(r)
 
-    # create ordered list of package decorators
-    decorators = []
-    ordered_keys = [descriptor.name for descriptor in ordered.keys()]
-    for descriptor, recursive_dependencies in ordered.items():
-        decorator = PackageDecorator(descriptor)
-        # reorder recursive dependencies according to the topological ordering
+    # order recursive dependencies for each decorator
+    ordered_name_list = [d.descriptor.name for d in ordered]
+    for decorator in ordered:
         decorator.recursive_dependencies = sorted(
-            (d for d in recursive_dependencies if d in ordered_keys),
-            key=ordered_keys.index)
-        decorators.append(decorator)
+            decorator.recursive_dependencies, key=ordered_name_list.index)
 
-    return decorators
-
-
-class _PackageDependencies:
-
-    __slots__ = (
-        'descriptor', 'recursive_dependencies', 'remaining_dependencies')
-
-    def __init__(
-        self, descriptor, recursive_dependencies, remaining_dependencies,
-    ):
-        self.descriptor = descriptor
-        self.recursive_dependencies = recursive_dependencies
-        self.remaining_dependencies = remaining_dependencies
+    return ordered
