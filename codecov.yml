@@ -5,4 +5,5 @@ coverage:
         informational: true
     patch:
       default:
+        only_pulls: true
         target: 0%
