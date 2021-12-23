@@ -198,7 +198,10 @@ class BuildVerb(VerbExtensionPoint):
                 ' line:'
                 '\n\t--allow-overriding ' +
                 ' '.join(sorted(override_messages.keys())))
-            raise RuntimeError(override_msg)
+
+            logger.warn(
+                override_msg + '\n\nThis will be promoted to an error in a'
+                ' future release of colcon-core.')
 
         on_error = OnError.interrupt \
             if not context.args.continue_on_error else OnError.skip_downstream
