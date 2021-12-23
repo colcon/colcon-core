@@ -200,7 +200,7 @@ class BuildVerb(VerbExtensionPoint):
                 ' '.join(sorted(override_messages.keys())))
 
             logger.warn(
-                override_msg + '\n\nThis will be promoted to an error in a'
+                override_msg + '\n\nThis may be promoted to an error in a'
                 ' future release of colcon-core.')
 
         on_error = OnError.interrupt \
