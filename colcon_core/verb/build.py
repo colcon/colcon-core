@@ -162,6 +162,10 @@ class BuildVerb(VerbExtensionPoint):
 
         underlay_packages = {}
         for prefix_path in get_chained_prefix_path():
+            if prefix_path == install_base:
+                # The install space of the workspace being built is sourced
+                # Ignore it for the purposes of the override warning
+                continue
             packages = find_installed_packages(Path(prefix_path))
             if packages:
                 for pkg, path in packages.items():
