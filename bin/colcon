@@ -106,8 +106,8 @@ custom_entry_points.update({
         # since they can't be queried through pkg_resources without installing
     },
     'colcon_core.shell.find_installed_packages': {
-        'colcon_isolated' : IsolatedInstalledPackageFinder,
-        'colcon_merged' : MergedInstalledPackageFinder,
+        'colcon_isolated': IsolatedInstalledPackageFinder,
+        'colcon_merged': MergedInstalledPackageFinder,
     },
     'colcon_core.package_augmentation': {
         'python': PythonPackageAugmentation,
