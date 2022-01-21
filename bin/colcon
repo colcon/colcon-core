@@ -65,6 +65,10 @@ from colcon_core.prefix_path.colcon import ColconPrefixPath  # noqa: E402
 from colcon_core.shell import ALL_SHELLS_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.shell.bat import BatShell  # noqa: E402
 from colcon_core.shell.dsv import DsvShell  # noqa: E402
+from colcon_core.shell.installed_packages \
+    import IsolatedInstalledPackageFinder  # noqa: E402
+from colcon_core.shell.installed_packages \
+    import MergedInstalledPackageFinder  # noqa: E402
 from colcon_core.shell.sh import ShShell  # noqa: E402
 from colcon_core.task.python.build import PythonBuildTask  # noqa: E402
 from colcon_core.task.python.test import PythonTestTask  # noqa: E402
@@ -100,6 +104,10 @@ custom_entry_points.update({
     'colcon_core.extension_point': {
         # there is no point in registering the extension_point extensions here
         # since they can't be queried through pkg_resources without installing
+    },
+    'colcon_core.shell.find_installed_packages': {
+        'colcon_isolated' : IsolatedInstalledPackageFinder,
+        'colcon_merged' : MergedInstalledPackageFinder,
     },
     'colcon_core.package_augmentation': {
         'python': PythonPackageAugmentation,
