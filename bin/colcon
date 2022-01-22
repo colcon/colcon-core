@@ -105,10 +105,6 @@ custom_entry_points.update({
         # there is no point in registering the extension_point extensions here
         # since they can't be queried through pkg_resources without installing
     },
-    'colcon_core.shell.find_installed_packages': {
-        'colcon_isolated': IsolatedInstalledPackageFinder,
-        'colcon_merged': MergedInstalledPackageFinder,
-    },
     'colcon_core.package_augmentation': {
         'python': PythonPackageAugmentation,
     },
@@ -131,6 +127,10 @@ custom_entry_points.update({
         'bat': BatShell,
         'dsv': DsvShell,
         'sh': ShShell,
+    },
+    'colcon_core.shell.find_installed_packages': {
+        'colcon_isolated': IsolatedInstalledPackageFinder,
+        'colcon_merged': MergedInstalledPackageFinder,
     },
     'colcon_core.task.build': {
         'python': PythonBuildTask,
