@@ -124,6 +124,9 @@ custom_entry_points.update({
         'dsv': DsvShell,
         'sh': ShShell,
     },
+    'colcon_core.shell.find_installed_packages': {
+        # Not essential for bootstrapping
+    },
     'colcon_core.task.build': {
         'python': PythonBuildTask,
     },
