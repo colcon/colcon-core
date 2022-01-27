@@ -11,7 +11,7 @@ from colcon_core.package_discovery import discover_packages
 from colcon_core.package_identification \
     import get_package_identification_extensions
 from colcon_core.plugin_system import instantiate_extensions
-from colcon_core.plugin_system import order_extensions_by_name
+from colcon_core.plugin_system import order_extensions_by_priority
 from colcon_core.topological_order import topological_order_packages
 
 logger = colcon_logger.getChild(__name__)
@@ -30,6 +30,9 @@ class PackageSelectionExtensionPoint:
 
     """The version of the package selection extension interface."""
     EXTENSION_POINT_VERSION = '1.0'
+
+    """The default priority of package selection extensions."""
+    PRIORITY = 100
 
     def add_arguments(self, *, parser):
         """
@@ -93,7 +96,7 @@ def get_package_selection_extensions():
     extensions = instantiate_extensions(__name__)
     for name, extension in extensions.items():
         extension.PACKAGE_SELECTION_NAME = name
-    return order_extensions_by_name(extensions)
+    return order_extensions_by_priority(extensions)
 
 
 def _add_package_selection_arguments(parser):
