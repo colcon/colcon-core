@@ -45,13 +45,14 @@ jobs:
         run: |
           python -m pip install -U pip setuptools
           python -m pip install -U -e .[test]
+          python -m pip uninstall -y colcon-core
       - name: Build and test
-        env:
-          COLCON_ALL_SHELLS: 'TRUE'
         run: |
-          python bin/colcon build --build-base ../build --install-base ../install
-          python bin/colcon test --build-base ../build --install-base ../install
+          cd ..
+          python ${{github.workspace}}/bin/colcon build --paths ${{github.workspace}}
+          python ${{github.workspace}}/bin/colcon test --paths ${{github.workspace}} --return-code-on-test-failure
       - name: Use the installed package (Bash)
+        if: ${{runner.os != 'windows'}}
         shell: bash
         run: |
           . ../install/local_setup.sh
