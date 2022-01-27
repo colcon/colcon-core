@@ -1,12 +1,10 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-import argparse
 from collections import OrderedDict
 import os
 import os.path
 from pathlib import Path
-import sys
 import traceback
 
 from colcon_core.argument_parser.destination_collector \
@@ -22,8 +20,6 @@ from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
 from colcon_core.package_selection import get_packages
 from colcon_core.plugin_system import satisfies_version
-from colcon_core.prefix_path import get_chained_prefix_path
-from colcon_core.shell import find_installed_packages
 from colcon_core.shell import get_shell_extensions
 from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
@@ -33,19 +29,6 @@ from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import logger
 from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
-
-
-if sys.version_info < (3, 8):
-    # TODO(sloretz) remove when minimum supported Python version is 3.8
-    # https://stackoverflow.com/a/41153081
-    class _ExtendAction(argparse.Action):
-        """Add argparse action to extend a list."""
-
-        def __call__(self, parser, namespace, values, option_string=None):
-            """Extend the list with new arguments."""
-            items = getattr(namespace, self.dest) or []
-            items.extend(values)
-            setattr(namespace, self.dest, items)
 
 
 class BuildPackageArguments:
@@ -98,9 +81,6 @@ class BuildVerb(VerbExtensionPoint):
         satisfies_version(VerbExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def add_arguments(self, *, parser):  # noqa: D102
-        if sys.version_info < (3, 8):
-            # TODO(sloretz) remove when minimum supported Python version is 3.8
-            parser.register('action', 'extend', _ExtendAction)
         parser.add_argument(
             '--build-base',
             default='build',
@@ -126,13 +106,6 @@ class BuildVerb(VerbExtensionPoint):
             help='Continue other packages when a package fails to build '
                  '(packages recursively depending on the failed package are '
                  'skipped)')
-        parser.add_argument(
-            '--allow-overriding',
-            action='extend',
-            default=[],
-            metavar='PKG_NAME',
-            nargs='+',
-            help='Allow building packages that exist in underlay workspaces')
         add_executor_arguments(parser)
         add_event_handler_arguments(parser)
 
@@ -159,49 +132,6 @@ class BuildVerb(VerbExtensionPoint):
             os.getcwd(), context.args.install_base))
         jobs, unselected_packages = self._get_jobs(
             context.args, decorators, install_base)
-
-        underlay_packages = {}
-        for prefix_path in get_chained_prefix_path():
-            packages = find_installed_packages(Path(prefix_path))
-            if packages:
-                for pkg, path in packages.items():
-                    if pkg not in underlay_packages:
-                        underlay_packages[pkg] = []
-                    underlay_packages[pkg].append(str(path))
-
-        override_messages = {}
-        for overlay_package in jobs.keys():
-            if overlay_package in underlay_packages:
-                if overlay_package not in context.args.allow_overriding:
-                    override_messages[overlay_package] = (
-                        "'{overlay_package}'".format_map(locals()) +
-                        ' is in: ' +
-                        ', '.join(underlay_packages[overlay_package]))
-
-        if override_messages:
-            override_msg = (
-                'Some selected packages are already built in one or more'
-                ' underlay workspaces:'
-                '\n\t' +
-                '\n\t'.join(override_messages.values()) +
-                '\nIf a package in a merged underlay workspace is overridden'
-                ' and it installs headers, then all packages in the overlay'
-                ' must sort their include directories by workspace order.'
-                ' Failure to do so may result in build failures or undefined'
-                ' behavior at run time.'
-                '\nIf the overridden package is used by another package'
-                ' in any underlay, then the overriding package in the'
-                ' overlay must be API and ABI compatible or undefined'
-                ' behavior at run time may occur.'
-                '\n\nIf you understand the risks and want to override a'
-                ' package anyways, add the following to the command'
-                ' line:'
-                '\n\t--allow-overriding ' +
-                ' '.join(sorted(override_messages.keys())))
-
-            logger.warn(
-                override_msg + '\n\nThis may be promoted to an error in a'
-                ' future release of colcon-core.')
 
         on_error = OnError.interrupt \
             if not context.args.continue_on_error else OnError.skip_downstream
