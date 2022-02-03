@@ -36,14 +36,14 @@ def test_spell_check(known_words):
 
     unknown_word_count = len(report.unknown_words)
     assert unknown_word_count == 0, \
-        'Found {unknown_word_count} unknown words: '.format_map(locals()) + \
+        f'Found {unknown_word_count} unknown words: ' + \
         ', '.join(sorted(report.unknown_words))
 
     unused_known_words = set(known_words) - report.found_known_words
     unused_known_word_count = len(unused_known_words)
     assert unused_known_word_count == 0, \
-        '{unused_known_word_count} words in the word list are not used: ' \
-        .format_map(locals()) + ', '.join(sorted(unused_known_words))
+        f'{unused_known_word_count} words in the word list are not used: ' + \
+        ', '.join(sorted(unused_known_words))
 
 
 def test_spell_check_word_list_order(known_words):

@@ -184,8 +184,7 @@ class TestVerb(VerbExtensionPoint):
             extension = get_task_extension('colcon_core.task.test', pkg.type)
             if not extension:
                 logger.warning(
-                    "No task extension to 'test' a '{pkg.type}' package"
-                    .format_map(locals()))
+                    f"No task extension to 'test' a '{pkg.type}' package")
                 continue
 
             recursive_dependencies = OrderedDict()
@@ -204,8 +203,8 @@ class TestVerb(VerbExtensionPoint):
                 for k in sorted(package_args.__dict__.keys())
             ])
             logger.debug(
-                "Testing package '{pkg.name}' with the following arguments: "
-                '{{{ordered_package_args}}}'.format_map(locals()))
+                f"Testing package '{pkg.name}' with the following arguments: "
+                f'{{{ordered_package_args}}}')
             task_context = TaskContext(
                 pkg=pkg, args=package_args,
                 dependencies=recursive_dependencies)

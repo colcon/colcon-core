@@ -116,8 +116,7 @@ def _add_package_selection_arguments(parser):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package selection extension '
-                "'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 
@@ -156,7 +155,7 @@ def get_packages(
     if len({d.name for d in pkgs}) < len(pkgs):
         pkg_paths = defaultdict(list)
         for d in pkgs:
-            pkg_paths[d.name].append('  - {d.path}'.format_map(locals()))
+            pkg_paths[d.name].append(f'  - {d.path}')
         raise RuntimeError(
             'Duplicate package names not supported:\n' +
             '\n'.join(
@@ -205,8 +204,7 @@ def _check_package_selection_parameters(args, pkg_names):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package selection extension '
-                "'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 
@@ -232,6 +230,5 @@ def select_package_decorators(args, decorators):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package selection extension '
-                "'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one

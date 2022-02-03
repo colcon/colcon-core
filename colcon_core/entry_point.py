@@ -73,9 +73,9 @@ def get_all_entry_points():
                 if entry_point_name in entry_points[group_name]:
                     previous = entry_points[group_name][entry_point_name]
                     logger.error(
-                        "Entry point '{group_name}.{entry_point_name}' is "
-                        "declared multiple times, '{entry_point}' overwriting "
-                        "'{previous}'".format_map(locals()))
+                        f"Entry point '{group_name}.{entry_point_name}' is "
+                        f"declared multiple times, '{entry_point}' "
+                        f"overwriting '{previous}'")
                 entry_points[group_name][entry_point_name] = \
                     (dist, entry_point)
     return entry_points
@@ -96,9 +96,9 @@ def get_entry_points(group_name):
         if entry_point.name in entry_points:
             previous_entry_point = entry_points[entry_point.name]
             logger.error(
-                "Entry point '{group_name}.{entry_point.name}' is declared "
-                "multiple times, '{entry_point}' overwriting "
-                "'{previous_entry_point}'".format_map(locals()))
+                f"Entry point '{group_name}.{entry_point.name}' is declared "
+                f"multiple times, '{entry_point}' overwriting "
+                f"'{previous_entry_point}'")
         entry_points[entry_point.name] = entry_point
     return entry_points
 
@@ -125,8 +125,7 @@ def load_entry_points(group_name, *, exclude_names=None):
             exc = traceback.format_exc()
             logger.error(
                 'Exception loading extension '
-                "'{group_name}.{entry_point.name}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{group_name}.{entry_point.name}': {e}\n{exc}")
             # skip failing entry point, continue with next one
             continue
         extension_types[entry_point.name] = extension_type
@@ -158,11 +157,10 @@ def load_entry_point(entry_point):
         if entry_point.group_name in blocklist:
             raise RuntimeError(
                 'The entry point group name is listed in the environment '
-                "variable '{env_var_name}'".format_map(locals()))
-        full_name = '{entry_point.group_name}.{entry_point.name}' \
-            .format_map(locals())
+                f"variable '{env_var_name}'")
+        full_name = f'{entry_point.group_name}.{entry_point.name}'
         if full_name in blocklist:
             raise RuntimeError(
                 'The entry point name is listed in the environment variable '
-                "'{env_var_name}'".format_map(locals()))
+                f"'{env_var_name}'")
     return entry_point.load()

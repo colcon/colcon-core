@@ -151,6 +151,6 @@ class ShShell(ShellExtensionPoint):
         with env_path.open('w') as h:
             for key in sorted(env.keys()):
                 value = env[key]
-                h.write('{key}={value}\n'.format_map(locals()))
+                h.write(f'{key}={value}\n')
 
         return env

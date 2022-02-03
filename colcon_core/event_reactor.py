@@ -80,8 +80,7 @@ class EventReactor:
             except Exception as e:  # noqa: F841
                 # catch exceptions raised in event handler extension
                 msg = 'Exception in event handler extension ' \
-                    "'{observer.EVENT_HANDLER_NAME}': {e}" \
-                    .format_map(locals())
+                    f"'{observer.EVENT_HANDLER_NAME}': {e}"
                 if not isinstance(e, RuntimeError):
                     msg += '\n' + traceback.format_exc()
                 logger.error(msg)

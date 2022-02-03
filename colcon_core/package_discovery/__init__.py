@@ -121,8 +121,7 @@ def add_package_discovery_arguments(parser, *, extensions=None):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package discovery extension '
-                "'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
         else:
             if has_default:
@@ -141,8 +140,7 @@ def add_package_discovery_arguments(parser, *, extensions=None):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package discovery extension '
-                "'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 
@@ -222,9 +220,8 @@ def _get_extensions_with_parameters(
     with_parameters = OrderedDict()
     for extension in discovery_extensions.values():
         logger.log(
-            1,
-            'discover_packages({extension.PACKAGE_DISCOVERY_NAME}) check '
-            'parameters'.format_map(locals()))
+            1, f'discover_packages({extension.PACKAGE_DISCOVERY_NAME}) check '
+            'parameters')
         try:
             has_parameter = extension.has_parameters(args=args)
         except Exception as e:  # noqa: F841
@@ -232,8 +229,7 @@ def _get_extensions_with_parameters(
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package discovery extension '
-                "'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
         else:
             if has_parameter:
@@ -262,8 +258,7 @@ def _discover_packages(
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package discovery extension '
-                "'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
             continue
         else:

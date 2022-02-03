@@ -33,8 +33,8 @@ def set_logger_level_from_env(logger, env_name):
             numeric_log_level = get_numeric_log_level(log_level)
         except ValueError as e:  # noqa: F841
             logger.warning(
-                "environment variable '{env_name}' has unsupported value "
-                "'{log_level}', {e}".format_map(locals()))
+                f"environment variable '{env_name}' has unsupported value "
+                f"'{log_level}', {e}")
         else:
             logger.setLevel(numeric_log_level)
 

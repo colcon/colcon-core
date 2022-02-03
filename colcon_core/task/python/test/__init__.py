@@ -29,11 +29,9 @@ class PythonTestTask(TaskExtensionPoint):
         add_python_testing_step_arguments(parser)
 
     async def test(self, *, additional_hooks=None):  # noqa: D102
-        pkg = self.context.pkg
         args = self.context.args
 
-        logger.info(
-            "Testing Python package in '{args.path}'".format_map(locals()))
+        logger.info(f"Testing Python package in '{args.path}'")
 
         try:
             env = await get_command_environment(
@@ -49,14 +47,12 @@ class PythonTestTask(TaskExtensionPoint):
             extension = get_python_testing_step_extension(key)
             if extension is None:
                 logger.error(
-                    "Failed to load Python testing step extension '{key}'"
-                    .format_map(locals()))
+                    f"Failed to load Python testing step extension '{key}'")
                 return 1
         else:
             extensions = get_python_testing_step_extensions()
             for key, extension in extensions.items():
-                logger.log(
-                    1, "test() by extension '{key}'".format_map(locals()))
+                logger.log(1, f"test() by extension '{key}'")
                 try:
                     matched = extension.match(self.context, env, setup_py_data)
                 except Exception as e:  # noqa: F841
@@ -64,20 +60,18 @@ class PythonTestTask(TaskExtensionPoint):
                     exc = traceback.format_exc()
                     logger.error(
                         'Exception in Python testing step extension '
-                        "'{extension.STEP_TYPE}': {e}\n{exc}"
-                        .format_map(locals()))
+                        f"'{extension.STEP_TYPE}': {e}\n{exc}")
                     # skip failing extension, continue with next one
                     continue
                 if matched:
                     break
             else:
                 logger.warning(
-                    "No Python Testing Step extension matched in '{args.path}'"
-                    .format_map(locals()))
+                    'No Python Testing Step extension matched in '
+                    f"'{args.path}'")
                 return
 
-        logger.log(
-            1, "test.step() by extension '{key}'".format_map(locals()))
+        logger.log(1, f"test.step() by extension '{key}'")
         try:
             return await extension.step(self.context, env, setup_py_data)
         except Exception as e:  # noqa: F841
@@ -85,7 +79,7 @@ class PythonTestTask(TaskExtensionPoint):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in Python testing step extension '
-                "'{extension.STEP_TYPE}': {e}\n{exc}".format_map(locals()))
+                f"'{extension.STEP_TYPE}': {e}\n{exc}")
             return 1
 
 
@@ -171,13 +165,13 @@ def add_python_testing_step_arguments(parser):
             # to mention the available options
             desc = '<no description>'
         # it requires a custom formatter to maintain the newline
-        descriptions += '\n* {key}: {desc}'.format_map(locals())
+        descriptions += f'\n* {key}: {desc}'
 
     parser.add_argument(
         '--python-testing', type=str, choices=sorted(extensions.keys()),
         help='The Python testing framework to use (default: determined '
              'based on the packages `tests_require`)'
-             '{descriptions}'.format_map(locals()))
+             f'{descriptions}')
 
     for extension in extensions.values():
         try:
@@ -188,7 +182,7 @@ def add_python_testing_step_arguments(parser):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in Python testing step extension '
-                "'{extension.STEP_TYPE}': {e}\n{exc}".format_map(locals()))
+                f"'{extension.STEP_TYPE}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 

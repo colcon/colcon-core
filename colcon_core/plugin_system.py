@@ -62,15 +62,14 @@ def _instantiate_extension(
             'invocation should return an object'
     except SkipExtensionException as e:  # noqa: F841
         logger.info(
-            "Skipping extension '{group_name}.{extension_name}': {e}"
-            .format_map(locals()))
+            f"Skipping extension '{group_name}.{extension_name}': {e}")
         extension_instance = None
     except Exception as e:  # noqa: F841
         # catch exceptions raised in extension constructor
         exc = traceback.format_exc()
         logger.error(
             'Exception instantiating extension '
-            "'{group_name}.{extension_name}': {e}\n{exc}".format_map(locals()))
+            f"'{group_name}.{extension_name}': {e}\n{exc}")
         extension_instance = None
     if not unique_instance:
         _extension_instances[extension_class] = extension_instance

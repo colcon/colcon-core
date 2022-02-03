@@ -174,8 +174,7 @@ class BuildVerb(VerbExtensionPoint):
             if overlay_package in underlay_packages:
                 if overlay_package not in context.args.allow_overriding:
                     override_messages[overlay_package] = (
-                        "'{overlay_package}'".format_map(locals()) +
-                        ' is in: ' +
+                        f"'{overlay_package}' is in: " +
                         ', '.join(underlay_packages[overlay_package]))
 
         if override_messages:
@@ -247,8 +246,7 @@ class BuildVerb(VerbExtensionPoint):
             extension = get_task_extension('colcon_core.task.build', pkg.type)
             if not extension:
                 logger.warning(
-                    "No task extension to 'build' a '{pkg.type}' package"
-                    .format_map(locals()))
+                    f"No task extension to 'build' a '{pkg.type}' package")
                 continue
 
             recursive_dependencies = OrderedDict()
@@ -266,8 +264,8 @@ class BuildVerb(VerbExtensionPoint):
                 for k in sorted(package_args.__dict__.keys())
             ])
             logger.debug(
-                "Building package '{pkg.name}' with the following arguments: "
-                '{{{ordered_package_args}}}'.format_map(locals()))
+                f"Building package '{pkg.name}' with the following arguments: "
+                f'{{{ordered_package_args}}}')
             task_context = TaskContext(
                 pkg=pkg, args=package_args,
                 dependencies=recursive_dependencies)
@@ -295,6 +293,5 @@ class BuildVerb(VerbExtensionPoint):
                     exc = traceback.format_exc()
                     logger.error(
                         'Exception in shell extension '
-                        "'{extension.SHELL_NAME}': {e}\n{exc}"
-                        .format_map(locals()))
+                        f"'{extension.SHELL_NAME}': {e}\n{exc}")
                     # skip failing extension, continue with next one

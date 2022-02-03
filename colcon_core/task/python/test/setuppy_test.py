@@ -33,14 +33,14 @@ class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
         if context.args.retest_until_fail:
             logger.warning(
                 "Ignored '--retest-until-fail' for package "
-                "'{context.pkg.name}' since 'unittest' does not support the "
-                'usage'.format_map(locals()))
+                f"'{context.pkg.name}' since 'unittest' does not support the "
+                'usage')
 
         if context.args.retest_until_pass:
             logger.warning(
                 "Ignored '--retest-until-pass' for package "
-                "'{context.pkg.name}' since 'unittest' does not support the "
-                'usage'.format_map(locals()))
+                f"'{context.pkg.name}' since 'unittest' does not support the "
+                'usage')
 
         cmd = [executable, '-m', 'unittest', '-v']
         if context.args.unittest_args is not None:
