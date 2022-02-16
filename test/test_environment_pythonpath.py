@@ -1,8 +1,8 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-from distutils.sysconfig import get_python_lib
 from pathlib import Path
+import sysconfig
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
@@ -23,7 +23,8 @@ def test_pythonpath():
             assert len(hooks) == 0
 
             # Python path exists
-            python_path = Path(get_python_lib(prefix=str(prefix_path)))
+            python_path = Path(
+                sysconfig.get_path('purelib', vars={'base': prefix_path}))
             python_path.mkdir(parents=True)
             hooks = extension.create_environment_hooks(prefix_path, 'pkg_name')
             assert len(hooks) == 2
