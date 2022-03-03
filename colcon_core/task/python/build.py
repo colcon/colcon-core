@@ -2,17 +2,13 @@
 # Licensed under the Apache License, Version 2.0
 
 from contextlib import suppress
-with suppress(ImportError):
-    # needed before importing distutils
-    # to avoid warning introduced in setuptools 49.2.0
-    import setuptools  # noqa: F401
-from distutils.sysconfig import get_python_lib
 import locale
 import os
 from pathlib import Path
 import shutil
 import sys
 from sys import executable
+import sysconfig
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
@@ -306,7 +302,7 @@ class PythonBuildTask(TaskExtensionPoint):
         return temp_symlinks
 
     def _get_python_lib(self, args):
-        path = get_python_lib(prefix=args.install_base)
+        path = sysconfig.get_path('purelib', vars={'base': args.install_base})
         return os.path.relpath(path, start=args.install_base)
 
     def _append_install_layout(self, args, cmd):
