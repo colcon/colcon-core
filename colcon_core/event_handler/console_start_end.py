@@ -34,10 +34,10 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
         data = event[0]
 
         if isinstance(data, JobStarted):
+            self._start_times[data.identifier] = time.monotonic()
             print(
                 'Starting >>> {data.identifier}'.format_map(locals()),
                 flush=True)
-            self._start_times[data.identifier] = time.monotonic()
 
         elif isinstance(data, TestFailure):
             job = event[1]
