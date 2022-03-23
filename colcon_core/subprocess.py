@@ -71,6 +71,18 @@ async def run(
     assert callable(stdout_callback) or stdout_callback is None
     assert callable(stderr_callback) or stderr_callback is None
 
+    stdout_capture = []
+    def _stdout_callback(line):
+        if stdout_callback:
+            stdout_callback(line)
+        stdout_capture.append(line)
+
+    stderr_capture = []
+    def _stderr_callback(line):
+        if stderr_callback:
+            stderr_callback(line)
+        stderr_capture.append(line)
+
     # if use_pty is neither True nor False choose based on isatty of stdout
     if use_pty is None:
         use_pty = sys.stdout.isatty()
@@ -79,9 +91,14 @@ async def run(
         use_pty = False
 
     rc, _, _ = await _async_check_call(
-        args, stdout_callback, stderr_callback,
+        args, _stdout_callback, _stderr_callback,
         use_pty=use_pty, **other_popen_kwargs)
-    return subprocess.CompletedProcess(args, rc)
+
+    completed = subprocess.CompletedProcess(args, rc)
+    completed.stdout = b''.join(stdout_capture)
+    completed.stderr = b''.join(stderr_capture)
+
+    return completed
 
 
 async def check_output(
