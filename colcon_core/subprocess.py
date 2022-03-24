@@ -94,11 +94,9 @@ async def run(
         args, _stdout_callback, _stderr_callback,
         use_pty=use_pty, **other_popen_kwargs)
 
-    completed = subprocess.CompletedProcess(args, rc)
-    completed.stdout = b''.join(stdout_capture)
-    completed.stderr = b''.join(stderr_capture)
-
-    return completed
+    return subprocess.CompletedProcess(
+        args, rc, stdout=b''.join(stdout_capture),
+        stderr=b''.join(stderr_capture))
 
 
 async def check_output(
