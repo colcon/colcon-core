@@ -170,7 +170,8 @@ def _extract_maintainers_with_emails(metadata):
         maintainer_email = metadata.get('maintainer_email')
     else:
         # If no explicit maintainer is given then it is likely that the
-        # original author is maintaining the package following python recommendations
+        # original author is maintaining the package following python
+        # recommendations
         # https://packaging.python.org/en/latest/specifications/core-metadata/#maintainer
         maintainer = metadata.get('author')
         maintainer_email = metadata.get('author_email')
