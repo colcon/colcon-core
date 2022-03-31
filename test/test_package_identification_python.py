@@ -65,6 +65,8 @@ def test_identify():
         (basepath / 'setup.cfg').write_text(
             '[metadata]\n'
             'name = other-name\n'
+            'maintainer = Foo Bar\n'
+            'maintainer_email = foobar@example.com\n'
             '[options]\n'
             'setup_requires =\n'
             "  build; sys_platform != 'win32'\n"
@@ -96,6 +98,19 @@ def test_identify():
         assert callable(desc.metadata['get_python_setup_options'])
         options = desc.metadata['get_python_setup_options'](None)
         assert 'zip_safe' in options
+
+        assert desc.metadata['maintainers'] == ['Foo Bar <foobar@example.com>']
+
+        desc = PackageDescriptor(basepath)
+        desc.name = 'other-name'
+        (basepath / 'setup.cfg').write_text(
+            '[metadata]\n'
+            'name = other-name\n'
+            'author = Baz Qux\n'
+            'author_email = bazqux@example.com\n')
+        extension.identify(desc)
+        augmentation_extension.augment_package(desc)
+        assert desc.metadata['maintainers'] == ['Baz Qux <bazqux@example.com>']
 
 
 def test_create_dependency_descriptor():

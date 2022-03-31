@@ -5,6 +5,7 @@ argparse
 asyncio
 autouse
 basepath
+bazqux
 blocklist
 callables
 capsys
@@ -33,6 +34,7 @@ executables
 exitstatus
 fdopen
 filterwarnings
+foobar
 fromhex
 functools
 getcategory
