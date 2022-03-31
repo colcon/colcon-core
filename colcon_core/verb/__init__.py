@@ -80,9 +80,9 @@ def check_and_mark_build_tool(build_base, *, this_build_tool='colcon'):
             if previous_build_tool == this_build_tool:
                 return
             raise RuntimeError(
-                "The build directory '{build_base}' was created by "
-                "'{previous_build_tool}'. Please remove the build directory "
-                'or pick a different one.'.format_map(locals()))
+                f"The build directory '{build_base}' was created by "
+                f"'{previous_build_tool}'. Please remove the build directory "
+                'or pick a different one.')
     else:
         os.makedirs(build_base, exist_ok=True)
 
@@ -109,17 +109,16 @@ def check_and_mark_install_layout(install_base, *, merge_install):
                 return
             change_option = 'remove' if merge_install else 'add'
             raise RuntimeError(
-                "The install directory '{install_base}' was created with the "
-                "layout '{previous_install_layout}'. Please remove the "
-                'install directory, pick a different one or {change_option} '
-                "the '--merge-install' option.".format_map(locals()))
+                f"The install directory '{install_base}' was created with the "
+                f"layout '{previous_install_layout}'. Please remove the "
+                f'install directory, pick a different one or {change_option} '
+                "the '--merge-install' option.")
     else:
         try:
             os.makedirs(install_base, exist_ok=True)
         except FileExistsError:
             raise RuntimeError(
-                "The install base '{install_base}' is not a directory"
-                .format_map(locals()))
+                f"The install base '{install_base}' is not a directory")
 
     marker_path.write_text(this_install_layout + '\n')
 
@@ -150,8 +149,8 @@ def update_object(
     """
     if not hasattr(object_, key):
         logger.log(
-            5, "set package '{package_name}' {argument_type} argument '{key}' "
-            "from {value_source} to '{value}'".format_map(locals()))
+            5, f"set package '{package_name}' {argument_type} argument "
+            f"'{key}' from {value_source} to '{value}'")
         # add value to the object
         # copy value to avoid changes to either of them to affect each other
         setattr(object_, key, copy.deepcopy(value))
@@ -160,16 +159,16 @@ def update_object(
     old_value = getattr(object_, key)
     if isinstance(old_value, dict) and isinstance(value, dict):
         logger.log(
-            5, "update package '{package_name}' {argument_type} argument "
-            "'{key}' from {value_source} with '{value}'".format_map(locals()))
+            5, f"update package '{package_name}' {argument_type} argument "
+            f"'{key}' from {value_source} with '{value}'")
         # update dictionary
         old_value.update(value)
         return
 
     if isinstance(old_value, list) and isinstance(value, list):
         logger.log(
-            5, "extend package '{package_name}' {argument_type} argument "
-            "'{key}' from {value_source} with '{value}'".format_map(locals()))
+            5, f"extend package '{package_name}' {argument_type} argument "
+            f"'{key}' from {value_source} with '{value}'")
         # extend list
         old_value += value
         return
@@ -178,9 +177,9 @@ def update_object(
         if old_value is None or type(old_value) == type(value) \
         else logging.WARNING
     logger.log(
-        severity, "overwrite package '{package_name}' {argument_type} "
-        "argument '{key}' from {value_source} with '{value}' (before: "
-        "'{old_value}')".format_map(locals()))
+        severity, f"overwrite package '{package_name}' {argument_type} "
+        f"argument '{key}' from {value_source} with '{value}' (before: "
+        f"'{old_value}')")
     # overwrite existing value
     # copy value to avoid changes to either of them to affect each other
     setattr(object_, key, copy.deepcopy(value))

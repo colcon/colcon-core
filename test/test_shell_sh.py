@@ -82,9 +82,9 @@ def _test_extension(prefix_path):
             run_until_complete(coroutine)
         assert str(e.value) == (
             'Failed to find the following files:\n'
-            '- {prefix_path}/share/dep/package.sh\n'
+            f'- {prefix_path}/share/dep/package.sh\n'
             'Check that the following packages have been built:\n'
-            '- dep'.format_map(locals()))
+            '- dep')
 
         # dependency script exists
         dep_script = prefix_path / 'share' / 'dep' / 'package.sh'

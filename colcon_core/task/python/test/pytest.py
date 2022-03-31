@@ -80,8 +80,8 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             except ImportError:
                 logger.warning(
                     'Test coverage will not be produced for package '
-                    "'{context.pkg.name}' since the pytest extension 'cov' "
-                    'was not found'.format_map(locals()))
+                    f"'{context.pkg.name}' since the pytest extension 'cov' "
+                    'was not found')
             else:
                 args += [
                     '--cov=' + str(PurePosixPath(
@@ -104,7 +104,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                         'Test coverage will be produced but will not contain '
                         'branch coverage information because the pytest '
                         "extension 'cov' does not support it (need 2.5.0, "
-                        'have {pytest_cov_version})'.format_map(locals()))
+                        f'have {pytest_cov_version})')
                 env['COVERAGE_FILE'] = os.path.join(
                     context.args.build_base, '.coverage')
 
@@ -114,13 +114,11 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             except ImportError:
                 logger.warning(
                     "Ignored '--retest-until-fail' for package "
-                    "'{context.pkg.name}' since the pytest extension 'repeat' "
-                    'was not found'.format_map(locals()))
+                    f"'{context.pkg.name}' since the pytest extension "
+                    "'repeat' was not found")
             else:
                 count = context.args.retest_until_fail + 1
-                args += [
-                    '--count={count}'.format_map(locals()),
-                ]
+                args += [f'--count={count}']
 
         if context.args.retest_until_pass:
             try:
@@ -128,32 +126,29 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             except ImportError:
                 logger.warning(
                     "Ignored '--retest-until-pass' for package "
-                    "'{context.pkg.name}' since pytest extension "
-                    "'rerunfailures' was not found".format_map(locals()))
+                    f"'{context.pkg.name}' since pytest extension "
+                    "'rerunfailures' was not found")
             else:
-                args += [
-                    '--reruns={context.args.retest_until_pass}'
-                    .format_map(locals()),
-                ]
+                args += [f'--reruns={context.args.retest_until_pass}']
 
         if context.args.pytest_args is not None:
             args += context.args.pytest_args
 
         if args:
             env['PYTEST_ADDOPTS'] = ' '.join(
-                a if ' ' not in a else '"{a}"'.format_map(locals())
+                a if ' ' not in a else f'"{a}"'
                 for a in args)
 
         # create dummy result in case the invocation fails early
         # and doesn't generate a result file at all
         junit_xml_path.parent.mkdir(parents=True, exist_ok=True)
-        junit_xml_path.write_text("""<?xml version="1.0" encoding="UTF-8"?>
+        junit_xml_path.write_text(f"""<?xml version="1.0" encoding="UTF-8"?>
 <testsuite name="{context.pkg.name}" tests="1" failures="0" time="0" errors="1" skipped="0">
   <testcase classname="{context.pkg.name}" name="pytest.missing_result" time="0">
     <failure message="The test invocation failed without generating a result file."/>
   </testcase>
 </testsuite>
-""".format_map(locals()))  # noqa: E501
+""")  # noqa: E501
 
         completed = await run(
             context, cmd, cwd=context.args.path, env=env)

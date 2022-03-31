@@ -44,40 +44,32 @@ class SequentialExecutor(ExecutorExtensionPoint):
                 coro = job()
                 future = asyncio.ensure_future(coro, loop=loop)
                 try:
-                    logger.debug(
-                        "run_until_complete '{name}'".format_map(locals()))
+                    logger.debug(f"run_until_complete '{name}'")
                     loop.run_until_complete(future)
                 except KeyboardInterrupt:
                     logger.debug(
-                        "run_until_complete '{name}' was interrupted"
-                        .format_map(locals()))
+                        f"run_until_complete '{name}' was interrupted")
                     # override job rc with special SIGINT value
                     job.returncode = SIGINT_RESULT
                     # ignore further SIGINTs
                     signal.signal(signal.SIGINT, signal.SIG_IGN)
                     # wait for job which has also received a SIGINT
                     if not future.done():
-                        logger.debug(
-                            "run_until_complete '{name}' again"
-                            .format_map(locals()))
+                        logger.debug(f"run_until_complete '{name}' again")
                         loop.run_until_complete(future)
                         assert future.done()
                     # read potential exception to avoid asyncio error
                     _ = future.exception()  # noqa: F841
-                    logger.debug(
-                        "run_until_complete '{name}' finished"
-                        .format_map(locals()))
+                    logger.debug(f"run_until_complete '{name}' finished")
                     return signal.SIGINT
                 except Exception as e:  # noqa: F841
                     exc = traceback.format_exc()
                     logger.error(
-                        "Exception in job execution '{name}': {e}\n{exc}"
-                        .format_map(locals()))
+                        f"Exception in job execution '{name}': {e}\n{exc}")
                     return 1
                 result = future.result()
                 logger.debug(
-                    "run_until_complete '{name}' finished with '{result}'"
-                    .format_map(locals()))
+                    f"run_until_complete '{name}' finished with '{result}'")
                 if result:
                     if not rc:
                         rc = result
@@ -98,7 +90,7 @@ class SequentialExecutor(ExecutorExtensionPoint):
                 all_tasks = asyncio.Task.all_tasks
             for task in all_tasks(loop):
                 if not task.done():
-                    logger.error("Task '{task}' not done".format_map(locals()))
+                    logger.error(f"Task '{task}' not done")
             # HACK on Windows closing the event loop seems to hang after Ctrl-C
             # even though no futures are pending
             if sys.platform != 'win32':

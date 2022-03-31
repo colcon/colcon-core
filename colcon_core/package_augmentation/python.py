@@ -126,8 +126,7 @@ def create_dependency_descriptor(requirement_string):
             metadata['version_lt'] = _next_incompatible_version(version)
         else:
             logger.warning(
-                "Ignoring unknown symbol '{symbol}' in '{requirement}'"
-                .format_map(locals()))
+                f"Ignoring unknown symbol '{symbol}' in '{requirement}'")
     return DependencyDescriptor(requirement.name, metadata=metadata)
 
 

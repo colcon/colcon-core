@@ -29,9 +29,8 @@ class ColconPrefixPath(PrefixPathExtensionPoint):
             if not os.path.exists(path):
                 if path not in _get_colcon_prefix_path_warnings:
                     logger.warning(
-                        "The path '{path}' in the environment variable "
-                        "COLCON_PREFIX_PATH doesn't exist"
-                        .format_map(locals()))
+                        f"The path '{path}' in the environment variable "
+                        "COLCON_PREFIX_PATH doesn't exist")
                 _get_colcon_prefix_path_warnings.add(path)
                 continue
             paths.append(path)

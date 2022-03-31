@@ -103,8 +103,7 @@ def augment_packages(
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package augmentation extension '
-                "'{extension.PACKAGE_AUGMENTATION_NAME}': "
-                '{e}\n{exc}'.format_map(locals()))
+                f"'{extension.PACKAGE_AUGMENTATION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 
@@ -143,7 +142,7 @@ def update_descriptor(
                 desc.dependencies[dep_type].add(d)
     # transfer type specific dependencies
     for dep_type in dep_types:
-        key = '{dep_type}-dependencies'.format_map(locals())
+        key = f'{dep_type}-dependencies'
         if key in data:
             for d in data[key]:
                 desc.dependencies[dep_type].add(d)
@@ -159,8 +158,7 @@ def update_descriptor(
         # skip any of the already explicitly handled names
         ignored_names = ['name', 'type', 'dependencies', 'hooks']
         for dep_type in dep_types:
-            ignored_names.append(
-                '{dep_type}-dependencies'.format_map(locals()))
+            ignored_names.append(f'{dep_type}-dependencies')
         for name in data.keys():
             if name in ignored_names:
                 continue
@@ -217,8 +215,8 @@ def update_metadata(desc, key, value):
 
     if type(old_value) != type(value):
         logger.warning(
-            "update package '{desc.name}' metadata '{key}' from value "
-            "'{old_value}' to '{value}'".format_map(locals()))
+            f"update package '{desc.name}' metadata '{key}' from value "
+            f"'{old_value}' to '{value}'")
 
     # overwrite existing value
     # copy value to avoid changes to either of them to affect each other

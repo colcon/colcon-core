@@ -136,8 +136,8 @@ def create_environment_scripts_only(
                 # catch exceptions raised in shell extension
                 exc = traceback.format_exc()
                 logger.error(
-                    "Exception in shell extension '{extension.SHELL_NAME}': "
-                    '{e}\n{exc}'.format_map(locals()))
+                    f"Exception in shell extension '{extension.SHELL_NAME}': "
+                    f'{e}\n{exc}')
                 # skip failing extension, continue with next one
 
 
@@ -180,8 +180,7 @@ def create_environment_hooks(prefix_path, pkg_name):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in environment extension '
-                "'{extension.ENVIRONMENT_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.ENVIRONMENT_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
             continue
         all_hooks += hooks
