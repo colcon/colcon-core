@@ -86,7 +86,10 @@ def get_configuration(setup_cfg):
     """
     try:
         # import locally to allow other functions in this module to be usable
-        from setuptools.config import read_configuration
+        try:
+            from setuptools.config.setupcfg import read_configuration
+        except ImportError:
+            from setuptools.config import read_configuration
     except ImportError as e:
         from pkg_resources import get_distribution
         from pkg_resources import parse_version
