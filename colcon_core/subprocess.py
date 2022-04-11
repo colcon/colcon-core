@@ -104,8 +104,7 @@ async def check_output(
         **other_popen_kwargs)
     if rc:
         stderr_data = stderr_data.decode(errors='replace')
-    assert not rc, \
-        'Expected {args} to pass: {stderr_data}'.format_map(locals())
+    assert not rc, f'Expected {args} to pass: {stderr_data}'
     return stdout_data
 
 

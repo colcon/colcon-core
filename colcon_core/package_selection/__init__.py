@@ -11,7 +11,7 @@ from colcon_core.package_discovery import discover_packages
 from colcon_core.package_identification \
     import get_package_identification_extensions
 from colcon_core.plugin_system import instantiate_extensions
-from colcon_core.plugin_system import order_extensions_by_name
+from colcon_core.plugin_system import order_extensions_by_priority
 from colcon_core.topological_order import topological_order_packages
 
 logger = colcon_logger.getChild(__name__)
@@ -30,6 +30,9 @@ class PackageSelectionExtensionPoint:
 
     """The version of the package selection extension interface."""
     EXTENSION_POINT_VERSION = '1.0'
+
+    """The default priority of package selection extensions."""
+    PRIORITY = 100
 
     def add_arguments(self, *, parser):
         """
@@ -93,7 +96,7 @@ def get_package_selection_extensions():
     extensions = instantiate_extensions(__name__)
     for name, extension in extensions.items():
         extension.PACKAGE_SELECTION_NAME = name
-    return order_extensions_by_name(extensions)
+    return order_extensions_by_priority(extensions)
 
 
 def _add_package_selection_arguments(parser):
@@ -113,8 +116,7 @@ def _add_package_selection_arguments(parser):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package selection extension '
-                "'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 
@@ -153,7 +155,7 @@ def get_packages(
     if len({d.name for d in pkgs}) < len(pkgs):
         pkg_paths = defaultdict(list)
         for d in pkgs:
-            pkg_paths[d.name].append('  - {d.path}'.format_map(locals()))
+            pkg_paths[d.name].append(f'  - {d.path}')
         raise RuntimeError(
             'Duplicate package names not supported:\n' +
             '\n'.join(
@@ -202,8 +204,7 @@ def _check_package_selection_parameters(args, pkg_names):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package selection extension '
-                "'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 
@@ -229,6 +230,5 @@ def select_package_decorators(args, decorators):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package selection extension '
-                "'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.PACKAGE_SELECTION_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one

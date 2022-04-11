@@ -40,8 +40,7 @@ def get_data_files_mapping(data_files):
             assert isinstance(sources, list)
             for source in sources:
                 assert not os.path.isabs(source), \
-                    "'data_files' must be relative, '{source}' is absolute" \
-                    .format_map(locals())
+                    f"'data_files' must be relative, '{source}' is absolute"
                 mapping[source] = os.path.join(dest, os.path.basename(source))
         else:
             assert not os.path.isabs(data_file)

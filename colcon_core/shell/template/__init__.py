@@ -43,8 +43,7 @@ def expand_template(template_path, destination_path, data):
         output = output.getvalue()
     except Exception as e:  # noqa: F841
         logger.error(
-            "{e.__class__.__name__} processing template '{template_path}'"
-            .format_map(locals()))
+            f"{e.__class__.__name__} processing template '{template_path}'")
         raise
     else:
         os.makedirs(str(destination_path.parent), exist_ok=True)

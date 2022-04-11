@@ -26,7 +26,7 @@ def test_expand_template():
         assert error.call_count == 1
         assert len(error.call_args[0]) == 1
         assert error.call_args[0][0].endswith(
-            " processing template '{template_path}'".format_map(locals()))
+            f" processing template '{template_path}'")
         assert not destination_path.exists()
 
         # missing variable
@@ -39,7 +39,7 @@ def test_expand_template():
         assert error.call_count == 1
         assert len(error.call_args[0]) == 1
         assert error.call_args[0][0].endswith(
-            " processing template '{template_path}'".format_map(locals()))
+            f" processing template '{template_path}'")
         assert not destination_path.exists()
 
         # skip all symlink tests on Windows for now

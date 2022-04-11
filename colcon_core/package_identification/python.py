@@ -37,10 +37,9 @@ class PythonPackageIdentification(PackageIdentificationExtensionPoint):
 
         if not is_reading_cfg_sufficient(setup_py):
             logger.debug(
-                "Python package in '{desc.path}' passes arguments to the "
+                f"Python package in '{desc.path}' passes arguments to the "
                 'setup() function which requires a different identification '
-                "extension than '{self.PACKAGE_IDENTIFICATION_NAME}'"
-                .format_map(locals()))
+                f"extension than '{self.PACKAGE_IDENTIFICATION_NAME}'")
             return
 
         config = get_configuration(setup_cfg)
@@ -86,7 +85,10 @@ def get_configuration(setup_cfg):
     """
     try:
         # import locally to allow other functions in this module to be usable
-        from setuptools.config import read_configuration
+        try:
+            from setuptools.config.setupcfg import read_configuration
+        except ImportError:
+            from setuptools.config import read_configuration
     except ImportError as e:
         from pkg_resources import get_distribution
         from pkg_resources import parse_version
@@ -95,9 +97,9 @@ def get_configuration(setup_cfg):
         if parse_version(setuptools_version) < parse_version(minimum_version):
             e.msg += ', ' \
                 "'setuptools' needs to be at least version " \
-                '{minimum_version}, if a newer version is not available ' \
+                f'{minimum_version}, if a newer version is not available ' \
                 "from the package manager use 'pip3 install -U setuptools' " \
-                'to update to the latest version'.format_map(locals())
+                'to update to the latest version'
         raise
     return read_configuration(str(setup_cfg))
 

@@ -81,8 +81,7 @@ def get_chained_prefix_path(*, skip=None):
                 exc = traceback.format_exc()
                 logger.error(
                     'Exception in prefix path extension '
-                    "'{extension.PREFIX_PATH_NAME}': {e}\n{exc}"
-                    .format_map(locals()))
+                    f"'{extension.PREFIX_PATH_NAME}': {e}\n{exc}")
                 # skip failing extension, continue with next one
     unique_prefix_path = []
     for p in chained_prefix_path:
