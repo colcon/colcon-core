@@ -114,8 +114,7 @@ def identify(
 
     if getattr(desc, 'type', None) or getattr(desc, 'name', None):
         logger.warning(
-            "package '{desc.path}' has type or name but is incomplete"
-            .format_map(locals()))
+            f"package '{desc.path}' has type or name but is incomplete")
     return None
 
 
@@ -150,8 +149,8 @@ def _identify(extensions_same_prio, desc):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in package identification extension '
-                "'{extension.PACKAGE_IDENTIFICATION_NAME}' in '{desc.path}': "
-                '{e}\n{exc}'.format_map(locals()))
+                f"'{extension.PACKAGE_IDENTIFICATION_NAME}' in '{desc.path}': "
+                f'{e}\n{exc}')
             # skip failing extension, continue with next one
             continue
 
@@ -165,8 +164,8 @@ def _identify(extensions_same_prio, desc):
     # multiple extensions populated the descriptor with different values
     if len(results) > 2:
         logger.warning(
-            '_identify({desc.path}) has multiple matches and therefore is '
-            'being ignored: '.format_map(locals()) +
+            f'_identify({desc.path}) has multiple matches and therefore is '
+            'being ignored: ' +
             ', '.join(sorted(d.type for d in results if d.type is not None)))
         return False
 
@@ -177,8 +176,8 @@ def _identify(extensions_same_prio, desc):
     results.remove(desc)
     desc = results.pop()
     logger.debug(
-        "Package '{desc.path}' with type '{desc.type}' and name '{desc.name}'"
-        .format_map(locals()))
+        f"Package '{desc.path}' with type '{desc.type}' and name "
+        f"'{desc.name}'")
     return desc
 
 

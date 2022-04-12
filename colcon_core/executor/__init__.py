@@ -234,7 +234,7 @@ def add_executor_arguments(parser):
                 # to mention the available options
                 desc = '<no description>'
             # it requires a custom formatter to maintain the newline
-            descriptions += '\n* {key}: {desc}'.format_map(locals())
+            descriptions += f'\n* {key}: {desc}'
     assert keys, 'No executor extensions found'
 
     default = os.environ.get(DEFAULT_EXECUTOR_ENVIRONMENT_VARIABLE.name)
@@ -243,8 +243,8 @@ def add_executor_arguments(parser):
 
     group.add_argument(
         '--executor', type=str, choices=keys, default=default,
-        help='The executor to process all packages (default: {default})'
-             '{descriptions}'.format_map(locals()))
+        help=f'The executor to process all packages (default: {default})'
+             f'{descriptions}')
 
     for priority in extensions.keys():
         extensions_same_prio = extensions[priority]
@@ -257,8 +257,7 @@ def add_executor_arguments(parser):
                 exc = traceback.format_exc()
                 logger.error(
                     'Exception in executor extension '
-                    "'{extension.EXECUTOR_NAME}': {e}\n{exc}"
-                    .format_map(locals()))
+                    f"'{extension.EXECUTOR_NAME}': {e}\n{exc}")
                 # skip failing extension, continue with next one
 
 
@@ -325,9 +324,8 @@ def execute_jobs(
             # fallback to legacy API
             assert 'abort_on_error' in signature.parameters
             warnings.warn(
-                "The ExecutorExtensionPoint '{executor.EXECUTOR_NAME}' uses a "
-                "deprecated signature for the 'execute' method"
-                .format_map(locals()))
+                f"The ExecutorExtensionPoint '{executor.EXECUTOR_NAME}' uses "
+                "a deprecated signature for the 'execute' method")
             kwargs['abort_on_error'] = on_error == OnError.interrupt
 
         try:
@@ -336,8 +334,8 @@ def execute_jobs(
             # catch exceptions raised in executor extension
             exc = traceback.format_exc()
             logger.error(
-                "Exception in executor extension '{executor.EXECUTOR_NAME}': "
-                '{e}\n{exc}'.format_map(locals()))
+                f"Exception in executor extension '{executor.EXECUTOR_NAME}': "
+                f'{e}\n{exc}')
             rc = 1
         finally:
             # generate an event for every skipped job

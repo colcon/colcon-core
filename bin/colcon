@@ -26,8 +26,7 @@ custom_entry_points = {}
 def custom_load_entry_points(group_name, *, exclude_names=None):  # noqa: D103
     global custom_entry_points
     assert group_name in custom_entry_points, \
-        "get_entry_points() not overridden for group '{group_name}'" \
-        .format_map(locals())
+        f"get_entry_points() not overridden for group '{group_name}'"
     return {
         k: v for k, v in custom_entry_points[group_name].items()
         if exclude_names is None or k not in exclude_names}

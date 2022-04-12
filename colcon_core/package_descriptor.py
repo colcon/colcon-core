@@ -76,8 +76,7 @@ class PackageDescriptor:
         for category in sorted(categories):
             dependencies |= self.dependencies[category]
         assert self.name not in dependencies, \
-            "The package '{self.name}' has a dependency with the same name" \
-            .format_map(locals())
+            f"The package '{self.name}' has a dependency with the same name"
         return {
             (DependencyDescriptor(d)
                 if not isinstance(d, DependencyDescriptor) else d)

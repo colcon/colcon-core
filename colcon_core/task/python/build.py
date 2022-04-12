@@ -36,8 +36,7 @@ class PythonBuildTask(TaskExtensionPoint):
         pkg = self.context.pkg
         args = self.context.args
 
-        logger.info(
-            "Building Python package in '{args.path}'".format_map(locals()))
+        logger.info(f"Building Python package in '{args.path}'")
 
         try:
             env = await get_command_environment(
@@ -185,9 +184,8 @@ class PythonBuildTask(TaskExtensionPoint):
         for module_name in packages:
             if module_name in sys.modules:
                 logger.warning(
-                    "Switching to 'develop' for package '{pkg.name}' while it "
-                    'is being used might result in import errors later'
-                    .format_map(locals()))
+                    f"Switching to 'develop' for package '{pkg.name}' while "
+                    'it is being used might result in import errors later')
                 break
 
         # remove previously installed files
@@ -199,8 +197,7 @@ class PythonBuildTask(TaskExtensionPoint):
             if not line.startswith(python_lib):
                 logger.debug(
                     'While undoing a previous installation files outside the '
-                    'Python library path are being ignored: {line}'
-                    .format_map(locals()))
+                    f'Python library path are being ignored: {line}')
                 continue
             if not os.path.isdir(line):
                 os.remove(line)
@@ -234,21 +231,19 @@ class PythonBuildTask(TaskExtensionPoint):
                 if package_dir[package] in package_dir:
                     package_dir_package = package_dir[package]
                     raise RuntimeError(
-                        "The package_dir contains a mapping from '{package}' "
-                        "to '{package_dir_package}' which is also a key"
-                        .format_map(locals()))
+                        f"The package_dir contains a mapping from '{package}' "
+                        f"to '{package_dir_package}' which is also a key")
                 if package_dir[package] in packages:
                     package_dir_package = package_dir[package]
                     raise RuntimeError(
-                        "The value '{package_dir_package}' in package_dir is "
-                        'also listed in packages'
-                        .format_map(locals()))
+                        f"The value '{package_dir_package}' in package_dir is "
+                        'also listed in packages')
             elif '' in package_dir:
                 items.append(os.path.join(package_dir[''], package))
             else:
                 items.append(package)
         # relative python-ish paths are allowed as entries in py_modules, see:
-        # https://docs.python.org/3.5/distutils/setupscript.html#listing-individual-modules
+        # https://docs.python.org/3.6/distutils/setupscript.html#listing-individual-modules
         py_modules = setup_py_data.get('py_modules')
         if py_modules:
             py_modules_list = [
@@ -256,8 +251,7 @@ class PythonBuildTask(TaskExtensionPoint):
             for py_module in py_modules_list:
                 if not os.path.exists(os.path.join(args.path, py_module)):
                     raise RuntimeError(
-                        "Provided py_modules '{py_module}' does not exist"
-                        .format_map(locals()))
+                        f"Provided py_modules '{py_module}' does not exist")
             items += py_modules_list
         data_files = get_data_files_mapping(
             setup_py_data.get('data_files') or [])

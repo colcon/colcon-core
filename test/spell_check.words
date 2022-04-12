@@ -5,6 +5,7 @@ argparse
 asyncio
 autouse
 basepath
+bazqux
 blocklist
 callables
 capsys
@@ -33,6 +34,7 @@ executables
 exitstatus
 fdopen
 filterwarnings
+foobar
 fromhex
 functools
 getcategory
@@ -91,14 +93,13 @@ scspell
 sdist
 searchability
 separarator
+setupcfg
 setuppy
 setupscript
 setuptools
 shlex
 sigint
-sloretz
 stacklevel
-stackoverflow
 staticmethod
 stdeb
 stringify
@@ -125,4 +126,3 @@ unlinking
 unrenamed
 wildcards
 workaround
-workspaces
