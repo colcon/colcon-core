@@ -99,9 +99,7 @@ setupscript
 setuptools
 shlex
 sigint
-sloretz
 stacklevel
-stackoverflow
 staticmethod
 stdeb
 stringify
@@ -128,4 +126,3 @@ unlinking
 unrenamed
 wildcards
 workaround
-workspaces
