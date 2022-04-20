@@ -296,8 +296,7 @@ class PythonBuildTask(TaskExtensionPoint):
         return temp_symlinks
 
     def _get_python_lib(self, args):
-        path = sysconfig.get_path(
-            'purelib', vars={'base': args.install_base}, scheme='posix_prefix')
+        path = sysconfig.get_path('purelib', vars={'base': args.install_base})
         return os.path.relpath(path, start=args.install_base)
 
     def _append_install_layout(self, args, cmd):

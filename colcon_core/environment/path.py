@@ -70,8 +70,7 @@ class PythonScriptsPathEnvironment(EnvironmentExtensionPoint):
     ):
         hooks = []
         bin_path = Path(
-            sysconfig.get_path(
-                'scripts', vars={'base': prefix_path}, scheme='posix_prefix'))
+            sysconfig.get_path('scripts', vars={'base': prefix_path}))
         logger.log(1, "checking '%s'" % bin_path)
         try:
             names = os.listdir(str(bin_path))

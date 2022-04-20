@@ -22,8 +22,7 @@ class PythonPathEnvironment(EnvironmentExtensionPoint):
         hooks = []
 
         python_path = Path(
-            sysconfig.get_path(
-                'purelib', vars={'base': prefix_path}, scheme='posix_prefix'))
+            sysconfig.get_path('purelib', vars={'base': prefix_path}))
         logger.log(1, "checking '%s'" % python_path)
         if python_path.exists():
             rel_python_path = python_path.relative_to(prefix_path)
