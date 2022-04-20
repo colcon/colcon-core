@@ -8,6 +8,7 @@ from colcon_core import shell
 from colcon_core.environment import EnvironmentExtensionPoint
 from colcon_core.environment import logger
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.python_install_path import get_python_install_path
 
 
 class PythonPathEnvironment(EnvironmentExtensionPoint):
@@ -21,8 +22,8 @@ class PythonPathEnvironment(EnvironmentExtensionPoint):
     def create_environment_hooks(self, prefix_path, pkg_name):  # noqa: D102
         hooks = []
 
-        python_path = Path(
-            sysconfig.get_path('purelib', vars={'base': prefix_path}))
+        python_path = get_python_install_path(
+            'purelib', vars={'base': prefix_path})
         logger.log(1, "checking '%s'" % python_path)
         if python_path.exists():
             rel_python_path = python_path.relative_to(prefix_path)

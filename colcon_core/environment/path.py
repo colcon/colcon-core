@@ -10,6 +10,7 @@ from colcon_core import shell
 from colcon_core.environment import EnvironmentExtensionPoint
 from colcon_core.environment import logger
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.python_install_path import get_python_install_path
 
 
 class PathEnvironment(EnvironmentExtensionPoint):
@@ -49,7 +50,6 @@ class PathEnvironment(EnvironmentExtensionPoint):
         return hooks
 
 
-
 class PythonScriptsPathEnvironment(EnvironmentExtensionPoint):
     """Extend the `PATH` variable to find python scripts."""
 
@@ -69,8 +69,8 @@ class PythonScriptsPathEnvironment(EnvironmentExtensionPoint):
         self, prefix_path, pkg_name, subdirectory, suffix=''
     ):
         hooks = []
-        bin_path = Path(
-            sysconfig.get_path('scripts', vars={'base': prefix_path}))
+        bin_path = get_python_install_path(
+            'scripts', vars={'base': prefix_path})
         logger.log(1, "checking '%s'" % bin_path)
         try:
             names = os.listdir(str(bin_path))
