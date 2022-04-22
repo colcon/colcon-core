@@ -68,8 +68,7 @@ class PythonScriptsPathEnvironment(EnvironmentExtensionPoint):
         self, prefix_path, pkg_name, subdirectory, suffix=''
     ):
         hooks = []
-        bin_path = get_python_install_path(
-            'scripts', vars={'base': prefix_path})
+        bin_path = get_python_install_path('scripts', {'base': prefix_path})
         logger.log(1, "checking '%s'" % bin_path)
         try:
             names = os.listdir(str(bin_path))

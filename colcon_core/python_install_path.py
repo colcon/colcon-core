@@ -5,19 +5,19 @@ from pathlib import Path
 import sysconfig
 
 
-def get_python_install_path(name, vars=None):
+def get_python_install_path(name, vars_=None):
     """
     Get Python install paths matching Colcon's preferred scheme.
 
     See sysconfig.get_path for more info about the arguments.
 
     :param name: Name of the path type
-    :param vars: A dictionary of variables updating the values of
+    :param vars_: A dictionary of variables updating the values of
         sysconfig.get_config_vars()
     :rtype: Pathlib.Path
     """
-    if not vars:
-        vars = {}
+    if not vars_:
+        vars_ = {}
 
     if hasattr(sysconfig, 'get_preferred_scheme'):
         # Python >= 3.10
@@ -30,4 +30,4 @@ def get_python_install_path(name, vars=None):
         # Ubuntu Jammy has a custom scheme
         preferred_scheme = 'deb_system'
 
-    return Path(sysconfig.get_path(name, preferred_scheme, vars))
+    return Path(sysconfig.get_path(name, preferred_scheme, vars_))
