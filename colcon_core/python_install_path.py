@@ -21,5 +21,5 @@ def get_python_install_path(name, vars_=None):
         kwargs['vars'] = vars_
     if 'deb_system' in sysconfig.get_scheme_names():
         kwargs['scheme'] = 'deb_system'
-        
+
     return Path(sysconfig.get_path(name, **kwargs))

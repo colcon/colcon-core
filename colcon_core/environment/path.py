@@ -1,9 +1,6 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-import os
-import sys
-
 from colcon_core import shell
 from colcon_core.environment import EnvironmentExtensionPoint
 from colcon_core.environment import logger
