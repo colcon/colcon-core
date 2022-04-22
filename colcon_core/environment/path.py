@@ -4,7 +4,6 @@
 import os
 from pathlib import Path
 import sys
-import sysconfig
 
 from colcon_core import shell
 from colcon_core.environment import EnvironmentExtensionPoint

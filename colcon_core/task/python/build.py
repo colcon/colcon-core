@@ -8,12 +8,12 @@ from pathlib import Path
 import shutil
 import sys
 from sys import executable
-import sysconfig
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.python_install_path import get_python_install_path
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
 from colcon_core.subprocess import check_output
@@ -296,7 +296,8 @@ class PythonBuildTask(TaskExtensionPoint):
         return temp_symlinks
 
     def _get_python_lib(self, args):
-        path = sysconfig.get_path('purelib', vars={'base': args.install_base})
+        path = get_python_install_path(
+            'purelib', vars={'base': args.install_base})
         return os.path.relpath(path, start=args.install_base)
 
     def _append_install_layout(self, args, cmd):

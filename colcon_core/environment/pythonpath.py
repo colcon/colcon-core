@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 from pathlib import Path
-import sysconfig
 
 from colcon_core import shell
 from colcon_core.environment import EnvironmentExtensionPoint
