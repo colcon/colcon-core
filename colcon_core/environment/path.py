@@ -55,11 +55,6 @@ class PythonScriptsPathEnvironment(EnvironmentExtensionPoint):
     def create_environment_hooks(self, prefix_path, pkg_name):  # noqa: D102
         hooks = []
         bin_path = get_python_install_path('scripts', {'base': prefix_path})
-        logger.log(1, "checking '%s'" % bin_path)
-        try:
-            names = os.listdir(str(bin_path))
-        except FileNotFoundError:
-            return
 
         if _has_file(bin_path):
             rel_bin_path = bin_path.relative_to(prefix_path)
