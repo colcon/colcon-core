@@ -32,17 +32,12 @@ class PathEnvironment(EnvironmentExtensionPoint):
             EnvironmentExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def create_environment_hooks(self, prefix_path, pkg_name):  # noqa: D102
-        return self._create_environment_hooks(prefix_path, pkg_name, 'bin')
-
-    def _create_environment_hooks(
-        self, prefix_path, pkg_name, subdirectory, suffix=''
-    ):
         hooks = []
         bin_path = prefix_path / subdirectory
 
         if _has_file(bin_path):
             hooks += shell.create_environment_hook(
-                'path' + suffix, prefix_path, pkg_name, 'PATH', subdirectory,
+                'path', prefix_path, pkg_name, 'PATH', subdirectory,
                 mode='prepend')
 
         return hooks
@@ -68,7 +63,7 @@ class PythonScriptsPathEnvironment(EnvironmentExtensionPoint):
         if _has_file(bin_path):
             rel_bin_path = bin_path.relative_to(prefix_path)
             hooks += shell.create_environment_hook(
-                'pythonscriptspath' + suffix, prefix_path, pkg_name, 'PATH',
+                'pythonscriptspath', prefix_path, pkg_name, 'PATH',
                 str(rel_bin_path), mode='prepend')
 
         return hooks
