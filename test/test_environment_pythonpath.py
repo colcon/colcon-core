@@ -24,7 +24,7 @@ def test_pythonpath():
 
             # Python path exists
             python_path = get_python_install_path(
-                'purelib', vars={'base': prefix_path})
+                'purelib', {'base': prefix_path})
             python_path.mkdir(parents=True)
             hooks = extension.create_environment_hooks(prefix_path, 'pkg_name')
             assert len(hooks) == 2

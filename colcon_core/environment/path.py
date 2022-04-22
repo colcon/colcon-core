@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
 import sys
 
 from colcon_core import shell
