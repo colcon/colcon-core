@@ -74,6 +74,7 @@ pydocstyle
 pytest
 pytests
 pythonpath
+pythonscriptspath
 pythonwarnings
 readouterr
 readthedocs
@@ -119,6 +120,7 @@ todo
 traceback
 tryfirst
 tuples
+ubuntu
 uninstall
 unittest
 unittests
