@@ -32,6 +32,7 @@ class PathEnvironment(EnvironmentExtensionPoint):
             EnvironmentExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def create_environment_hooks(self, prefix_path, pkg_name):  # noqa: D102
+        subdirectory = 'bin'
         hooks = []
         bin_path = prefix_path / subdirectory
 
