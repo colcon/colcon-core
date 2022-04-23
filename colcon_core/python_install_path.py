@@ -5,7 +5,7 @@ from pathlib import Path
 import sysconfig
 
 
-def get_python_install_path(name, vars_=None):
+def get_python_install_path(name, vars_=()):
     """
     Get Python install paths matching Colcon's preferred scheme.
 
@@ -16,9 +16,7 @@ def get_python_install_path(name, vars_=None):
         sysconfig.get_config_vars()
     :rtype: Pathlib.Path
     """
-    kwargs = {}
-    if vars_:
-        kwargs['vars'] = vars_
+    kwargs['vars'] = dict(vars_)
     if 'deb_system' in sysconfig.get_scheme_names():
         kwargs['scheme'] = 'deb_system'
 
