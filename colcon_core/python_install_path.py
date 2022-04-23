@@ -16,6 +16,7 @@ def get_python_install_path(name, vars_=()):
         sysconfig.get_config_vars()
     :rtype: Pathlib.Path
     """
+    kwargs = {}
     kwargs['vars'] = dict(vars_)
     if 'deb_system' in sysconfig.get_scheme_names():
         kwargs['scheme'] = 'deb_system'
