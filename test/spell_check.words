@@ -74,6 +74,7 @@ pydocstyle
 pytest
 pytests
 pythonpath
+pythonscriptspath
 pythonwarnings
 readouterr
 readthedocs

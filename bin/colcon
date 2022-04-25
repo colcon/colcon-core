@@ -41,6 +41,8 @@ from colcon_core.command import LOG_LEVEL_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.entry_point \
     import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.environment.path import PathEnvironment  # noqa: E402
+from colcon_core.environment.path \
+    import PythonScriptsPathEnvironment  # noqa: E402
 from colcon_core.environment.pythonpath \
     import PythonPathEnvironment  # noqa: E402
 from colcon_core.event_handler.console_direct \
@@ -79,6 +81,7 @@ custom_entry_points.update({
     'colcon_core.argument_parser': {},
     'colcon_core.environment': {
         'path': PathEnvironment,
+        'pythonscriptspath': PythonScriptsPathEnvironment,
         'pythonpath': PythonPathEnvironment,
     },
     'colcon_core.environment_variable': {
