@@ -72,12 +72,14 @@ async def run(
     assert callable(stderr_callback) or stderr_callback is None
 
     stdout_capture = []
+
     def _stdout_callback(line):
         if stdout_callback:
             stdout_callback(line)
         stdout_capture.append(line)
 
     stderr_capture = []
+
     def _stderr_callback(line):
         if stderr_callback:
             stderr_callback(line)
