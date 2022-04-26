@@ -48,6 +48,7 @@ async def run(
     stderr_callback: Callable[[bytes], None],
     *,
     use_pty: Optional[bool] = None,
+    capture_output: Optional[bool] = None,
     **other_popen_kwargs: Mapping[str, Any]
 ) -> subprocess.CompletedProcess:
     """
@@ -65,6 +66,7 @@ async def run(
     :param stderr_callback: the callable is invoked for every line read from
       the stderr pipe of the process
     :param use_pty: whether to use a pseudo terminal
+    :param capture_output: whether to store stdout and stderr
     :returns: the result of the completed process
     :rtype subprocess.CompletedProcess
     """
@@ -76,14 +78,16 @@ async def run(
     def _stdout_callback(line):
         if stdout_callback:
             stdout_callback(line)
-        stdout_capture.append(line)
+        if capture_output:
+            stdout_capture.append(line)
 
     stderr_capture = []
 
     def _stderr_callback(line):
         if stderr_callback:
             stderr_callback(line)
-        stderr_capture.append(line)
+        if capture_output:
+            stderr_capture.append(line)
 
     # if use_pty is neither True nor False choose based on isatty of stdout
     if use_pty is None:
