@@ -84,7 +84,6 @@ class PythonBuildTask(TaskExtensionPoint):
             if 'egg_info' in available_commands:
                 # prevent installation of dependencies specified in setup.py
                 cmd.append('--single-version-externally-managed')
-            self._append_install_layout(args, cmd)
             completed = await run(
                 self.context, cmd, cwd=args.path, env=env)
             if completed.returncode:
@@ -110,7 +109,6 @@ class PythonBuildTask(TaskExtensionPoint):
                 ]
                 if setup_py_data.get('data_files'):
                     cmd += ['install_data', '--install-dir', args.install_base]
-                self._append_install_layout(args, cmd)
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
@@ -298,7 +296,3 @@ class PythonBuildTask(TaskExtensionPoint):
     def _get_python_lib(self, args):
         path = get_python_install_path('purelib', {'base': args.install_base})
         return os.path.relpath(path, start=args.install_base)
-
-    def _append_install_layout(self, args, cmd):
-        if 'dist-packages' in self._get_python_lib(args):
-            cmd += ['--install-layout', 'deb']
