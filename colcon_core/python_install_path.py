@@ -19,7 +19,7 @@ def get_python_install_path(name, vars_=()):
     kwargs = {}
     kwargs['vars'] = dict(vars_)
     # Avoid deb_system because it means using --install-layout deb
-    # The latter ignores --prefix and hardcodes it to /usr
+    # which ignores --prefix and hardcodes it to /usr
     if 'deb_system' in sysconfig.get_scheme_names():
         kwargs['scheme'] = 'posix_prefix'
 
