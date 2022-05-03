@@ -41,6 +41,7 @@ getcategory
 getpid
 getpreferredencoding
 github
+hardcodes
 hookimpl
 hookwrapper
 https
@@ -100,6 +101,7 @@ setupscript
 setuptools
 shlex
 sigint
+sloretz
 stacklevel
 staticmethod
 stdeb

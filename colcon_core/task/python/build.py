@@ -110,7 +110,6 @@ class PythonBuildTask(TaskExtensionPoint):
                 ]
                 if setup_py_data.get('data_files'):
                     cmd += ['install_data', '--install-dir', args.install_base]
-                self._append_install_layout(args, cmd)
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
@@ -300,5 +299,9 @@ class PythonBuildTask(TaskExtensionPoint):
         return os.path.relpath(path, start=args.install_base)
 
     def _append_install_layout(self, args, cmd):
+        # Debian patches sysconfig to return a path containing dist-packages
+        # instead of site-packages when using the default install scheme.
+        # TODO(sloretz) this is potentially unused now that
+        # get_python_install_path avoids the deb_system scheme.
         if 'dist-packages' in self._get_python_lib(args):
             cmd += ['--install-layout', 'deb']
