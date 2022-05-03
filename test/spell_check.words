@@ -101,6 +101,7 @@ setupscript
 setuptools
 shlex
 sigint
+sloretz
 stacklevel
 staticmethod
 stdeb

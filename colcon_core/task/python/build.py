@@ -84,6 +84,7 @@ class PythonBuildTask(TaskExtensionPoint):
             if 'egg_info' in available_commands:
                 # prevent installation of dependencies specified in setup.py
                 cmd.append('--single-version-externally-managed')
+            self._append_install_layout(args, cmd)
             completed = await run(
                 self.context, cmd, cwd=args.path, env=env)
             if completed.returncode:
@@ -296,3 +297,11 @@ class PythonBuildTask(TaskExtensionPoint):
     def _get_python_lib(self, args):
         path = get_python_install_path('purelib', {'base': args.install_base})
         return os.path.relpath(path, start=args.install_base)
+
+    def _append_install_layout(self, args, cmd):
+        # Debian patches sysconfig to return a path containing dist-packages
+        # instead of site-packages when using the default install scheme.
+        # TODO(sloretz) this is potentially unused now that
+        # get_python_install_path avoids the deb_system scheme.
+        if 'dist-packages' in self._get_python_lib(args):
+            cmd += ['--install-layout', 'deb']
