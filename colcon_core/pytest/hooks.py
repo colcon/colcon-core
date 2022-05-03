@@ -14,7 +14,6 @@ def pytest_terminal_summary(terminalreporter, exitstatus=None, config=None):
     summary_warnings = terminalreporter.summary_warnings
 
     def redirect_to_stderr(self):
-        nonlocal summary_warnings
         tw = self._tw
         import _pytest.config
         self._tw = _pytest.config.create_terminal_writer(
