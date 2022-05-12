@@ -22,5 +22,11 @@ def get_python_install_path(name, vars_=()):
     # which ignores --prefix and hardcodes it to /usr
     if 'deb_system' in sysconfig.get_scheme_names():
         kwargs['scheme'] = 'posix_prefix'
+    # The presence of the rpm_prefix scheme indicates that posix_prefix
+    # has been patched to inject `local` into the installation locations.
+    # The rpm_prefix scheme is a backup of what posix_prefix was before it was
+    # patched.
+    elif 'rpm_prefix' in sysconfig.get_scheme_names():
+        kwargs['scheme'] = 'rpm_prefix'
 
     return Path(sysconfig.get_path(name, **kwargs))
