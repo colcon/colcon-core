@@ -80,6 +80,12 @@ class PythonBuildTask(TaskExtensionPoint):
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
                 'install', '--prefix', args.install_base,
+                '--install-lib', str(get_python_install_path(
+                    'purelib', {'base': args.install_base})),
+                '--install-scripts', str(get_python_install_path(
+                    'scripts', {'base': args.install_base})),
+                '--install-data', str(get_python_install_path(
+                    'data', {'base': args.install_base})),
                 '--record', os.path.join(args.build_base, 'install.log')]
             if 'egg_info' in available_commands:
                 # prevent installation of dependencies specified in setup.py
