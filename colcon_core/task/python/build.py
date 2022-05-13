@@ -21,6 +21,7 @@ from colcon_core.task import run
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
+from colcon_core.task.python.template import expand_template
 
 logger = colcon_logger.getChild(__name__)
 
@@ -46,14 +47,23 @@ class PythonBuildTask(TaskExtensionPoint):
             return 1
         setup_py_data = get_setup_data(self.context.pkg, env)
 
+        # override installation locations
+        prefix_override = Path(args.build_base) / 'prefix_override'
+        expand_template(
+            Path(__file__).parent / 'template' / 'sitecustomize.py.em',
+            prefix_override / 'sitecustomize.py',
+            {
+                'site_prefix': args.install_base,
+            })
+
         # `setup.py develop|install` requires the python lib path to exist
         python_lib = os.path.join(
             args.install_base, self._get_python_lib(args))
         os.makedirs(python_lib, exist_ok=True)
         # and being in the PYTHONPATH
         env = dict(env)
-        env['PYTHONPATH'] = python_lib + os.pathsep + \
-            env.get('PYTHONPATH', '')
+        env['PYTHONPATH'] = str(prefix_override) + os.pathsep + \
+            python_lib + os.pathsep + env.get('PYTHONPATH', '')
 
         # determine if setuptools specific commands are available
         available_commands = await self._get_available_commands(
@@ -79,7 +89,7 @@ class PythonBuildTask(TaskExtensionPoint):
             cmd += [
                 'build', '--build-base', os.path.join(
                     args.build_base, 'build'),
-                'install', '--prefix', args.install_base,
+                'install',
                 '--record', os.path.join(args.build_base, 'install.log')]
             if 'egg_info' in available_commands:
                 # prevent installation of dependencies specified in setup.py
@@ -102,14 +112,14 @@ class PythonBuildTask(TaskExtensionPoint):
                 # easy-install.pth file
                 cmd = [
                     executable, 'setup.py',
-                    'develop', '--prefix', args.install_base,
+                    'develop',
                     '--editable',
                     '--build-directory',
                     os.path.join(args.build_base, 'build'),
                     '--no-deps',
                 ]
                 if setup_py_data.get('data_files'):
-                    cmd += ['install_data', '--install-dir', args.install_base]
+                    cmd += ['install_data']
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
@@ -163,7 +173,7 @@ class PythonBuildTask(TaskExtensionPoint):
         if os.path.exists(egg_info) and os.path.islink(setup_py_build_space):
             cmd = [
                 executable, 'setup.py',
-                'develop', '--prefix', args.install_base,
+                'develop',
                 '--uninstall', '--editable',
                 '--build-directory', os.path.join(args.build_base, 'build')
             ]
