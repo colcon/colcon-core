@@ -55,6 +55,10 @@ class PythonBuildTask(TaskExtensionPoint):
         env['PYTHONPATH'] = python_lib + os.pathsep + \
             env.get('PYTHONPATH', '')
 
+        # hack around bad patching in Debian and Fedora
+        env.setdefault('DEB_PYTHON_INSTALL_LAYOUT', 'deb')
+        env.setdefault('RPM_BUILD_ROOT', '/dev/null')
+
         # determine if setuptools specific commands are available
         available_commands = await self._get_available_commands(
             args.path, env)
