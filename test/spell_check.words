@@ -50,6 +50,7 @@ isatty
 iterdir
 junit
 levelname
+libexec
 lineno
 linux
 lstrip
