@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from configparser import ConfigParser
 from contextlib import suppress
 import locale
 import os
@@ -23,6 +24,17 @@ from colcon_core.task.python import get_data_files_mapping
 from colcon_core.task.python import get_setup_data
 
 logger = colcon_logger.getChild(__name__)
+
+
+def _get_install_scripts(path):
+    setup_cfg_path = os.path.join(path, 'setup.cfg')
+    if not os.path.exists(setup_cfg_path):
+        return
+    parser = ConfigParser()
+    parser.optionxform = str
+    with open(setup_cfg_path, encoding='utf-8') as f:
+        parser.read_file(f)
+    return parser.get('install', 'install-scripts', fallback=None)
 
 
 class PythonBuildTask(TaskExtensionPoint):
@@ -81,6 +93,13 @@ class PythonBuildTask(TaskExtensionPoint):
                     args.build_base, 'build'),
                 'install', '--prefix', args.install_base,
                 '--record', os.path.join(args.build_base, 'install.log')]
+            # Extract and explicitly pass install-scripts to setuptools.
+            # When part of a virtual environment, this option is specifically
+            # ignored in configuration files by setuptools, but not on the
+            # command line.
+            install_scripts = _get_install_scripts(args.path)
+            if install_scripts:
+                cmd += ['--install-scripts', install_scripts]
             if 'egg_info' in available_commands:
                 # prevent installation of dependencies specified in setup.py
                 cmd.append('--single-version-externally-managed')
