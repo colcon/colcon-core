@@ -36,14 +36,14 @@ if warnings_filters:
             category = warnings._getcategory(category)
         except Exception:  # noqa: B902
             print(
-                "The category field '{category}' must be a valid warnings "
-                'class name'.format_map(locals()), file=sys.stderr)
+                f"The category field '{category}' must be a valid warnings "
+                'class name', file=sys.stderr)
             sys.exit(1)
         if module:
             print(
-                'The module field of the {WARNINGS_ENVIRONMENT_VARIABLE.name} '
-                'filter should be empty, otherwise use PYTHONWARNINGS instead'
-                .format_map(locals()), file=sys.stderr)
+                'The module field of the '
+                f'{WARNINGS_ENVIRONMENT_VARIABLE.name} filter should be '
+                'empty, otherwise use PYTHONWARNINGS instead', file=sys.stderr)
             sys.exit(1)
         warnings.filterwarnings(
             action, message=message, category=category or Warning,
@@ -130,16 +130,15 @@ def _main(*, command_name, argv):
     # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
     set_logger_level_from_env(
-        colcon_logger, '{command_name}_LOG_LEVEL'.format_map(locals()).upper())
+        colcon_logger, f'{command_name}_LOG_LEVEL'.upper())
     colcon_logger.debug(
         'Command line arguments: {argv}'
         .format(argv=argv if argv is not None else sys.argv))
 
     # set default locations for config files, for searchability: COLCON_HOME
     set_default_config_path(
-        path=(
-            Path('~') / '.{command_name}'.format_map(locals())).expanduser(),
-        env_var='{command_name}_HOME'.format_map(locals()).upper())
+        path=(Path('~') / f'.{command_name}').expanduser(),
+        env_var=f'{command_name}_HOME'.upper())
 
     parser = create_parser('colcon_core.environment_variable')
 
@@ -165,8 +164,7 @@ def _main(*, command_name, argv):
         # the value might be provided externally and needs to be checked again
         colcon_logger.setLevel(get_numeric_log_level(args.log_level))
 
-    colcon_logger.debug(
-        'Parsed command line arguments: {args}'.format_map(locals()))
+    colcon_logger.debug(f'Parsed command line arguments: {args}')
 
     # error: no verb provided
     if args.verb_name is None:
@@ -178,8 +176,8 @@ def _main(*, command_name, argv):
     now_str = str(now)[:-7].replace(' ', '_').replace(':', '-')
     set_default_log_path(
         base_path=args.log_base,
-        env_var='{command_name}_LOG_PATH'.format_map(locals()).upper(),
-        subdirectory='{args.verb_name}_{now_str}'.format_map(locals()))
+        env_var=f'{command_name}_LOG_PATH'.upper(),
+        subdirectory=f'{args.verb_name}_{now_str}')
 
     # add a file handler writing all levels if logging isn't disabled
     log_path = get_log_path()
@@ -196,8 +194,7 @@ def _main(*, command_name, argv):
         handler.handle(log_record)
         log_record = colcon_logger.makeRecord(
             colcon_logger.name, logging.DEBUG, __file__, 0,
-            'Parsed command line arguments: {args}'.format_map(locals()),
-            None, None)
+            f'Parsed command line arguments: {args}', None, None)
         handler.handle(log_record)
 
     # set an environment variable named after the command (if not already set)
@@ -311,7 +308,7 @@ def add_log_level_argument(parser):
     parser.add_argument(
         '--log-base',
         help='The base path for all log directories (default: ./log, to '
-             'disable: {os.devnull})'.format_map(globals()))
+             f'disable: {os.devnull})')
     parser.add_argument(
         '--log-level', action=LogLevelAction,
         help='Set log level for the console output, either by numeric or '
@@ -332,9 +329,7 @@ class LogLevelAction(argparse.Action):
         try:
             value = get_numeric_log_level(values)
         except ValueError as e:  # noqa: F841
-            parser.error(
-                '{option_string} has unsupported value, {e}'
-                .format_map(locals()))
+            parser.error(f'{option_string} has unsupported value, {e}')
         setattr(namespace, self.dest, value)
 
 
@@ -391,11 +386,10 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
 
     # add subparser with description of verb extensions
     subparser = parser.add_subparsers(
-        title='{cmd_name} verbs'.format_map(locals()),
+        title=f'{cmd_name} verbs',
         description='\n'.join(verbs),
         dest=attribute,
-        help='call `{cmd_name} VERB -h` for specific help'
-             .format_map(locals())
+        help=f'call `{cmd_name} VERB -h` for specific help',
     )
     return subparser
 
@@ -445,8 +439,8 @@ def add_parser_arguments(verb_parser, extension):
         retval = extension.add_arguments(parser=verb_parser)
         if retval is not None:
             colcon_logger.error(
-                "Exception in verb extension '{extension.VERB_NAME}': "
-                'add_arguments() should return None'.format_map(locals()))
+                f"Exception in verb extension '{extension.VERB_NAME}': "
+                'add_arguments() should return None')
 
 
 def _format_pair(key, value, *, indent, align):
@@ -528,15 +522,12 @@ def verb_main(context, logger):
         rc = context.args.main(context=context)
     except RuntimeError as e:  # noqa: F841
         # only log the error message for "known" exceptions
-        logger.error(
-            '{context.command_name} {context.args.verb_name}: {e}'
-            .format_map(locals()))
+        logger.error(f'{context.command_name} {context.args.verb_name}: {e}')
         return 1
     except Exception as e:  # noqa: F841
         # log the error message and a traceback for "unexpected" exceptions
         exc = traceback.format_exc()
         logger.error(
-            '{context.command_name} {context.args.verb_name}: {e}\n{exc}'
-            .format_map(locals()))
+            f'{context.command_name} {context.args.verb_name}: {e}\n{exc}')
         return 1
     return rc

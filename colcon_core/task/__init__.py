@@ -148,7 +148,8 @@ async def check_call(
 
 
 async def run(
-    context, cmd, *, cwd=None, env=None, shell=False, use_pty=None
+    context, cmd, *, cwd=None, env=None, shell=False, use_pty=None,
+    capture_output=None
 ):
     """
     Run the command described by cmd.
@@ -163,6 +164,7 @@ async def run(
     :param env: a dictionary with environment variables
     :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
+    :param capture_output: whether to store stdout and stderr
     :returns: the result of the completed process
     :rtype subprocess.CompletedProcess
     """
@@ -176,7 +178,8 @@ async def run(
         Command(cmd, cwd=cwd, env=env, shell=shell))
     completed = await colcon_core_subprocess_run(
         cmd, stdout_callback, stderr_callback,
-        cwd=cwd, env=env, shell=shell, use_pty=use_pty)
+        cwd=cwd, env=env, shell=shell, use_pty=use_pty,
+        capture_output=capture_output)
     context.put_event_into_queue(
         CommandEnded(
             cmd, cwd=cwd, env=env, shell=shell,
@@ -218,8 +221,7 @@ def add_task_arguments(parser, task_name):
     extensions = get_task_extensions(task_name, unique_instance=True)
     for extension_name, extension in extensions.items():
         group = parser.add_argument_group(
-            title="Arguments for '{extension_name}' packages"
-            .format_map(locals()))
+            title=f"Arguments for '{extension_name}' packages")
         try:
             retval = extension.add_arguments(parser=group)
             assert retval is None, 'add_arguments() should return None'
@@ -227,9 +229,8 @@ def add_task_arguments(parser, task_name):
             # catch exceptions raised in task extension
             exc = traceback.format_exc()
             logger.error(
-                'Exception in task extension '
-                "'{extension.TASK_NAME}.{extension.PACKAGE_TYPE}': {e}\n{exc}"
-                .format_map(locals()))
+                f"Exception in task extension '{extension.TASK_NAME}."
+                f"{extension.PACKAGE_TYPE}': {e}\n{exc}")
             # skip failing extension, continue with next one
 
 

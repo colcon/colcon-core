@@ -8,12 +8,12 @@ from pathlib import Path
 import shutil
 import sys
 from sys import executable
-import sysconfig
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.python_install_path import get_python_install_path
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
 from colcon_core.subprocess import check_output
@@ -36,8 +36,7 @@ class PythonBuildTask(TaskExtensionPoint):
         pkg = self.context.pkg
         args = self.context.args
 
-        logger.info(
-            "Building Python package in '{args.path}'".format_map(locals()))
+        logger.info(f"Building Python package in '{args.path}'")
 
         try:
             env = await get_command_environment(
@@ -111,7 +110,6 @@ class PythonBuildTask(TaskExtensionPoint):
                 ]
                 if setup_py_data.get('data_files'):
                     cmd += ['install_data', '--install-dir', args.install_base]
-                self._append_install_layout(args, cmd)
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
@@ -185,9 +183,8 @@ class PythonBuildTask(TaskExtensionPoint):
         for module_name in packages:
             if module_name in sys.modules:
                 logger.warning(
-                    "Switching to 'develop' for package '{pkg.name}' while it "
-                    'is being used might result in import errors later'
-                    .format_map(locals()))
+                    f"Switching to 'develop' for package '{pkg.name}' while "
+                    'it is being used might result in import errors later')
                 break
 
         # remove previously installed files
@@ -199,8 +196,7 @@ class PythonBuildTask(TaskExtensionPoint):
             if not line.startswith(python_lib):
                 logger.debug(
                     'While undoing a previous installation files outside the '
-                    'Python library path are being ignored: {line}'
-                    .format_map(locals()))
+                    f'Python library path are being ignored: {line}')
                 continue
             if not os.path.isdir(line):
                 os.remove(line)
@@ -234,21 +230,19 @@ class PythonBuildTask(TaskExtensionPoint):
                 if package_dir[package] in package_dir:
                     package_dir_package = package_dir[package]
                     raise RuntimeError(
-                        "The package_dir contains a mapping from '{package}' "
-                        "to '{package_dir_package}' which is also a key"
-                        .format_map(locals()))
+                        f"The package_dir contains a mapping from '{package}' "
+                        f"to '{package_dir_package}' which is also a key")
                 if package_dir[package] in packages:
                     package_dir_package = package_dir[package]
                     raise RuntimeError(
-                        "The value '{package_dir_package}' in package_dir is "
-                        'also listed in packages'
-                        .format_map(locals()))
+                        f"The value '{package_dir_package}' in package_dir is "
+                        'also listed in packages')
             elif '' in package_dir:
                 items.append(os.path.join(package_dir[''], package))
             else:
                 items.append(package)
         # relative python-ish paths are allowed as entries in py_modules, see:
-        # https://docs.python.org/3.5/distutils/setupscript.html#listing-individual-modules
+        # https://docs.python.org/3.6/distutils/setupscript.html#listing-individual-modules
         py_modules = setup_py_data.get('py_modules')
         if py_modules:
             py_modules_list = [
@@ -256,8 +250,7 @@ class PythonBuildTask(TaskExtensionPoint):
             for py_module in py_modules_list:
                 if not os.path.exists(os.path.join(args.path, py_module)):
                     raise RuntimeError(
-                        "Provided py_modules '{py_module}' does not exist"
-                        .format_map(locals()))
+                        f"Provided py_modules '{py_module}' does not exist")
             items += py_modules_list
         data_files = get_data_files_mapping(
             setup_py_data.get('data_files') or [])
@@ -302,9 +295,13 @@ class PythonBuildTask(TaskExtensionPoint):
         return temp_symlinks
 
     def _get_python_lib(self, args):
-        path = sysconfig.get_path('purelib', vars={'base': args.install_base})
+        path = get_python_install_path('purelib', {'base': args.install_base})
         return os.path.relpath(path, start=args.install_base)
 
     def _append_install_layout(self, args, cmd):
+        # Debian patches sysconfig to return a path containing dist-packages
+        # instead of site-packages when using the default install scheme.
+        # TODO(sloretz) this is potentially unused now that
+        # get_python_install_path avoids the deb_system scheme.
         if 'dist-packages' in self._get_python_lib(args):
             cmd += ['--install-layout', 'deb']

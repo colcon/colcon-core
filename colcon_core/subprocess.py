@@ -48,6 +48,7 @@ async def run(
     stderr_callback: Callable[[bytes], None],
     *,
     use_pty: Optional[bool] = None,
+    capture_output: Optional[bool] = None,
     **other_popen_kwargs: Mapping[str, Any]
 ) -> subprocess.CompletedProcess:
     """
@@ -65,11 +66,28 @@ async def run(
     :param stderr_callback: the callable is invoked for every line read from
       the stderr pipe of the process
     :param use_pty: whether to use a pseudo terminal
+    :param capture_output: whether to store stdout and stderr
     :returns: the result of the completed process
     :rtype subprocess.CompletedProcess
     """
     assert callable(stdout_callback) or stdout_callback is None
     assert callable(stderr_callback) or stderr_callback is None
+
+    stdout_capture = []
+
+    def _stdout_callback(line):
+        if stdout_callback:
+            stdout_callback(line)
+        if capture_output:
+            stdout_capture.append(line)
+
+    stderr_capture = []
+
+    def _stderr_callback(line):
+        if stderr_callback:
+            stderr_callback(line)
+        if capture_output:
+            stderr_capture.append(line)
 
     # if use_pty is neither True nor False choose based on isatty of stdout
     if use_pty is None:
@@ -79,9 +97,12 @@ async def run(
         use_pty = False
 
     rc, _, _ = await _async_check_call(
-        args, stdout_callback, stderr_callback,
+        args, _stdout_callback, _stderr_callback,
         use_pty=use_pty, **other_popen_kwargs)
-    return subprocess.CompletedProcess(args, rc)
+
+    return subprocess.CompletedProcess(
+        args, rc, stdout=b''.join(stdout_capture),
+        stderr=b''.join(stderr_capture))
 
 
 async def check_output(
@@ -104,8 +125,7 @@ async def check_output(
         **other_popen_kwargs)
     if rc:
         stderr_data = stderr_data.decode(errors='replace')
-    assert not rc, \
-        'Expected {args} to pass: {stderr_data}'.format_map(locals())
+    assert not rc, f'Expected {args} to pass: {stderr_data}'
     return stdout_data
 
 

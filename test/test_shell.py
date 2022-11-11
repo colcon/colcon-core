@@ -459,5 +459,5 @@ def test_find_package_two_locations():
                 assert {'pkgA': location1} == find_installed_packages(base)
                 mock_warn.assert_called_once_with(
                     "The package 'pkgA' previously found at"
-                    " '{location1}' was found again at '{location2}'."
-                    " Ignoring '{location2}'".format_map(locals()))
+                    f" '{location1}' was found again at '{location2}'."
+                    f" Ignoring '{location2}'")

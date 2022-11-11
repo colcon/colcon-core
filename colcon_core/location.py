@@ -54,7 +54,7 @@ def set_default_config_path(*, path, env_var=None):
     _config_path = Path(str(path))
     _config_path_env_var = env_var
     config_path = get_config_path()
-    logger.info("Using config path '{config_path}'".format_map(locals()))
+    logger.info(f"Using config path '{config_path}'")
 
 
 def _reset_config_path_globals():
@@ -202,7 +202,7 @@ def create_log_path(verb_name):
             path = path_with_suffix
             break
 
-    logger.info("Using log path '{path}'".format_map(locals()))
+    logger.info(f"Using log path '{path}'")
 
     # ensure the base log path has an ignore marker file
     # to avoid recursively crawling through log directories
@@ -211,10 +211,9 @@ def create_log_path(verb_name):
     ignore_marker.touch()
 
     # create latest symlinks
+    _create_symlink(path, path.parent / f'latest_{verb_name}')
     _create_symlink(
-        path, path.parent / 'latest_{verb_name}'.format_map(locals()))
-    _create_symlink(
-        path.parent / 'latest_{verb_name}'.format_map(locals()),
+        path.parent / f'latest_{verb_name}',
         path.parent / 'latest')
 
 

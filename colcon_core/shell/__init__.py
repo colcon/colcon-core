@@ -300,13 +300,13 @@ async def get_command_environment(task_name, build_base, dependencies):
             except NotImplementedError:
                 # skip extension, continue with next one
                 logger.debug(
-                    "Skip shell extension '{extension.SHELL_NAME}' for "
-                    'command environment'.format_map(locals()))
+                    f"Skip shell extension '{extension.SHELL_NAME}' for "
+                    'command environment')
             except SkipExtensionException as e:  # noqa: F841
                 # skip extension, continue with next one
                 logger.info(
-                    "Skip shell extension '{extension.SHELL_NAME}' for "
-                    'command environment: {e}'.format_map(locals()))
+                    f"Skip shell extension '{extension.SHELL_NAME}' for "
+                    f'command environment: {e}')
             except (CancelledError, RuntimeError):
                 # re-raise same exception to handle it in the executor
                 # without a traceback
@@ -316,8 +316,7 @@ async def get_command_environment(task_name, build_base, dependencies):
                 exc = traceback.format_exc()
                 logger.error(
                     'Exception in shell extension '
-                    "'{extension.SHELL_NAME}': {e}\n{exc}"
-                    .format_map(locals()))
+                    f"'{extension.SHELL_NAME}': {e}\n{exc}")
                 # skip failing extension, continue with next one
     raise RuntimeError(
         'Could not find a shell extension for the command environment')
@@ -345,7 +344,7 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
             line_replaced = line.decode(encoding=encoding, errors='replace')
             logger.warning(
                 'Failed to decode line from the environment using the '
-                "encoding '{encoding}': {line_replaced}".format_map(locals()))
+                f"encoding '{encoding}': {line_replaced}")
             continue
         parts = line.split('=', 1)
         if sys.platform != 'win32':
@@ -409,8 +408,7 @@ def create_environment_hook(
                     exc = traceback.format_exc()
                     logger.error(
                         'Exception in shell extension '
-                        "'{extension.SHELL_NAME}': {e}\n{exc}"
-                        .format_map(locals()))
+                        f"'{extension.SHELL_NAME}': {e}\n{exc}")
                     # skip failing extension, continue with next one
                     continue
                 hooks.append(hook)
@@ -428,8 +426,7 @@ def create_environment_hook(
                     exc = traceback.format_exc()
                     logger.error(
                         'Exception in shell extension '
-                        "'{extension.SHELL_NAME}': {e}\n{exc}"
-                        .format_map(locals()))
+                        f"'{extension.SHELL_NAME}': {e}\n{exc}")
                     # skip failing extension, continue with next one
                     continue
                 hooks.append(hook)
@@ -474,8 +471,8 @@ def get_colcon_prefix_path(*, skip=None):
         if not os.path.exists(path):
             if path not in _get_colcon_prefix_path_warnings:
                 logger.warning(
-                    "The path '{path}' in the environment variable "
-                    "COLCON_PREFIX_PATH doesn't exist".format_map(locals()))
+                    f"The path '{path}' in the environment variable "
+                    "COLCON_PREFIX_PATH doesn't exist")
             _get_colcon_prefix_path_warnings.add(path)
             continue
         prefix_path.append(path)
@@ -551,8 +548,7 @@ def find_installed_packages_in_environment():
         prefix_path = Path(prefix_path)
         pkgs = find_installed_packages(prefix_path)
         if pkgs is None:
-            logger.debug(
-                "Ignoring prefix path '{prefix_path}'".format_map(locals()))
+            logger.debug(f"Ignoring prefix path '{prefix_path}'")
             continue
         for pkg_name in sorted(pkgs.keys()):
             # ignore packages with the same name in "lower" prefix path
@@ -635,16 +631,16 @@ def find_installed_packages(install_base: Path):
         for pkg, path in ext_packages.items():
             if not path.exists():
                 logger.warning(
-                    "Ignoring '{pkg}' found at '{path}' because the path"
-                    ' does not exist.'.format_map(locals()))
+                    f"Ignoring '{pkg}' found at '{path}' because the path"
+                    ' does not exist.')
                 continue
             if pkg in packages and not path.samefile(packages[pkg]):
                 # Same package found at different paths in the same prefix
                 first_path = packages[pkg]
                 logger.warning(
-                    "The package '{pkg}' previously found at "
-                    "'{first_path}' was found again at '{path}'."
-                    " Ignoring '{path}'".format_map(locals()))
+                    f"The package '{pkg}' previously found at "
+                    f"'{first_path}' was found again at '{path}'."
+                    f" Ignoring '{path}'")
             else:
                 packages[pkg] = path
 
