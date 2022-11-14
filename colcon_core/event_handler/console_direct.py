@@ -27,20 +27,23 @@ class ConsoleDirectEventHandler(EventHandlerExtensionPoint):
         satisfies_version(
             EventHandlerExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
         self.enabled = ConsoleDirectEventHandler.ENABLED_BY_DEFAULT
+        self._handlers = {
+            StdoutLine: sys.stdout,
+            StderrLine: sys.stderr,
+        }
 
     def __call__(self, event):  # noqa: D102
         data = event[0]
 
-        if isinstance(data, StdoutLine):
-            if isinstance(data.line, bytes):
-                sys.stdout.buffer.write(data.line)
-            else:
-                sys.stdout.write(data.line)
-            sys.stdout.flush()
-
-        elif isinstance(data, StderrLine):
-            if isinstance(data.line, bytes):
-                sys.stderr.buffer.write(data.line)
-            else:
-                sys.stderr.write(data.line)
-            sys.stderr.flush()
+        for event_type, writable in self._handlers.items():
+            if isinstance(data, event_type):
+                try:
+                    if isinstance(data.line, bytes):
+                        writable.buffer.write(data.line)
+                    else:
+                        writable.write(data.line)
+                    writable.flush()
+                except BrokenPipeError:
+                    self._handlers.pop(event_type)
+                    raise
+                return
