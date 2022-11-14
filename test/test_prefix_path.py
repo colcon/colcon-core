@@ -40,16 +40,6 @@ def test_get_prefix_path_extensions():
 
 
 def test_get_chained_prefix_path():
-    # empty environment variable
-    with EnvironmentContext(COLCON_PREFIX_PATH=''):
-        prefix_path = get_chained_prefix_path()
-        assert prefix_path == []
-
-    # extra path separator
-    with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep):
-        prefix_path = get_chained_prefix_path(skip='/path/to/skip')
-        assert prefix_path == []
-
     ColconPrefixPath.PREFIX_PATH_NAME = 'colcon'
     with patch(
         'colcon_core.prefix_path.get_prefix_path_extensions',
@@ -57,6 +47,16 @@ def test_get_chained_prefix_path():
             100: {'colcon': ColconPrefixPath()},
         }
     ):
+        # empty environment variable
+        with EnvironmentContext(COLCON_PREFIX_PATH=''):
+            prefix_path = get_chained_prefix_path()
+            assert prefix_path == []
+
+        # extra path separator
+        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep):
+            prefix_path = get_chained_prefix_path(skip='/path/to/skip')
+            assert prefix_path == []
+
         with TemporaryDirectory(prefix='test_colcon_') as basepath:
             basepath = Path(basepath)
             with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
