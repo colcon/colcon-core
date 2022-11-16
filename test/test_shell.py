@@ -4,6 +4,7 @@
 from collections import OrderedDict
 import os
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -124,7 +125,8 @@ def test_get_command_environment():
 
 def test_get_environment_variables():
     cmd = [
-        'echo', 'FOO\nNAME=value\n\nSOMETHING\nNAME2=value with spaces']
+        sys.executable, '-c',
+        r'print("FOO\nNAME=value\n\nSOMETHING\nNAME2=value with spaces")']
 
     coroutine = get_environment_variables(cmd, shell=False)
     env = run_until_complete(coroutine)
