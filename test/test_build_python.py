@@ -99,3 +99,62 @@ def test_build_package():
             assert 'Name: test-package' in pkg_info.read_text().splitlines()
     finally:
         event_loop.close()
+
+
+def test_build_package_libexec_pattern():
+    event_loop = new_event_loop()
+    asyncio.set_event_loop(event_loop)
+    try:
+        with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
+            tmp_path = Path(tmp_path_str)
+            python_build_task = PythonBuildTask()
+            package = PackageDescriptor(tmp_path / 'src')
+            package.name = 'test_package'
+            package.type = 'python'
+
+            context = TaskContext(
+                pkg=package,
+                args=SimpleNamespace(
+                    path=str(tmp_path / 'src'),
+                    build_base=str(tmp_path / 'build'),
+                    install_base=str(tmp_path / 'install'),
+                    symlink_install=False,
+                ),
+                dependencies={}
+            )
+            python_build_task.set_context(context=context)
+
+            pkg = python_build_task.context.pkg
+
+            pkg.path.mkdir()
+            (pkg.path / 'setup.py').write_text(
+                'from setuptools import setup\n'
+                'setup()\n'
+            )
+            (pkg.path / 'setup.cfg').write_text(
+                '[metadata]\n'
+                'name = test_package\n'
+                '[options]\n'
+                'packages = find:\n'
+                '[options.entry_points]\n'
+                'console_scripts =\n'
+                '    my_command = my_module:main\n'
+                '[develop]\n'
+                'script-dir=$base/lib/test_package\n'
+                '[install]\n'
+                'install-scripts=$base/lib/test_package\n'
+            )
+            (pkg.path / 'my_module').mkdir()
+            (pkg.path / 'my_module' / '__init__.py').write_text(
+                'def main():\n'
+                '    print("Hello, World!")\n'
+            )
+
+            rc = event_loop.run_until_complete(python_build_task.build())
+            assert not rc
+
+            install_base = Path(python_build_task.context.args.install_base)
+            assert list(install_base.rglob(
+                '**/lib/test_package/my_command*'))
+    finally:
+        event_loop.close()
