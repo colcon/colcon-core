@@ -104,6 +104,7 @@ setupscript
 setuptools
 shlex
 sigint
+sitecustomize
 sloretz
 stacklevel
 staticmethod
