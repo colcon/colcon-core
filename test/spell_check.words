@@ -41,6 +41,7 @@ functools
 getcategory
 getpid
 getpreferredencoding
+getsignal
 github
 hardcodes
 hookimpl

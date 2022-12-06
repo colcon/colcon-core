@@ -97,7 +97,14 @@ def test_log_path():
     assert get_log_path() == Path(log_base_path) / subdirectory
 
 
-def test_create_log_path():
+@pytest.fixture
+def reset_log_path_creation_global():
+    yield
+    from colcon_core import location
+    location._reset_log_path_creation_global()
+
+
+def test_create_log_path(reset_log_path_creation_global):
     subdirectory = 'sub'
     with TemporaryDirectory(prefix='test_colcon_') as log_path:
         log_path = Path(log_path)
