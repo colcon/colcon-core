@@ -77,12 +77,17 @@ def create_environment_scripts(
       by :function:`create_environment_hooks` are used
     :param list additional_hooks: Any additional hooks which should be
       referenced by the generated scripts
+    :returns: iterable of generated file paths
+    :rtype: Iterable
     """
     prefix_path = Path(args.install_base)
-    create_environment_scripts_only(
+    files = []
+    files += create_environment_scripts_only(
         prefix_path, pkg, default_hooks=default_hooks,
         additional_hooks=additional_hooks)
-    create_file_with_runtime_dependencies(prefix_path, pkg)
+    files.append(
+        create_file_with_runtime_dependencies(prefix_path, pkg))
+    return files
 
 
 def create_environment_scripts_only(
@@ -97,6 +102,8 @@ def create_environment_scripts_only(
       by :function:`create_environment_hooks` are used
     :param list additional_hooks: Any additional hooks which should be
       referenced by the generated scripts
+    :returns: iterable of generated script paths
+    :rtype: Iterable
     """
     logger.log(1, 'create_environment_scripts_only(%s)', pkg.name)
 
@@ -123,15 +130,19 @@ def create_environment_scripts_only(
 
         hook_tuples.append((hook, hook_args))
 
+    all_scripts = []
     extensions = get_shell_extensions()
     for priority in extensions.keys():
         extensions_same_prio = extensions[priority]
         for extension in extensions_same_prio.values():
             try:
-                retval = extension.create_package_script(
+                scripts = extension.create_package_script(
                     prefix_path, pkg.name, hook_tuples)
-                assert retval is None, \
-                    'create_package_script() should return None'
+                # TODO: Disallow 'None' in v3.0 of ShellExtensionPoint
+                if scripts is not None:
+                    assert isinstance(scripts, list), \
+                        'create_package_script() should return a list'
+                    all_scripts += scripts
             except Exception as e:  # noqa: F841
                 # catch exceptions raised in shell extension
                 exc = traceback.format_exc()
@@ -139,6 +150,8 @@ def create_environment_scripts_only(
                     f"Exception in shell extension '{extension.SHELL_NAME}': "
                     f'{e}\n{exc}')
                 # skip failing extension, continue with next one
+
+    return all_scripts
 
 
 def create_file_with_runtime_dependencies(prefix_path, pkg):
@@ -150,12 +163,15 @@ def create_file_with_runtime_dependencies(prefix_path, pkg):
 
     :param prefix_path: The prefix path
     :param pkg: The package descriptor
+    :returns: generated file path
+    :rtype: Path
     """
     path = prefix_path / get_relative_package_index_path() / pkg.name
     logger.log(1, 'create_file_with_runtime_dependencies(%s)', path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         os.pathsep.join(sorted(pkg.dependencies.get('run', set()))))
+    return path
 
 
 def create_environment_hooks(prefix_path, pkg_name):

@@ -17,10 +17,10 @@ class DsvShell(ShellExtensionPoint):
 
     def __init__(self):  # noqa: D107
         super().__init__()
-        satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^2.0')
+        satisfies_version(ShellExtensionPoint.EXTENSION_POINT_VERSION, '^2.2')
 
     def create_prefix_script(self, prefix_path, merge_install):  # noqa: D102
-        pass
+        return []
 
     def create_package_script(  # noqa: D102
         self, prefix_path, pkg_name, hooks
@@ -33,6 +33,7 @@ class DsvShell(ShellExtensionPoint):
             {
                 'hooks': hooks,
             })
+        return [pkg_env_path]
 
     def create_hook_set_value(  # noqa: D102
         self, env_hook_name, prefix_path, pkg_name, name, value,

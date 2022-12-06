@@ -215,10 +215,12 @@ class BuildVerb(VerbExtensionPoint):
             extensions_same_prio = extensions[priority]
             for extension in extensions_same_prio.values():
                 try:
-                    retval = extension.create_prefix_script(
+                    scripts = extension.create_prefix_script(
                         Path(install_base), merge_install)
-                    assert retval is None, \
-                        'create_prefix_script() should return None'
+                    # TODO: Disallow 'None' in v3.0 of ShellExtensionPoint
+                    if scripts is not None:
+                        assert isinstance(scripts, list), \
+                            'create_prefix_script() should return a list'
                 except Exception as e:  # noqa: F841
                     # catch exceptions raised in shell extension
                     exc = traceback.format_exc()
