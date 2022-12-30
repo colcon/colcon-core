@@ -16,7 +16,7 @@ jobs:
         with:
           repository: colcon/ci
       - id: load
-        run: echo "::set-output name=strategy::$(echo $(cat strategy.json))"
+        run: echo "strategy=$(echo $(cat strategy.json))" >> $GITHUB_OUTPUT
 
   pytest:
     needs: [setup]
