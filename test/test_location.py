@@ -36,16 +36,14 @@ def test_config_path():
     config_path = '/some/path'.replace('/', os.sep)
     with patch('colcon_core.location.logger.info') as info:
         set_default_config_path(path=config_path)
-        info.assert_called_once_with(
-            "Using config path '{config_path}'".format_map(locals()))
+        info.assert_called_once_with(f"Using config path '{config_path}'")
 
     # use config path if environment variable is not set
     config_path_env_var = 'TEST_COLCON_CONFIG_PATH'
     with patch('colcon_core.location.logger.info') as info:
         set_default_config_path(
             path=config_path, env_var=config_path_env_var)
-        info.assert_called_once_with(
-            "Using config path '{config_path}'".format_map(locals()))
+        info.assert_called_once_with(f"Using config path '{config_path}'")
 
     # use environment variable when set
     config_path = '/other/path'.replace('/', os.sep)
@@ -99,7 +97,14 @@ def test_log_path():
     assert get_log_path() == Path(log_base_path) / subdirectory
 
 
-def test_create_log_path():
+@pytest.fixture
+def reset_log_path_creation_global():
+    yield
+    from colcon_core import location
+    location._reset_log_path_creation_global()
+
+
+def test_create_log_path(reset_log_path_creation_global):
     subdirectory = 'sub'
     with TemporaryDirectory(prefix='test_colcon_') as log_path:
         log_path = Path(log_path)

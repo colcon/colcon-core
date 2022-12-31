@@ -154,7 +154,14 @@ async def job8():
     ran_jobs.append('job8')
 
 
-def test_sequential_keyboard_interrupt():
+@pytest.fixture
+def restore_sigint_handler():
+    handler = signal.getsignal(signal.SIGINT)
+    yield
+    signal.signal(signal.SIGINT, handler)
+
+
+def test_sequential_keyboard_interrupt(restore_sigint_handler):
     global ran_jobs
 
     if sys.platform == 'win32':

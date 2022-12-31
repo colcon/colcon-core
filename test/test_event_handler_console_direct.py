@@ -6,12 +6,13 @@ from unittest.mock import patch
 from colcon_core.event.output import StderrLine
 from colcon_core.event.output import StdoutLine
 from colcon_core.event_handler.console_direct import ConsoleDirectEventHandler
+import pytest
 
 
 def test_console_direct():
-    extension = ConsoleDirectEventHandler()
-
     with patch('sys.stdout') as stdout:
+        extension = ConsoleDirectEventHandler()
+
         event = StdoutLine(b'bytes line')
         extension((event, None))
         assert stdout.buffer.write.call_count == 1
@@ -26,6 +27,8 @@ def test_console_direct():
         assert stdout.write.call_count == 0
 
     with patch('sys.stderr') as stderr:
+        extension = ConsoleDirectEventHandler()
+
         event = StderrLine(b'bytes line')
         extension((event, None))
         assert stderr.buffer.write.call_count == 1
@@ -38,3 +41,20 @@ def test_console_direct():
         extension(('unknown', None))
         assert stderr.buffer.write.call_count == 0
         assert stderr.write.call_count == 0
+
+    with patch('sys.stdout') as stdout:
+        stdout.buffer.write.side_effect = BrokenPipeError()
+        stdout.write.side_effect = BrokenPipeError()
+
+        extension = ConsoleDirectEventHandler()
+
+        event = StdoutLine(b'bytes line')
+        with pytest.raises(BrokenPipeError):
+            extension((event, None))
+        assert stdout.buffer.write.call_count == 1
+        event = StdoutLine(b'bytes line')
+        extension((event, None))
+        assert stdout.buffer.write.call_count == 1
+        event = StdoutLine('string line')
+        extension((event, None))
+        assert stdout.write.call_count == 0

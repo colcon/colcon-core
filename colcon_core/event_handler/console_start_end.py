@@ -34,10 +34,8 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
         data = event[0]
 
         if isinstance(data, JobStarted):
-            print(
-                'Starting >>> {data.identifier}'.format_map(locals()),
-                flush=True)
             self._start_times[data.identifier] = time.monotonic()
+            print(f'Starting >>> {data.identifier}', flush=True)
 
         elif isinstance(data, TestFailure):
             job = event[1]
@@ -48,22 +46,19 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
                 time.monotonic() - self._start_times[data.identifier]
             duration_string = format_duration(duration)
             if not data.rc:
-                msg = 'Finished <<< {data.identifier} [{duration_string}]' \
-                    .format_map(locals())
+                msg = f'Finished <<< {data.identifier} [{duration_string}]'
                 job = event[1]
                 if job in self._with_test_failures:
                     msg += '\t[ with test failures ]'
                 writable = sys.stdout
 
             elif data.rc == SIGINT_RESULT:
-                msg = 'Aborted  <<< {data.identifier} [{duration_string}]' \
-                    .format_map(locals())
+                msg = f'Aborted  <<< {data.identifier} [{duration_string}]'
                 writable = sys.stdout
 
             else:
-                msg = 'Failed   <<< {data.identifier} ' \
-                    '[{duration_string}, exited with code {data.rc}]' \
-                    .format_map(locals())
+                msg = f'Failed   <<< {data.identifier} ' \
+                    f'[{duration_string}, exited with code {data.rc}]'
                 writable = sys.stderr
 
             print(msg, file=writable, flush=True)

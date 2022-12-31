@@ -77,8 +77,7 @@ def decorate_argument_parser(parser):
             exc = traceback.format_exc()
             logger.error(
                 'Exception in argument parser decorator extension '
-                "'{extension.ARGUMENT_PARSER_DECORATOR_NAME}': {e}\n{exc}"
-                .format_map(locals()))
+                f"'{extension.ARGUMENT_PARSER_DECORATOR_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
         else:
             parser = decorated_parser

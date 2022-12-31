@@ -302,8 +302,8 @@ def handle_dsv_types_except_source(type_, remainder, prefix):
                 type_ == DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS and
                 not os.path.exists(value)
             ):
-                comment = 'skip extending {env_name} with not existing path: ' \
-                    '{value}'.format_map(locals())
+                comment = f'skip extending {env_name} with not existing ' \
+                    f'path: {value}'
                 if _include_comments():
                     commands.append(
                         FORMAT_STR_COMMENT_LINE.format_map({'comment': comment}))

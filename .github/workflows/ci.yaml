@@ -12,11 +12,11 @@ jobs:
       strategy: ${{steps.load.outputs.strategy}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           repository: colcon/ci
       - id: load
-        run: echo "::set-output name=strategy::$(echo $(cat strategy.json))"
+        run: echo "strategy=$(echo $(cat strategy.json))" >> $GITHUB_OUTPUT
 
   pytest:
     needs: [setup]
@@ -24,12 +24,12 @@ jobs:
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.python}}
       - uses: colcon/ci@v1
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
 
   bootstrap:
     needs: [setup]
@@ -37,8 +37,8 @@ jobs:
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{matrix.python}}
       - name: Install dependencies

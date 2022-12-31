@@ -33,7 +33,7 @@ class Command:
         The message includes the working directory, modifications to
         environment variable and the command including the arguments.
         """
-        string = "Invoking command in '{self.cwd}': ".format_map(locals())
+        string = f"Invoking command in '{self.cwd}': "
         string += self._get_env_string()
         string += self._get_cmd_string()
         return string
@@ -77,7 +77,7 @@ class Command:
         if env:
             for name in sorted(env.keys()):
                 value = env[name]
-                string += '{name}={value} '.format_map(locals())
+                string += f'{name}={value} '
         return string
 
     def _get_cmd_string(self):
@@ -106,8 +106,8 @@ class CommandEnded(Command):
 
     def to_string(self):
         """Get a string describing the invoked command and its return code."""
-        string = "Invoked command in '{self.cwd}' returned " \
-            "'{self.returncode}': ".format_map(locals())
+        string = f"Invoked command in '{self.cwd}' returned " \
+            f"'{self.returncode}': "
         string += self._get_env_string()
         string += self._get_cmd_string()
         return string

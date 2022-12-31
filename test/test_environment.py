@@ -28,8 +28,8 @@ class Extension1(EnvironmentExtensionPoint):
 
     def create_environment_hooks(self, prefix_path, pkg_name):
         return [
-            '{prefix_path}/share/{pkg_name}/hook/one.ext'.format_map(locals()),
-            '{prefix_path}/share/{pkg_name}/hook/two.ext'.format_map(locals()),
+            f'{prefix_path}/share/{pkg_name}/hook/one.ext',
+            f'{prefix_path}/share/{pkg_name}/hook/two.ext',
         ]
 
 
@@ -105,10 +105,8 @@ def test_create_environment_hooks():
             with patch('colcon_core.environment.logger.error') as error:
                 hooks = create_environment_hooks(basepath, 'pkg_name')
     assert len(hooks) == 2
-    assert hooks[0] == '{basepath}/share/pkg_name/hook/one.ext' \
-        .format_map(locals())
-    assert hooks[1] == '{basepath}/share/pkg_name/hook/two.ext' \
-        .format_map(locals())
+    assert hooks[0] == f'{basepath}/share/pkg_name/hook/one.ext'
+    assert hooks[1] == f'{basepath}/share/pkg_name/hook/two.ext'
     # the raised exception is catched and results in an error message
     assert error.call_count == 1
     assert len(error.call_args[0]) == 1

@@ -45,7 +45,8 @@ class PythonPackageAugmentation(PackageAugmentationExtensionPoint):
 
         config = get_configuration(setup_cfg)
 
-        version = config.get('metadata', {}).get('version')
+        metadata = config.get('metadata', {})
+        version = metadata.get('version')
         desc.metadata['version'] = version
 
         options = config.get('options', {})
@@ -58,6 +59,11 @@ class PythonPackageAugmentation(PackageAugmentationExtensionPoint):
             return options
 
         desc.metadata['get_python_setup_options'] = getter
+
+        maintainers = _extract_maintainers_with_emails(metadata)
+        if maintainers:
+            desc.metadata.setdefault('maintainers', [])
+            desc.metadata['maintainers'] += maintainers
 
 
 def extract_dependencies(options):
@@ -126,8 +132,7 @@ def create_dependency_descriptor(requirement_string):
             metadata['version_lt'] = _next_incompatible_version(version)
         else:
             logger.warning(
-                "Ignoring unknown symbol '{symbol}' in '{requirement}'"
-                .format_map(locals()))
+                f"Ignoring unknown symbol '{symbol}' in '{requirement}'")
     return DependencyDescriptor(requirement.name, metadata=metadata)
 
 
@@ -156,3 +161,24 @@ def _next_incompatible_version(version):
     if len(version) == 1:
         version.append(0)
     return '.'.join(map(str, version))
+
+
+def _extract_maintainers_with_emails(metadata):
+    if 'maintainer' in metadata:
+        maintainer = metadata['maintainer']
+        maintainer_email = metadata.get('maintainer_email')
+    else:
+        # If no explicit maintainer is given then it is likely that the
+        # original author is maintaining the package following python
+        # recommendations
+        # https://packaging.python.org/en/latest/specifications/core-metadata/#maintainer
+        maintainer = metadata.get('author')
+        maintainer_email = metadata.get('author_email')
+
+    # We're only interested in entries with emails
+    if maintainer and maintainer_email:
+        maintainers = [
+            (m[0].strip(), m[1].strip()) for m in zip(
+                maintainer.split(','),
+                maintainer_email.split(','))]
+        return ['{} <{}>'.format(*m) for m in maintainers]
