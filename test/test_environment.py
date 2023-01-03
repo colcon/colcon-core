@@ -85,7 +85,7 @@ def test_create_environment_scripts():
             assert len(error.call_args[0]) == 1
             assert error.call_args[0][0].startswith(
                 "Exception in shell extension 'extension3': "
-                'create_package_script() should return None\n')
+                'create_package_script() should return a list\n')
             # check for correct hooks argument
             mock = extensions[100]['extension4'].create_package_script
             assert mock.call_count == 1

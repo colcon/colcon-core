@@ -41,7 +41,7 @@ class ShellExtensionPoint:
     """
 
     """The version of the shell extension interface."""
-    EXTENSION_POINT_VERSION = '2.1'
+    EXTENSION_POINT_VERSION = '2.2'
 
     """
     The default priority of shell extensions.
@@ -133,6 +133,8 @@ class ShellExtensionPoint:
         :param Path prefix_path: The path of the install prefix
         :param bool merge_install: The flag if all packages share the same
           install prefix
+        :returns: The relative paths to the created scripts
+        :rtype: list
         """
         raise NotImplementedError()
 
@@ -168,6 +170,8 @@ class ShellExtensionPoint:
         :param Path prefix_path: The package specific install prefix
         :param str pkg_name: The package name
         :param list hooks: The relative paths to the hook scripts
+        :returns: The relative paths to the created scripts
+        :rtype: list
         """
         raise NotImplementedError()
 
