@@ -141,12 +141,12 @@ def test_get_first_line_doc():
     assert get_first_line_doc(no_doc) == ''
 
     def whitespace_doc():
-        """ """
+        """ """  # noqa: D419
     assert get_first_line_doc(whitespace_doc) == ''
 
     def empty_lines_doc():
         """
-        """
+        """  # noqa: D419
     assert get_first_line_doc(empty_lines_doc) == ''
 
 
