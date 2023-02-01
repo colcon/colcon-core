@@ -3,10 +3,19 @@
 
 import argparse
 import sys
+import warnings
 
-from colcon_core.argument_parser.type_collector import SuppressTypeConversions
-from colcon_core.argument_parser.type_collector import TypeCollectorDecorator
 import pytest
+
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        'ignore', message='.*deprecated.*', category=UserWarning,
+        module='colcon_core.argument_parser.type_collector')
+
+    from colcon_core.argument_parser.type_collector \
+        import SuppressTypeConversions  # noqa: E402
+    from colcon_core.argument_parser.type_collector \
+        import TypeCollectorDecorator  # noqa: E402
 
 
 class _RaisingArgumentParser(argparse.ArgumentParser):

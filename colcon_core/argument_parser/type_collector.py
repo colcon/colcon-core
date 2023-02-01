@@ -1,11 +1,18 @@
 # Copyright 2021 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import warnings
+
 from colcon_core.argument_parser import ArgumentParserDecorator
 
 
 class TypeCollectorDecorator(ArgumentParserDecorator):
     """Collect the type conversions of arguments."""
+
+    warnings.warn(
+        "'colcon_core.argument_parser.type_collector."
+        "TypeCollectorDecorator' has been deprecated",
+        stacklevel=2)
 
     def __init__(self, parser, **kwargs):
         """
@@ -61,6 +68,12 @@ class SuppressTypeConversions:
     conversion function (`str()`) in place of the original conversion, then
     restores the original conversion when exiting.
     """
+
+    warnings.warn(
+        "'colcon_core.argument_parser.type_collector."
+        "SuppressTypeConversions' has been deprecated, use 'colcon_core."
+        "argument_parser.action_collector.SuppressTypeConversions' "
+        'instead', stacklevel=2)
 
     def __init__(self, parsers, types_to_omit=None):
         """
