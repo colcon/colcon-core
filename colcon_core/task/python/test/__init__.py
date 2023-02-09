@@ -3,7 +3,6 @@
 
 import re
 import traceback
-import warnings
 
 from colcon_core.entry_point import load_entry_points
 from colcon_core.logging import colcon_logger
@@ -218,10 +217,6 @@ def has_test_dependency(setup_py_data, name):
       False otherwise
     :rtype: bool
     """
-    warnings.warn(
-        "'colcon_core.task.python.test.has_test_dependency()' "
-        "has been deprecated, use dependencies['test'] from the "
-        'associated package descriptor instead', stacklevel=2)
     tests_require = extract_dependencies(setup_py_data).get('test')
     for d in tests_require or []:
         # the name might be followed by a version
