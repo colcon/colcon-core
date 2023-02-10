@@ -10,6 +10,7 @@ from colcon_core.event.test import TestFailure
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.task import run
+from colcon_core.task.python.test import has_test_dependency
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
 from pkg_resources import parse_version
@@ -46,8 +47,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             help='Generate coverage information')
 
     def match(self, context, env, setup_py_data):  # noqa: D102
-        test_deps = context.pkg.dependencies.get('test') or set()
-        return 'pytest' in test_deps
+        return has_test_dependency(setup_py_data, 'pytest')
 
     async def step(self, context, env, setup_py_data):  # noqa: D102
         cmd = [sys.executable, '-m', 'pytest']
@@ -71,10 +71,9 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             ]
         env = dict(env)
 
-        test_deps = context.pkg.dependencies.get('test') or set()
         if (
             context.args.pytest_with_coverage or
-            'pytest-cov' in test_deps
+            has_test_dependency(setup_py_data, 'pytest-cov')
         ):
             try:
                 from pytest_cov import __version__ as pytest_cov_version
