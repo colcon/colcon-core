@@ -211,7 +211,7 @@ class TestVerb(VerbExtensionPoint):
 
             job = Job(
                 identifier=pkg.name,
-                dependencies=set(recursive_dependencies.keys()),
+                dependencies=set(),
                 task=extension, task_context=task_context)
 
             jobs[pkg.name] = job
