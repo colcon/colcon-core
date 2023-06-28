@@ -16,7 +16,7 @@ from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.verb import VerbExtensionPoint
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(VerbExtensionPoint):
@@ -37,7 +37,7 @@ class Extension3(VerbExtensionPoint):
 
 
 def test_main():
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
         with patch(
@@ -59,7 +59,7 @@ def test_main():
                 main(argv=argv + ['--log-level', 'info'])
 
                 with patch(
-                    'colcon_core.command.load_entry_points',
+                    'colcon_core.command.load_extension_points',
                     return_value={
                         'key1': EnvironmentVariable('name', 'description'),
                         'key2': EnvironmentVariable(
@@ -83,7 +83,7 @@ def test_main():
 
 
 def test_create_parser():
-    with EntryPointContext():
+    with ExtensionPointContext():
         parser = create_parser('colcon_core.environment_variable')
 
     parser.add_argument('--foo', nargs='*', type=str.lstrip)
@@ -100,7 +100,7 @@ def test_create_parser():
 
     argv = sys.argv
     sys.argv = ['/some/path/prog_name/__main__.py'] + sys.argv[1:]
-    with EntryPointContext():
+    with ExtensionPointContext():
         parser = create_parser('colcon_core.environment_variable')
     sys.argv = argv
     assert parser.prog == 'prog_name'

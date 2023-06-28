@@ -4,7 +4,7 @@
 import re
 import traceback
 
-from colcon_core.entry_point import load_entry_points
+from colcon_core.extension_point import load_extension_points
 from colcon_core.logging import colcon_logger
 from colcon_core.package_augmentation.python import extract_dependencies
 from colcon_core.plugin_system import get_first_line_doc
@@ -194,7 +194,7 @@ def get_python_testing_step_extension(step_name):
     :returns: A unique instance of the extension, otherwise None
     """
     group_name = 'colcon_core.python_testing'
-    extension_types = load_entry_points(group_name)
+    extension_types = load_extension_points(group_name)
     extension_names = list(extension_types.keys())
     if step_name not in extension_names:
         return None

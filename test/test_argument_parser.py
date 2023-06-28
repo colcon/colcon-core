@@ -11,7 +11,7 @@ from colcon_core.argument_parser import decorate_argument_parser
 from colcon_core.argument_parser import get_argument_parser_extensions
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(ArgumentParserDecoratorExtensionPoint):
@@ -23,7 +23,7 @@ class Extension2(ArgumentParserDecoratorExtensionPoint):
 
 
 def test_get_argument_parser_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_argument_parser_extensions()
         assert ['extension2', 'extension1'] == \
             list(extensions.keys())
@@ -42,7 +42,7 @@ def decorate_argument_parser_mock(*, parser):
 
 def test_decorate_argument_parser():
     parser = ArgumentParser()
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_argument_parser_extensions()
 
         # one invalid return value, one not implemented

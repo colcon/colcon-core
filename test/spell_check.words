@@ -3,6 +3,7 @@ apache
 argcomplete
 argparse
 asyncio
+attrs
 autouse
 basepath
 bazqux

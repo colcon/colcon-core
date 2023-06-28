@@ -13,8 +13,8 @@ from colcon_core.prefix_path import PrefixPathExtensionPoint
 from colcon_core.prefix_path.colcon import ColconPrefixPath
 import pytest
 
-from .entry_point_context import EntryPointContext
 from .environment_context import EnvironmentContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(PrefixPathExtensionPoint):
@@ -32,7 +32,7 @@ def test_extension_interface():
 
 
 def test_get_prefix_path_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_prefix_path_extensions()
     assert list(extensions.keys()) == [100, 90]
     assert list(extensions[100].keys()) == ['extension2']
@@ -92,7 +92,7 @@ def test_get_chained_prefix_path():
                 assert prefix_path == [str(basepath)]
                 assert warn.call_count == 0
 
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_prefix_path_extensions()
 
         # one invalid return value, one not implemented
