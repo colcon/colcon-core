@@ -16,7 +16,7 @@ from colcon_core.package_selection import PackageSelectionExtensionPoint
 from colcon_core.package_selection import select_package_decorators
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(PackageSelectionExtensionPoint):
@@ -28,7 +28,7 @@ class Extension2(PackageSelectionExtensionPoint):
 
 
 def test_get_package_selection_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_selection_extensions()
         assert ['extension1', 'extension2'] == list(extensions.keys())
 
@@ -39,7 +39,7 @@ def add_dummy_arguments(parser):
 
 def test__add_package_selection_arguments():
     parser = Mock()
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_selection_extensions()
 
         # invalid return value
@@ -108,7 +108,7 @@ def test__check_package_selection_parameters():
     args = Mock()
     pkg_names = Mock()
 
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_selection_extensions()
 
         # nothing wrong with the arguments
@@ -161,7 +161,7 @@ def test_select_package_decorators():
     deco2.selected = True
     decos = [deco1, deco2]
 
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_selection_extensions()
 
         # raise exception

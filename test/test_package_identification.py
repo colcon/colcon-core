@@ -15,7 +15,7 @@ from colcon_core.package_identification \
     import PackageIdentificationExtensionPoint
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(PackageIdentificationExtensionPoint):
@@ -35,7 +35,7 @@ class Extension4(PackageIdentificationExtensionPoint):
 
 
 def test_get_package_identification_extensions():
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):
@@ -61,7 +61,7 @@ def identify_name_and_type(desc):
 
 def test_identify():
     path = '/some/path'
-    context = EntryPointContext(
+    context = ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4)
 
@@ -118,7 +118,7 @@ def test_identify():
 
 def test__identify():
     desc_path_only = PackageDescriptor('/some/path')
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):

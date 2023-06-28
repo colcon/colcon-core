@@ -4,12 +4,18 @@
 import os
 from unittest.mock import Mock
 from unittest.mock import patch
+import warnings
 
-from colcon_core.entry_point import EXTENSION_POINT_GROUP_NAME
-from colcon_core.entry_point import get_all_entry_points
-from colcon_core.entry_point import get_entry_points
-from colcon_core.entry_point import load_entry_point
-from colcon_core.entry_point import load_entry_points
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        'ignore', message='.*entry_point.*deprecated.*', category=UserWarning)
+
+    from colcon_core.entry_point import EXTENSION_POINT_GROUP_NAME
+    from colcon_core.entry_point import get_all_entry_points
+    from colcon_core.entry_point import get_entry_points
+    from colcon_core.entry_point import load_entry_point
+    from colcon_core.entry_point import load_entry_points
+
 import pytest
 
 from .environment_context import EnvironmentContext

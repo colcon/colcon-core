@@ -23,7 +23,7 @@ from colcon_core.task import TaskContext
 from colcon_core.task import TaskExtensionPoint
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 from .run_until_complete import run_until_complete
 
 
@@ -123,7 +123,7 @@ def instantiate_extensions_without_cache(
 def test_add_task_arguments():
     parser = Mock()
     task_name = 'colcon_core.task.build'
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         with patch(
             'colcon_core.task.instantiate_extensions',
             side_effect=instantiate_extensions_without_cache
@@ -155,7 +155,7 @@ def test_add_task_arguments():
 
 def test_get_task_extension():
     task_name = 'colcon_core.task.build'
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         # request invalid extension
         extension = get_task_extension(task_name, 'package_type')
         assert extension is None

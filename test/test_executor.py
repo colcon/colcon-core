@@ -21,8 +21,8 @@ from colcon_core.executor import OnError
 from colcon_core.subprocess import SIGINT_RESULT
 import pytest
 
-from .entry_point_context import EntryPointContext
 from .environment_context import EnvironmentContext
+from .extension_point_context import ExtensionPointContext
 from .run_until_complete import run_until_complete
 
 
@@ -143,7 +143,7 @@ class Extension3(ExecutorExtensionPoint):
 def test_add_executor_arguments():
     parser = ArgumentParser()
     # extensions with the same priority
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
         with pytest.raises(AssertionError) as e:
@@ -152,13 +152,13 @@ def test_add_executor_arguments():
             str(e.value)
 
     # no extensions
-    with EntryPointContext():
+    with ExtensionPointContext():
         with pytest.raises(AssertionError) as e:
             add_executor_arguments(parser)
         assert 'No executor extensions found' in str(e.value)
 
     # choose executor by environment variable
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_executor_extensions()
         extensions[110]['extension2'].add_arguments = Mock(
             side_effect=RuntimeError('custom exception'))
@@ -178,7 +178,7 @@ def test_add_executor_arguments():
 
     # choose default executor
     parser = ArgumentParser()
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         add_executor_arguments(parser)
     args = parser.parse_args([])
     assert args.executor == 'extension2'
@@ -202,7 +202,9 @@ def test_execute_jobs():
     with patch(
         'colcon_core.executor.create_event_reactor', return_value=event_reactor
     ):
-        with EntryPointContext(extension1=Extension1, extension2=Extension2):
+        with ExtensionPointContext(
+            extension1=Extension1, extension2=Extension2
+        ):
             # no extension selected
             with pytest.raises(AssertionError):
                 execute_jobs(context, jobs)

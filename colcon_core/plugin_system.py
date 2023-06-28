@@ -4,7 +4,7 @@
 from collections import OrderedDict
 import traceback
 
-from colcon_core.entry_point import load_entry_points
+from colcon_core.extension_point import load_extension_points
 from colcon_core.logging import colcon_logger
 from packaging.version import Version
 
@@ -33,8 +33,8 @@ def instantiate_extensions(
       instantiated even when it has been created and cached before
     :returns: dict of extensions
     """
-    extension_types = load_entry_points(
-        group_name, exclude_names=exclude_names)
+    extension_types = load_extension_points(
+        group_name, excludes=exclude_names)
     extension_instances = {}
     for extension_name, extension_class in extension_types.items():
         extension_instance = _instantiate_extension(

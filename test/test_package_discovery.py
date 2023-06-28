@@ -16,7 +16,7 @@ from colcon_core.package_discovery import expand_dir_wildcards
 from colcon_core.package_discovery import get_package_discovery_extensions
 from colcon_core.package_discovery import PackageDiscoveryExtensionPoint
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(PackageDiscoveryExtensionPoint):
@@ -36,7 +36,7 @@ class Extension4(PackageDiscoveryExtensionPoint):
 
 
 def test_get_package_discovery_extensions():
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):
@@ -47,7 +47,7 @@ def test_get_package_discovery_extensions():
 
 def test_add_package_discovery_arguments():
     parser = Mock()
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):
@@ -98,7 +98,7 @@ def test_discover_packages():
     warn.assert_called_once_with('No package discovery extensions found')
     assert descs == set()
 
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):
@@ -152,7 +152,7 @@ def test_expand_dir_wildcards():
 
 
 def test__get_extensions_with_parameters():
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):
@@ -178,7 +178,7 @@ def test__discover_packages():
     descs = _discover_packages(None, None, {})
     assert descs == set()
 
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2,
         extension3=Extension3, extension4=Extension4,
     ):

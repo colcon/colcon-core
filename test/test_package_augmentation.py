@@ -13,7 +13,7 @@ from colcon_core.package_augmentation import update_descriptor
 from colcon_core.package_augmentation import update_metadata
 from colcon_core.package_descriptor import PackageDescriptor
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(PackageAugmentationExtensionPoint):
@@ -25,7 +25,7 @@ class Extension2(PackageAugmentationExtensionPoint):
 
 
 def test_get_package_augmentation_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_augmentation_extensions()
         assert ['extension2', 'extension1'] == \
             list(extensions.keys())
@@ -48,7 +48,7 @@ def test_augment_packages():
     desc1 = PackageDescriptor('/some/path')
     desc2 = PackageDescriptor('/other/path')
     descs = {desc1, desc2}
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_augmentation_extensions()
         extensions['extension1'].augment_package = Mock(
             side_effect=augment_package_metadata_with_data)
@@ -67,7 +67,7 @@ def test_augment_packages():
     desc1 = PackageDescriptor('/some/path')
     desc2 = PackageDescriptor('/other/path')
     descs = {desc1, desc2}
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_package_augmentation_extensions()
     extensions['extension1'].augment_package = Mock(
         side_effect=augment_package_with_hook)

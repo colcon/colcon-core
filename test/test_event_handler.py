@@ -11,7 +11,7 @@ from colcon_core.event_handler import format_duration
 from colcon_core.event_handler import get_event_handler_extensions
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class Extension1(EventHandlerExtensionPoint):
@@ -39,7 +39,7 @@ def test_extension_interface():
 
 
 def test_get_shell_extensions():
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
         extensions = get_event_handler_extensions(context=None)
@@ -49,7 +49,7 @@ def test_get_shell_extensions():
 
 def test_add_event_handler_arguments():
     parser = argparse.ArgumentParser()
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
         add_event_handler_arguments(parser)
@@ -62,7 +62,7 @@ def test_add_event_handler_arguments():
 
 
 def test_apply_event_handler_arguments():
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3,
     ):
         extensions = get_event_handler_extensions(context=None)

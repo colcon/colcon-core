@@ -51,7 +51,7 @@ if warnings_filters:
 
 from colcon_core.argument_parser import decorate_argument_parser  # noqa: E402 E501 I100 I202
 from colcon_core.argument_parser import SuppressUsageOutput  # noqa: E402
-from colcon_core.entry_point import load_entry_points  # noqa: E402
+from colcon_core.extension_point import load_extension_points  # noqa: E402
 from colcon_core.location import create_log_path  # noqa: E402
 from colcon_core.location import get_log_path  # noqa: E402
 from colcon_core.location import set_default_config_path  # noqa: E402
@@ -286,7 +286,7 @@ def get_environment_variables_epilog(group_name):
     :rtype: str
     """
     # list environment variables with descriptions
-    entry_points = load_entry_points(group_name)
+    entry_points = load_extension_points(group_name)
     env_vars = {
         env_var.name: env_var.description for env_var in entry_points.values()}
     epilog_lines = []
