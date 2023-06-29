@@ -17,96 +17,96 @@ import pytest
 from .environment_context import EnvironmentContext
 
 
-Group1 = EntryPoint('group1', 'g1')
-Group2 = EntryPoint('group2', 'g2')
+Group1 = EntryPoint('group1', 'g1', EXTENSION_POINT_GROUP_NAME)
+Group2 = EntryPoint('group2', 'g2', EXTENSION_POINT_GROUP_NAME)
+ExtA = EntryPoint('extA', 'eA', Group1.name)
+ExtB = EntryPoint('extB', 'eB', Group1.name)
 
 
 class Dist():
 
-    project_name = 'dist'
+    version = '0.0.0'
 
-    def __init__(self, group_name, group):
-        self._group_name = group_name
-        self._group = group
+    def __init__(self, entry_points):
+        self.name = f'dist-{id(self)}'
+        self._entry_points = entry_points
 
-    def __lt__(self, other):
-        return self._group_name < other._group_name
-
-    def get_entry_map(self):
-        return self._group
+    @property
+    def entry_points(self):
+        return list(self._entry_points)
 
 
-def iter_entry_points(*, group):
+def iter_entry_points(*, group=None):
     if group == EXTENSION_POINT_GROUP_NAME:
         return [Group1, Group2]
-    assert group == Group1.name
-    ep1 = EntryPoint('extA', 'eA')
-    ep2 = EntryPoint('extB', 'eB')
-    return [ep1, ep2]
+    elif group == Group1.name:
+        return [ExtA, ExtB]
+    assert not group
+    return {
+        EXTENSION_POINT_GROUP_NAME: [Group1, Group2],
+        Group1.name: [ExtA, ExtB],
+    }
 
 
-def working_set():
+def distributions():
     return [
-        Dist('group1', {
-            'group1': {ep.name: ep for ep in iter_entry_points(group='group1')}
-        }),
-        Dist('group2', {'group2': {'extC': EntryPoint('extC', 'eC')}}),
-        Dist('groupX', {'groupX': {'extD': EntryPoint('extD', 'eD')}}),
+        Dist(iter_entry_points(group='group1')),
+        Dist([EntryPoint('extC', 'eC', Group2.name)]),
+        Dist([EntryPoint('extD', 'eD', 'groupX')]),
     ]
 
 
 def test_all_extension_points():
     with patch(
-        'colcon_core.extension_point.iter_entry_points',
+        'colcon_core.extension_point.entry_points',
         side_effect=iter_entry_points
     ):
         with patch(
-            'colcon_core.extension_point.WorkingSet',
-            side_effect=working_set
+            'colcon_core.extension_point.distributions',
+            side_effect=distributions
         ):
             # successfully load a known entry point
             extension_points = get_all_extension_points()
             assert set(extension_points.keys()) == {'group1', 'group2'}
             assert set(extension_points['group1'].keys()) == {'extA', 'extB'}
-            assert extension_points['group1']['extA'] == (
-                'eA', Dist.project_name, None)
+            assert extension_points['group1']['extA'][0] == 'eA'
 
 
 def test_extension_point_blocklist():
     # successful loading of extension point without a blocklist
     with patch(
-        'colcon_core.extension_point.iter_entry_points',
+        'colcon_core.extension_point.entry_points',
         side_effect=iter_entry_points
     ):
         with patch(
-            'colcon_core.extension_point.WorkingSet',
-            side_effect=working_set
+            'colcon_core.extension_point.distributions',
+            side_effect=distributions
         ):
             extension_points = get_extension_points('group1')
     assert 'extA' in extension_points.keys()
     extension_point = extension_points['extA']
     assert extension_point == 'eA'
 
-    with patch.object(EntryPoint, 'resolve', return_value=None) as resolve:
+    with patch.object(EntryPoint, 'load', return_value=None) as load:
         load_extension_point('extA', 'eA', 'group1')
-        assert resolve.call_count == 1
+        assert load.call_count == 1
 
         # successful loading of entry point not in blocklist
-        resolve.reset_mock()
+        load.reset_mock()
         with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST=os.pathsep.join([
             'group1.extB', 'group2.extC'])
         ):
             load_extension_point('extA', 'eA', 'group1')
-        assert resolve.call_count == 1
+        assert load.call_count == 1
 
         # entry point in a blocked group can't be loaded
-        resolve.reset_mock()
+        load.reset_mock()
         with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST='group1'):
             with pytest.raises(RuntimeError) as e:
                 load_extension_point('extA', 'eA', 'group1')
             assert 'The entry point group name is listed in the environment ' \
                 'variable' in str(e.value)
-        assert resolve.call_count == 0
+        assert load.call_count == 0
 
         # entry point listed in the blocklist can't be loaded
         with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST=os.pathsep.join([
@@ -116,10 +116,10 @@ def test_extension_point_blocklist():
                 load_extension_point('extA', 'eA', 'group1')
             assert 'The entry point name is listed in the environment ' \
                 'variable' in str(e.value)
-        assert resolve.call_count == 0
+        assert load.call_count == 0
 
 
-def entry_point_resolve(self, *args, **kwargs):
+def entry_point_load(self, *args, **kwargs):
     if self.name == 'exception':
         raise Exception('entry point raising exception')
     if self.name == 'runtime_error':
@@ -129,7 +129,7 @@ def entry_point_resolve(self, *args, **kwargs):
     return DEFAULT
 
 
-@patch.object(EntryPoint, 'resolve', entry_point_resolve)
+@patch.object(EntryPoint, 'load', entry_point_load)
 @patch(
     'colcon_core.extension_point.get_extension_points',
     return_value={'exception': 'a', 'runtime_error': 'b', 'success': 'c'}
