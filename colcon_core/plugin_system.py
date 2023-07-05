@@ -6,7 +6,7 @@ import traceback
 
 from colcon_core.entry_point import load_entry_points
 from colcon_core.logging import colcon_logger
-from pkg_resources import parse_version
+from packaging.version import Version
 
 logger = colcon_logger.getChild(__name__)
 
@@ -166,8 +166,8 @@ def satisfies_version(version, caret_range):
     :raises RuntimeError: if the version doesn't match the caret range
     """
     assert caret_range.startswith('^'), 'Only supports caret ranges'
-    extension_point_version = parse_version(version)
-    extension_version = parse_version(caret_range[1:])
+    extension_point_version = Version(version)
+    extension_version = Version(caret_range[1:])
     next_extension_version = _get_upper_bound_caret_version(
         extension_version)
 
@@ -192,4 +192,4 @@ def _get_upper_bound_caret_version(version):
         minor = 0
     else:
         minor += 1
-    return parse_version('%d.%d.0' % (major, minor))
+    return Version('%d.%d.0' % (major, minor))

@@ -47,6 +47,7 @@ hardcodes
 hookimpl
 hookwrapper
 https
+importlib
 isatty
 iterdir
 junit

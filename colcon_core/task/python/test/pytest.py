@@ -13,7 +13,7 @@ from colcon_core.task import run
 from colcon_core.task.python.test import has_test_dependency
 from colcon_core.task.python.test import PythonTestingStepExtensionPoint
 from colcon_core.verb.test import logger
-from pkg_resources import parse_version
+from packaging.version import Version
 
 
 class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
@@ -64,7 +64,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
         # use -o option only when available
         # https://github.com/pytest-dev/pytest/blob/3.3.0/CHANGELOG.rst
         from pytest import __version__ as pytest_version
-        if parse_version(pytest_version) >= parse_version('3.3.0'):
+        if Version(pytest_version) >= Version('3.3.0'):
             args += [
                 '-o', 'cache_dir=' + str(PurePosixPath(
                     *(Path(context.args.build_base).parts)) / '.pytest_cache'),
@@ -95,7 +95,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                 ]
                 # use --cov-branch option only when available
                 # https://github.com/pytest-dev/pytest-cov/blob/v2.5.0/CHANGELOG.rst
-                if parse_version(pytest_cov_version) >= parse_version('2.5.0'):
+                if Version(pytest_cov_version) >= Version('2.5.0'):
                     args += [
                         '--cov-branch',
                     ]
