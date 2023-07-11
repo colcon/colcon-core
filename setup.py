@@ -4,15 +4,11 @@
 import os
 import sys
 
-from pkg_resources import parse_version
 from setuptools import setup
 
-minimum_version = '3.6'
-if (
-    parse_version('%d.%d' % (sys.version_info.major, sys.version_info.minor)) <
-    parse_version(minimum_version)
-):
-    sys.exit('This package requires at least Python ' + minimum_version)
+minimum_version = (3, 6)
+if sys.version_info < minimum_version:
+    sys.exit('This package requires at least Python %d.%d' % minimum_version)
 
 cmdclass = {}
 try:
