@@ -5,8 +5,10 @@ from collections import OrderedDict
 import os
 import types
 
+from colcon_core.argument_default import wrap_default_value
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
+from colcon_core.argument_type import get_cwd_path_resolver
 from colcon_core.event.test import TestFailure
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
@@ -85,11 +87,13 @@ class TestVerb(VerbExtensionPoint):
     def add_arguments(self, *, parser):  # noqa: D102
         parser.add_argument(
             '--build-base',
-            default='build',
+            default=wrap_default_value('build'),
+            type=get_cwd_path_resolver(),
             help='The base path for all build directories (default: build)')
         parser.add_argument(
             '--install-base',
-            default='install',
+            default=wrap_default_value('install'),
+            type=get_cwd_path_resolver(),
             help='The base path for all install prefixes (default: install)')
         parser.add_argument(
             '--merge-install',
@@ -97,6 +101,7 @@ class TestVerb(VerbExtensionPoint):
             help='Merge all install prefixes into a single location')
         parser.add_argument(
             '--test-result-base',
+            type=get_cwd_path_resolver(),
             help='The base path for all test results (default: --build-base)')
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
