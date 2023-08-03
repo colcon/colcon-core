@@ -71,16 +71,20 @@ class PackageDescriptor:
         :raises AssertionError: if the package name is listed as a dependency
         """
         dependencies = set()
+        categories_by_dependency = defaultdict(list)
         if categories is None:
             categories = self.dependencies.keys()
         for category in sorted(categories):
-            dependencies |= self.dependencies[category]
+            for dependency in self.dependencies[category]:
+                categories_by_dependency[dependency].append(category)
+        for dependency, categories in categories_by_dependency.items():
+            if not isinstance(dependency, DependencyDescriptor):
+                dependency = DependencyDescriptor(dependency)
+            dependency.metadata['categories'] = categories
+            dependencies.add(dependency)
         assert self.name not in dependencies, \
             f"The package '{self.name}' has a dependency with the same name"
-        return {
-            (DependencyDescriptor(d)
-                if not isinstance(d, DependencyDescriptor) else d)
-            for d in dependencies}
+        return dependencies
 
     def get_recursive_dependencies(
         self, descriptors, direct_categories=None, recursive_categories=None,
