@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_descriptor import PackageDescriptor
 import pytest
 
@@ -57,9 +58,9 @@ def test_get_recursive_dependencies():
 
     d1 = PackageDescriptor('/other/path')
     d1.name = 'B'
-    d1.dependencies['build'].add('e')
-    d1.dependencies['run'].add('F')
-    d1.dependencies['test'].add('G')
+    d1.dependencies['build'].add(DependencyDescriptor('e'))
+    d1.dependencies['run'].add(DependencyDescriptor('F'))
+    d1.dependencies['test'].add(DependencyDescriptor('G'))
 
     d2 = PackageDescriptor('/another/path')
     d2.name = 'd'
