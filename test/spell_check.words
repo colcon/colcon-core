@@ -1,6 +1,5 @@
 addopts
 apache
-argcomplete
 argparse
 asyncio
 autouse
