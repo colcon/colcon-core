@@ -182,6 +182,9 @@ class BuildVerb(VerbExtensionPoint):
 
             recursive_dependencies = OrderedDict()
             for dep_name in decorator.recursive_dependencies:
+                if dep_name.metadata.get('depth') == 1:
+                    if dep_name.metadata.get('categories') == ['run']:
+                        continue
                 dep_path = install_base
                 if not args.merge_install:
                     dep_path = os.path.join(dep_path, dep_name)
