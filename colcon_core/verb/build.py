@@ -126,7 +126,7 @@ class BuildVerb(VerbExtensionPoint):
         decorators = get_packages(
             context.args,
             additional_argument_names=self.task_argument_destinations,
-            recursive_categories=('run', ))
+            recursive_categories=('dev', 'exec', 'run'))
 
         install_base = os.path.abspath(os.path.join(
             os.getcwd(), context.args.install_base))
