@@ -37,7 +37,8 @@ def new_event_loop():
 
     :returns: The created event loop
     """
-    if sys.platform == 'win32':
+    # TODO: Drop this along with py3.7
+    if sys.platform == 'win32' and sys.version_info < (3, 8):
         return asyncio.ProactorEventLoop()
     return asyncio.new_event_loop()
 
