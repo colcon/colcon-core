@@ -66,15 +66,15 @@ def test_create_event_reactor():
             assert error.call_count == 0
 
             queue.put(('first', None))
-            event_reactor.flush()
+            queue.join()
             assert error.call_count == 1
 
             queue.put(('second', None))
-            event_reactor.flush()
+            queue.join()
             assert error.call_count == 1
 
             queue.put(('third', None))
-            event_reactor.flush()
+            queue.join()
             assert error.call_count == 2
 
         # 1 timer event, 3 mock string events
