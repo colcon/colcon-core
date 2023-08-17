@@ -71,16 +71,26 @@ class PackageDescriptor:
         :raises AssertionError: if the package name is listed as a dependency
         """
         dependencies = set()
+        categories_by_dependency = defaultdict(list)
         if categories is None:
             categories = self.dependencies.keys()
         for category in sorted(categories):
-            dependencies |= self.dependencies[category]
+            for dependency in self.dependencies[category]:
+                categories_by_dependency[dependency].append(category)
+        for dependency, categories in categories_by_dependency.items():
+            if isinstance(dependency, DependencyDescriptor):
+                # duplicate the descriptor and metadata
+                dependency = deepcopy(dependency)
+            else:
+                dependency = DependencyDescriptor(dependency)
+            # note that the category list is not merged when a dependency
+            # appears multiple times in a package's tree, and the most shallow
+            # instance prevails.
+            dependency.metadata['categories'] = categories
+            dependencies.add(dependency)
         assert self.name not in dependencies, \
             f"The package '{self.name}' has a dependency with the same name"
-        return {
-            (DependencyDescriptor(d)
-                if not isinstance(d, DependencyDescriptor) else d)
-            for d in dependencies}
+        return dependencies
 
     def get_recursive_dependencies(
         self, descriptors, direct_categories=None, recursive_categories=None,
@@ -127,8 +137,7 @@ class PackageDescriptor:
                 for d in descs:
                     queue |= d.get_dependencies(
                         categories=recursive_categories)
-                # duplicate the descriptor and metadata and add the depth
-                dep = deepcopy(dep)
+                # add the depth
                 dep.metadata['depth'] = depth
                 # add dependency to result set
                 dependencies.add(dep)
