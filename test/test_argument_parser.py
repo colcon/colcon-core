@@ -94,7 +94,7 @@ def test_argument_parser_decorator():
     decorator = ArgumentParserDecorator(parser)
     assert decorator.format_help == parser.format_help
 
-    del decorator.__dict__['_parser']
+    del decorator.__dict__['_decoree']
     with pytest.raises(AttributeError):
         decorator.format_help
 
@@ -108,7 +108,7 @@ def test_argument_parser_decorator():
     assert parser.add_argument is True
 
     assert 'bar' not in decorator.__dict__
-    del decorator.__dict__['_parser']
+    del decorator.__dict__['_decoree']
     decorator.bar = 'baz'
     assert 'bar' in decorator.__dict__
     assert decorator.__dict__['bar'] == 'baz'
