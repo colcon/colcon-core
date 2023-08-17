@@ -7,8 +7,10 @@ import os.path
 from pathlib import Path
 import traceback
 
+from colcon_core.argument_default import wrap_default_value
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
+from colcon_core.argument_type import get_cwd_path_resolver
 from colcon_core.event.job import JobUnselected
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
@@ -83,11 +85,13 @@ class BuildVerb(VerbExtensionPoint):
     def add_arguments(self, *, parser):  # noqa: D102
         parser.add_argument(
             '--build-base',
-            default='build',
+            default=wrap_default_value('build'),
+            type=get_cwd_path_resolver(),
             help='The base path for all build directories (default: build)')
         parser.add_argument(
             '--install-base',
-            default='install',
+            default=wrap_default_value('install'),
+            type=get_cwd_path_resolver(),
             help='The base path for all install prefixes (default: install)')
         parser.add_argument(
             '--merge-install',
@@ -99,6 +103,7 @@ class BuildVerb(VerbExtensionPoint):
             help='Use symlinks instead of copying files where possible')
         parser.add_argument(
             '--test-result-base',
+            type=get_cwd_path_resolver(),
             help='The base path for all test results (default: --build-base)')
         parser.add_argument(
             '--continue-on-error',
