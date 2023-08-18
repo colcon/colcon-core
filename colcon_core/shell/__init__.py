@@ -188,7 +188,11 @@ class ShellExtensionPoint:
         :param str pkg_name: The package name
         :param str name: The name of the environment variable
         :param str value: The value to be set. If an empty string is passed the
-          environment variable should be set to the prefix path.
+          environment variable should be set to the prefix path at the time the
+          hook is sourced (from COLCON_CURRENT_PREFIX).
+          Note that the install-space may have been relocated, and the final
+          value may differ from the value of argument prefix_path, where
+          the hook was originally installed to.
         :returns: The relative path to the created hook script
         :rtype: Path
         """
