@@ -191,8 +191,8 @@ class ShellExtensionPoint:
           environment variable should be set to the prefix path at the time the
           hook is sourced (from COLCON_CURRENT_PREFIX).
           Note that the install-space may have been relocated, and the final
-          value may differ from the from the value of argument prefix_path,
-          where the hook has originally been installed to.
+          value may differ from the value of argument prefix_path, where
+          the hook was originally installed to.
         :returns: The relative path to the created hook script
         :rtype: Path
         """
