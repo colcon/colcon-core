@@ -123,7 +123,9 @@ def create_dependency_descriptor(requirement_string):
     }
 
     requirement = parse_requirement(requirement_string)
-    metadata = {}
+    metadata = {
+        'origin': 'python',
+    }
     for symbol, version in (requirement.constraints or []):
         if symbol in symbol_mapping:
             metadata[symbol_mapping[symbol]] = version
