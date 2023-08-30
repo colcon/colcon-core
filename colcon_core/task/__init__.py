@@ -148,8 +148,7 @@ async def check_call(
 
 
 async def run(
-    context, cmd, *, cwd=None, env=None, shell=False, use_pty=None,
-    capture_output=None
+    context, cmd, *, use_pty=None, capture_output=None, **other_popen_kwargs
 ):
     """
     Run the command described by cmd.
@@ -159,10 +158,11 @@ async def run(
     All output to `stdout` and `stderr` is posted as `StdoutLine` and
     `StderrLine` events to the event queue.
 
+    See the documentation of `subprocess.Popen()
+    <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>` for
+    other parameters.
+
     :param cmd: The command and its arguments
-    :param cwd: the working directory for the subprocess
-    :param env: a dictionary with environment variables
-    :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
     :param capture_output: whether to store stdout and stderr
     :returns: the result of the completed process
@@ -174,12 +174,16 @@ async def run(
     def stderr_callback(line):
         context.put_event_into_queue(StderrLine(line))
 
+    cwd = other_popen_kwargs.get('cwd', None)
+    env = other_popen_kwargs.get('env', None)
+    shell = other_popen_kwargs.get('shell', False)
+
     context.put_event_into_queue(
         Command(cmd, cwd=cwd, env=env, shell=shell))
     completed = await colcon_core_subprocess_run(
         cmd, stdout_callback, stderr_callback,
-        cwd=cwd, env=env, shell=shell, use_pty=use_pty,
-        capture_output=capture_output)
+        use_pty=use_pty, capture_output=capture_output,
+        **other_popen_kwargs)
     context.put_event_into_queue(
         CommandEnded(
             cmd, cwd=cwd, env=env, shell=shell,
