@@ -138,7 +138,7 @@ class PythonBuildTask(TaskExtensionPoint):
                     '--no-deps',
                 ]
                 if setup_py_data.get('data_files'):
-                    cmd += ['install_data']
+                    cmd += ['symlink_data']
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
