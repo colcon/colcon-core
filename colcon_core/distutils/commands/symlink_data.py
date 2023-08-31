@@ -3,7 +3,6 @@
 
 from distutils.command.install_data import install_data
 import os.path
-import warnings
 
 
 class symlink_data(install_data):  # noqa: N801
@@ -15,12 +14,4 @@ class symlink_data(install_data):  # noqa: N801
 
         kwargs['link'] = 'sym'
         src = os.path.abspath(src)
-
-        try:
-            return super().copy_file(src, dst, **kwargs)
-        except OSError:
-            warnings.warning(
-                'Failed to symlink data_file(s), falling back to copy')
-            del kwargs['link']
-
         return super().copy_file(src, dst, **kwargs)
