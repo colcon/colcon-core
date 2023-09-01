@@ -114,13 +114,19 @@ class PythonBuildTask(TaskExtensionPoint):
                 # prevent installation of dependencies specified in setup.py
                 cmd.append('--single-version-externally-managed')
             self._append_install_layout(args, cmd)
+            if setup_py_data.get('data_files'):
+                cmd += ['install_data']
+                if rc is not None:
+                    cmd += ['--force']
             completed = await run(
                 self.context, cmd, cwd=args.path, env=env)
             if completed.returncode:
                 return completed.returncode
 
         else:
-            self._undo_install(pkg, args, setup_py_data, python_lib)
+            rc = self._undo_install(pkg, args, setup_py_data, python_lib)
+            if rc:
+                return rc
             temp_symlinks = self._symlinks_in_build(args, setup_py_data)
 
             # invoke `setup.py develop` step in build space
@@ -139,6 +145,8 @@ class PythonBuildTask(TaskExtensionPoint):
                 ]
                 if setup_py_data.get('data_files'):
                     cmd += ['symlink_data']
+                    if rc is not None:
+                        cmd += ['--force']
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
@@ -198,6 +206,8 @@ class PythonBuildTask(TaskExtensionPoint):
             ]
             completed = await run(
                 self.context, cmd, cwd=args.build_base, env=env)
+            if not completed.returncode:
+                os.remove(setup_py_build_space)
             return completed.returncode
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
@@ -240,6 +250,7 @@ class PythonBuildTask(TaskExtensionPoint):
             with suppress(OSError):
                 os.rmdir(d)
         os.remove(install_log)
+        return 0
 
     def _symlinks_in_build(self, args, setup_py_data):
         items = ['setup.py']
