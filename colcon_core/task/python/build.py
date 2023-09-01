@@ -198,6 +198,8 @@ class PythonBuildTask(TaskExtensionPoint):
             ]
             completed = await run(
                 self.context, cmd, cwd=args.build_base, env=env)
+            if not completed.returncode:
+                os.remove(setup_py_build_space)
             return completed.returncode
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
