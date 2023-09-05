@@ -213,7 +213,7 @@ def update_metadata(desc, key, value):
         old_value |= value
         return
 
-    if type(old_value) != type(value):
+    if type(old_value) is not type(value):
         logger.warning(
             f"update package '{desc.name}' metadata '{key}' from value "
             f"'{old_value}' to '{value}'")
