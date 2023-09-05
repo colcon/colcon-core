@@ -76,6 +76,8 @@ class PythonBuildTask(TaskExtensionPoint):
         env = dict(env)
         env['PYTHONPATH'] = str(prefix_override) + os.pathsep + \
             python_lib + os.pathsep + env.get('PYTHONPATH', '')
+        # coverage capture interferes with sitecustomize
+        env.pop('COV_CORE_SOURCE', None)
 
         # determine if setuptools specific commands are available
         available_commands = await self._get_available_commands(
