@@ -174,7 +174,7 @@ def update_object(
         return
 
     severity = 5 \
-        if old_value is None or type(old_value) == type(value) \
+        if old_value is None or type(old_value) is type(value) \
         else logging.WARNING
     logger.log(
         severity, f"overwrite package '{package_name}' {argument_type} "
