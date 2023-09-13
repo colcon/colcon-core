@@ -77,6 +77,8 @@ class PythonBuildTask(TaskExtensionPoint):
         env['PYTHONPATH'] = str(prefix_override) + os.pathsep + \
             python_lib + os.pathsep + env.get('PYTHONPATH', '')
         # coverage capture interferes with sitecustomize
+        # See also: https://docs.python.org/3/library/site.html#module-site
+        # See also: colcon/colcon-core#579
         env.pop('COV_CORE_SOURCE', None)
 
         # determine if setuptools specific commands are available
