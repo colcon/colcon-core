@@ -19,7 +19,7 @@ def test_argument_default():
             unwrap_default_value(value)
         default_value = wrap_default_value(value)
         assert is_default_value(default_value)
-        assert type(default_value) != type(value)
+        assert type(default_value) is not type(value)
         with pytest.raises(ValueError):
             wrap_default_value(default_value)
         unwrapped_value = unwrap_default_value(default_value)
@@ -27,5 +27,5 @@ def test_argument_default():
 
     value = 42
     unchanged_value = wrap_default_value(value)
-    assert type(unchanged_value) == type(value)
+    assert type(unchanged_value) is type(value)
     assert unchanged_value == value
