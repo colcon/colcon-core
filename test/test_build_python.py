@@ -45,60 +45,101 @@ def monkey_patch_put_event_into_queue(monkeypatch):
     )
 
 
-def test_build_package():
+def _test_build_package(tmp_path_str, *, symlink_install):
     event_loop = new_event_loop()
     asyncio.set_event_loop(event_loop)
     try:
-        with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
-            tmp_path = Path(tmp_path_str)
-            python_build_task = PythonBuildTask()
-            package = PackageDescriptor(tmp_path / 'src')
-            package.name = 'test_package'
-            package.type = 'python'
+        tmp_path = Path(tmp_path_str)
+        python_build_task = PythonBuildTask()
+        package = PackageDescriptor(tmp_path / 'src')
+        package.name = 'test_package'
+        package.type = 'python'
+        package.metadata['get_python_setup_options'] = lambda _: {
+            'packages': ['my_module'],
+        }
 
-            context = TaskContext(
-                pkg=package,
-                args=SimpleNamespace(
-                    path=str(tmp_path / 'src'),
-                    build_base=str(tmp_path / 'build'),
-                    install_base=str(tmp_path / 'install'),
-                    symlink_install=False,
-                ),
-                dependencies={}
-            )
-            python_build_task.set_context(context=context)
+        context = TaskContext(
+            pkg=package,
+            args=SimpleNamespace(
+                path=str(tmp_path / 'src'),
+                build_base=str(tmp_path / 'build'),
+                install_base=str(tmp_path / 'install'),
+                symlink_install=symlink_install,
+            ),
+            dependencies={}
+        )
+        python_build_task.set_context(context=context)
 
-            pkg = python_build_task.context.pkg
+        pkg = python_build_task.context.pkg
 
-            pkg.path.mkdir()
-            (pkg.path / 'setup.py').write_text(
-                'from setuptools import setup\n'
-                'setup(\n'
-                '    name="test_package",\n'
-                '    packages=["my_module"],\n'
-                ')\n'
-            )
-            (pkg.path / 'my_module').mkdir()
-            (pkg.path / 'my_module' / '__init__.py').touch()
+        pkg.path.mkdir(exist_ok=True)
+        (pkg.path / 'setup.py').write_text(
+            'from setuptools import setup\n'
+            'setup(\n'
+            '    name="test_package",\n'
+            '    packages=["my_module"],\n'
+            ')\n'
+        )
+        (pkg.path / 'my_module').mkdir(exist_ok=True)
+        (pkg.path / 'my_module' / '__init__.py').touch()
 
-            src_base = Path(python_build_task.context.args.path)
+        src_base = Path(python_build_task.context.args.path)
 
-            source_files_before = set(src_base.rglob('*'))
-            rc = event_loop.run_until_complete(python_build_task.build())
-            assert not rc
-            source_files_after = set(src_base.rglob('*'))
-            assert source_files_before == source_files_after
+        source_files_before = set(src_base.rglob('*'))
+        rc = event_loop.run_until_complete(python_build_task.build())
+        assert not rc
+        source_files_after = set(src_base.rglob('*'))
+        assert source_files_before == source_files_after
 
-            build_base = Path(python_build_task.context.args.build_base)
-            assert 1 == len(list(build_base.rglob('my_module/__init__.py')))
+        build_base = Path(python_build_task.context.args.build_base)
+        assert build_base.rglob('my_module/__init__.py')
 
-            install_base = Path(python_build_task.context.args.install_base)
-            assert 1 == len(list(install_base.rglob('my_module/__init__.py')))
-
-            pkg_info, = install_base.rglob('PKG-INFO')
-            assert 'Name: test-package' in pkg_info.read_text().splitlines()
+        return Path(python_build_task.context.args.install_base)
     finally:
         event_loop.close()
+
+
+def test_build_package():
+    with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
+        install_base = _test_build_package(tmp_path_str, symlink_install=False)
+
+        assert 1 == len(list(install_base.rglob('my_module/__init__.py')))
+
+        pkg_info, = install_base.rglob('PKG-INFO')
+        assert 'Name: test-package' in pkg_info.read_text().splitlines()
+
+
+def test_build_package_symlink():
+    with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
+        install_base = _test_build_package(tmp_path_str, symlink_install=True)
+
+        assert 1 == len(list(install_base.rglob('test-package.egg-link')))
+
+
+def test_build_package_symlink_first():
+    with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
+        install_base = _test_build_package(tmp_path_str, symlink_install=True)
+
+        assert 1 == len(list(install_base.rglob('test-package.egg-link')))
+        assert 0 == len(list(install_base.rglob('PKG-INFO')))
+
+        install_base = _test_build_package(tmp_path_str, symlink_install=False)
+
+        assert 0 == len(list(install_base.rglob('test-package.egg-link')))
+        assert 1 == len(list(install_base.rglob('PKG-INFO')))
+
+
+def test_build_package_symlink_second():
+    with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
+        install_base = _test_build_package(tmp_path_str, symlink_install=False)
+
+        assert 0 == len(list(install_base.rglob('test-package.egg-link')))
+        assert 1 == len(list(install_base.rglob('PKG-INFO')))
+
+        install_base = _test_build_package(tmp_path_str, symlink_install=True)
+
+        assert 1 == len(list(install_base.rglob('test-package.egg-link')))
+        assert 0 == len(list(install_base.rglob('PKG-INFO')))
 
 
 def test_build_package_libexec_pattern():
@@ -126,7 +167,7 @@ def test_build_package_libexec_pattern():
 
             pkg = python_build_task.context.pkg
 
-            pkg.path.mkdir()
+            pkg.path.mkdir(exist_ok=True)
             (pkg.path / 'setup.py').write_text(
                 'from setuptools import setup\n'
                 'setup()\n'
@@ -144,7 +185,7 @@ def test_build_package_libexec_pattern():
                 '[install]\n'
                 'install-scripts=$base/lib/test_package\n'
             )
-            (pkg.path / 'my_module').mkdir()
+            (pkg.path / 'my_module').mkdir(exist_ok=True)
             (pkg.path / 'my_module' / '__init__.py').write_text(
                 'def main():\n'
                 '    print("Hello, World!")\n'
