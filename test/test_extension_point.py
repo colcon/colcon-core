@@ -28,12 +28,16 @@ class Dist():
     version = '0.0.0'
 
     def __init__(self, entry_points):
-        self.name = f'dist-{id(self)}'
+        self.metadata = {'Name': f'dist-{id(self)}'}
         self._entry_points = entry_points
 
     @property
     def entry_points(self):
         return list(self._entry_points)
+
+    @property
+    def name(self):
+        return self.metadata['Name']
 
 
 def iter_entry_points(*, group=None):

@@ -53,9 +53,10 @@ def get_all_extension_points():
     entry_points = defaultdict(dict)
     seen = set()
     for dist in distributions():
-        if dist.name in seen:
+        dist_name = dist.metadata['Name']
+        if dist_name in seen:
             continue
-        seen.add(dist.name)
+        seen.add(dist_name)
         for entry_point in dist.entry_points:
             # skip groups which are not registered as extension points
             if entry_point.group not in colcon_extension_points:
@@ -69,7 +70,7 @@ def get_all_extension_points():
                     f"from '{dist._path}' "
                     f"overwriting '{previous}'")
             entry_points[entry_point.group][entry_point.name] = \
-                (entry_point.value, dist.name, dist.version)
+                (entry_point.value, dist_name, dist.version)
     return entry_points
 
 
