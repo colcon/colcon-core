@@ -5,9 +5,9 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 
 --- setup.cfg	2018-05-27 11:22:33.000000000 -0700
 +++ setup.cfg.patched	2018-05-27 11:22:33.000000000 -0700
-@@ -33,9 +33,12 @@
- 	importlib-metadata; python_version < "3.8"
- 	packaging
+@@ -31,9 +31,12 @@
+ 	distlib
+ 	EmPy
  	pytest
 -	pytest-cov
 -	pytest-repeat

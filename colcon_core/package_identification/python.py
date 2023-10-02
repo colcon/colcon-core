@@ -90,17 +90,11 @@ def get_configuration(setup_cfg):
         except ImportError:
             from setuptools.config import read_configuration
     except ImportError as e:
-        try:
-            from importlib.metadata import distribution
-        except ImportError:
-            from importlib_metadata import distribution
-        from packaging.version import Version
-        try:
-            setuptools_version = distribution('setuptools').version
-        except ModuleNotFoundError:
-            setuptools_version = '0'
+        from pkg_resources import get_distribution
+        from pkg_resources import parse_version
+        setuptools_version = get_distribution('setuptools').version
         minimum_version = '30.3.0'
-        if Version(setuptools_version) < Version(minimum_version):
+        if parse_version(setuptools_version) < parse_version(minimum_version):
             e.msg += ', ' \
                 "'setuptools' needs to be at least version " \
                 f'{minimum_version}, if a newer version is not available ' \
