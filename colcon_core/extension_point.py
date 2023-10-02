@@ -6,18 +6,11 @@ from collections import defaultdict
 import os
 import traceback
 
-try:
-    from importlib.metadata import distributions
-    from importlib.metadata import EntryPoint
-    from importlib.metadata import entry_points
-except ImportError:
-    # TODO: Drop this with Python 3.7 support
-    from importlib_metadata import distributions
-    from importlib_metadata import EntryPoint
-    from importlib_metadata import entry_points
-
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.logging import colcon_logger
+from pkg_resources import EntryPoint
+from pkg_resources import iter_entry_points
+from pkg_resources import WorkingSet
 
 """Environment variable to block extensions"""
 EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
@@ -51,26 +44,27 @@ def get_all_extension_points():
     colcon_extension_points.setdefault(EXTENSION_POINT_GROUP_NAME, None)
 
     entry_points = defaultdict(dict)
-    seen = set()
-    for dist in distributions():
-        dist_name = dist.metadata['Name']
-        if dist_name in seen:
-            continue
-        seen.add(dist_name)
-        for entry_point in dist.entry_points:
+    working_set = WorkingSet()
+    for dist in sorted(working_set):
+        entry_map = dist.get_entry_map()
+        for group_name in entry_map.keys():
             # skip groups which are not registered as extension points
-            if entry_point.group not in colcon_extension_points:
+            if group_name not in colcon_extension_points:
                 continue
 
-            if entry_point.name in entry_points[entry_point.group]:
-                previous = entry_points[entry_point.group][entry_point.name]
-                logger.error(
-                    f"Entry point '{entry_point.group}.{entry_point.name}' is "
-                    f"declared multiple times, '{entry_point.value}' "
-                    f"from '{dist._path}' "
-                    f"overwriting '{previous}'")
-            entry_points[entry_point.group][entry_point.name] = \
-                (entry_point.value, dist_name, dist.version)
+            group = entry_map[group_name]
+            for entry_point_name, entry_point in group.items():
+                if entry_point_name in entry_points[group_name]:
+                    previous = entry_points[group_name][entry_point_name]
+                    logger.error(
+                        f"Entry point '{group_name}.{entry_point_name}' is "
+                        f"declared multiple times, '{entry_point}' "
+                        f"overwriting '{previous}'")
+                value = entry_point.module_name
+                if entry_point.attrs:
+                    value += f":{'.'.join(entry_point.attrs)}"
+                entry_points[group_name][entry_point_name] = (
+                    value, dist.project_name, getattr(dist, 'version', None))
     return entry_points
 
 
@@ -82,21 +76,19 @@ def get_extension_points(group):
     :returns: mapping of extension point names to extension point values
     :rtype: dict
     """
-    extension_points = {}
-    try:
-        # Python 3.10 and newer
-        query = entry_points(group=group)
-    except TypeError:
-        query = entry_points().get(group, ())
-    for entry_point in query:
-        if entry_point.name in extension_points:
-            previous_entry_point = extension_points[entry_point.name]
+    entry_points = {}
+    for entry_point in iter_entry_points(group=group):
+        if entry_point.name in entry_points:
+            previous_entry_point = entry_points[entry_point.name]
             logger.error(
                 f"Entry point '{group}.{entry_point.name}' is declared "
-                f"multiple times, '{entry_point.value}' overwriting "
+                f"multiple times, '{entry_point}' overwriting "
                 f"'{previous_entry_point}'")
-        extension_points[entry_point.name] = entry_point.value
-    return extension_points
+        value = entry_point.module_name
+        if entry_point.attrs:
+            value += f":{'.'.join(entry_point.attrs)}"
+        entry_points[entry_point.name] = value
+    return entry_points
 
 
 def load_extension_points(group, *, excludes=None):
@@ -154,4 +146,10 @@ def load_extension_point(name, value, group):
             raise RuntimeError(
                 'The entry point name is listed in the environment variable '
                 f"'{EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE.name}'")
-    return EntryPoint(name, value, group).load()
+    if ':' in value:
+        module_name, attr = value.split(':', 1)
+        attrs = attr.split('.')
+    else:
+        module_name = value
+        attrs = ()
+    return EntryPoint(name, module_name, attrs).resolve()
