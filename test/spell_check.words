@@ -2,7 +2,6 @@ addopts
 apache
 argparse
 asyncio
-attrs
 autouse
 basepath
 bazqux
@@ -47,6 +46,7 @@ hardcodes
 hookimpl
 hookwrapper
 https
+importlib
 isatty
 iterdir
 junit
