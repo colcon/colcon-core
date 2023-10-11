@@ -4,10 +4,6 @@
 from pathlib import Path
 
 import pytest
-from scspell import Report
-from scspell import SCSPELL_BUILTIN_DICT
-from scspell import spell_check
-
 
 spell_check_words_path = Path(__file__).parent / 'spell_check.words'
 
@@ -18,7 +14,12 @@ def known_words():
     return spell_check_words_path.read_text().splitlines()
 
 
+@pytest.mark.linter
 def test_spell_check(known_words):
+    from scspell import Report
+    from scspell import SCSPELL_BUILTIN_DICT
+    from scspell import spell_check
+
     source_filenames = [
         Path(__file__).parents[1] / 'bin' / 'colcon',
         Path(__file__).parents[1] / 'setup.py'] + \
@@ -46,11 +47,13 @@ def test_spell_check(known_words):
         ', '.join(sorted(unused_known_words))
 
 
+@pytest.mark.linter
 def test_spell_check_word_list_order(known_words):
     assert known_words == sorted(known_words), \
         'The word list should be ordered alphabetically'
 
 
+@pytest.mark.linter
 def test_spell_check_word_list_duplicates(known_words):
     assert len(known_words) == len(set(known_words)), \
         'The word list should not contain duplicates'

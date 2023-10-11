@@ -149,7 +149,7 @@ class PackageDescriptor:
         return hash((self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         if (self.type, self.name) != (other.type, other.name):
             return False
