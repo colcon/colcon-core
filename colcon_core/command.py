@@ -54,6 +54,7 @@ from colcon_core.argument_parser import SuppressUsageOutput  # noqa: E402
 from colcon_core.extension_point import load_extension_points  # noqa: E402
 from colcon_core.location import create_log_path  # noqa: E402
 from colcon_core.location import get_log_path  # noqa: E402
+from colcon_core.location import get_root_path  # noqa: E402
 from colcon_core.location import set_default_config_path  # noqa: E402
 from colcon_core.location import set_default_log_path  # noqa: E402
 from colcon_core.logging import add_file_handler  # noqa: E402

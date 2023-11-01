@@ -5,6 +5,7 @@ import functools
 import os
 
 from colcon_core.argument_default import is_default_value
+from colcon_core.location import get_root_path
 
 
 def resolve_path(value, base=os.getcwd()):
@@ -17,11 +18,19 @@ def resolve_path(value, base=os.getcwd()):
     :param value: The value to resolve to an absolute path
     :returns: The unmodified value, or resolved path
     """
-    if value is None or is_default_value(value):
+    if value is None:
         return value
     res = os.path.abspath(os.path.join(base, str(value)))
     return res
 
+
+def get_root_path_resolver():
+    """
+    Create a function which resolves paths from the colcon workspace root.
+
+    :returns: A function which takes a single string and returns a string
+    """
+    return functools.partial(resolve_path, base=get_root_path())
 
 def get_cwd_path_resolver():
     """

@@ -8,6 +8,7 @@ import uuid
 
 from colcon_core.logging import colcon_logger
 
+ROOT_MARKER = '.colcon_root'
 logger = colcon_logger.getChild(__name__)
 
 _config_path = None
@@ -64,6 +65,41 @@ def _reset_config_path_globals():
     _config_path_env_var = None
 
 
+_root_path = None
+
+
+def get_root_path():
+    global _root_path
+    if _root_path is not None:
+        return _root_path
+
+    def is_root(path):
+        if (path / ROOT_MARKER).is_file():
+            return True
+        if (path / 'log').is_dir() and (path / 'build').is_dir() and (path / 'install').is_dir():
+            return True
+
+    path = Path.cwd()
+    _root_path = path
+    anchor = Path(path.anchor)
+    while True:
+        if is_root(path):  # root path found
+            _root_path = path
+            break
+        path = path.parent
+        if path == anchor:
+            break  # no root path found
+
+    if _root_path != Path.cwd():  # inform user about root path
+        print(f'Using workspace root {get_root_path()}')
+
+    marker = _root_path / ROOT_MARKER
+    if not marker.is_file():
+        logger.info(f"Marking root folder: {_root_path}")
+        marker.touch()
+    return _root_path
+
+
 _log_base_path = None
 _log_base_path_default = None
 _log_base_path_env_var = None
@@ -96,7 +132,8 @@ def get_log_path():
     if path == os.devnull:
         return None
 
-    return Path(str(path)) / _log_subdirectory
+    path = Path(str(path)) / _log_subdirectory
+    return path if path.is_absolute() else get_root_path() / path
 
 
 def set_default_log_path(
