@@ -20,6 +20,8 @@ def resolve_path(value, base=os.getcwd()):
     """
     if value is None:
         return value
+    if os.path.isabs(value):
+        return value
     res = os.path.abspath(os.path.join(base, str(value)))
     return res
 
