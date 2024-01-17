@@ -76,7 +76,7 @@ def _test_build_package(tmp_path_str, *, symlink_install):
         (pkg.path / 'setup.py').write_text(
             'from setuptools import setup\n'
             'setup(\n'
-            '    name="test_package",\n'
+            '    name="test-package",\n'
             '    packages=["my_module"],\n'
             ')\n'
         )
