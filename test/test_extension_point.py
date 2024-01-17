@@ -54,8 +54,8 @@ def iter_entry_points(*, group=None):
 
 def distributions():
     return [
-        Dist(iter_entry_points(group='group1')),
-        Dist([EntryPoint('extC', 'eC', Group2.name)]),
+        Dist([Group1, ExtA, ExtB]),
+        Dist([Group2, EntryPoint('extC', 'eC', Group2.name)]),
         Dist([EntryPoint('extD', 'eD', 'groupX')]),
     ]
 
@@ -71,7 +71,11 @@ def test_all_extension_points():
         ):
             # successfully load a known entry point
             extension_points = get_all_extension_points()
-            assert set(extension_points.keys()) == {'group1', 'group2'}
+            assert set(extension_points.keys()) == {
+                EXTENSION_POINT_GROUP_NAME,
+                'group1',
+                'group2',
+            }
             assert set(extension_points['group1'].keys()) == {'extA', 'extB'}
             assert extension_points['group1']['extA'][0] == 'eA'
 
