@@ -10,5 +10,6 @@ artifacts:
           distributions:
             - ubuntu:focal
             - ubuntu:jammy
-            - debian:bullseye
+            - ubuntu:noble
             - debian:bookworm
+            - debian:trixie
