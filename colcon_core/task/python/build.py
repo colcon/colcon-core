@@ -197,6 +197,12 @@ class PythonBuildTask(TaskExtensionPoint):
         return commands
 
     async def _undo_develop(self, pkg, args, env):
+        """
+        Undo a previously run 'develop' command.
+
+        :returns: None if develop was not previously detected, otherwise
+                  an integer return code where zero indicates success.
+        """
         # undo previous develop if .egg-info is found and develop symlinks
         egg_info = os.path.join(
             args.build_base, '%s.egg-info' % pkg.name.replace('-', '_'))
@@ -215,6 +221,12 @@ class PythonBuildTask(TaskExtensionPoint):
             return completed.returncode
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
+        """
+        Undo a previously run 'install' command.
+
+        :returns: None if install was not previously detected, otherwise
+                  an integer return code where zero indicates success.
+        """
         # undo previous install if install.log is found
         install_log = os.path.join(args.build_base, 'install.log')
         if not os.path.exists(install_log):
