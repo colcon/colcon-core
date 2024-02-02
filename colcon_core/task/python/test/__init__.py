@@ -73,6 +73,9 @@ class PythonTestTask(TaskExtensionPoint):
 
         logger.log(1, f"test.step() by extension '{key}'")
         try:
+            if 'PYTHONDONTWRITEBYTECODE' not in env:
+                env = dict(env)
+                env['PYTHONDONTWRITEBYTECODE'] = '1'
             return await extension.step(self.context, env, setup_py_data)
         except Exception as e:  # noqa: F841
             # catch exceptions raised in python testing step extension
