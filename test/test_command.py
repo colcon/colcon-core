@@ -40,9 +40,15 @@ def test_main():
     with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
-        with patch(
-            'colcon_core.argument_parser.get_argument_parser_extensions',
-            return_value={}
+        with (
+            patch(
+                'colcon_core.argument_parser.get_argument_parser_extensions',
+                return_value={}
+            ),
+            patch(
+                'colcon_core.output_style.get_output_style_extensions',
+                return_value={}
+            ),
         ):
             with pytest.raises(SystemExit) as e:
                 main(argv=['--help'])

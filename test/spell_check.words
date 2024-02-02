@@ -112,6 +112,7 @@ stacklevel
 staticmethod
 stdeb
 stringify
+stylizer
 subparser
 subparsers
 subprocesses

@@ -9,6 +9,7 @@ from colcon_core.event.job import JobStarted
 from colcon_core.event.test import TestFailure
 from colcon_core.event_handler import EventHandlerExtensionPoint
 from colcon_core.event_handler import format_duration
+from colcon_core.output_style import Style
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.subprocess import SIGINT_RESULT
 
@@ -34,31 +35,34 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
         data = event[0]
 
         if isinstance(data, JobStarted):
+            job_id = Style.PackageOrJobName(data.identifier)
             self._start_times[data.identifier] = time.monotonic()
-            print(f'Starting >>> {data.identifier}', flush=True)
+            print(Style.SectionStart(f'Starting >>> {job_id}'), flush=True)
 
         elif isinstance(data, TestFailure):
             job = event[1]
             self._with_test_failures.add(job)
 
         elif isinstance(data, JobEnded):
+            job_id = Style.PackageOrJobName(data.identifier)
             duration = \
                 time.monotonic() - self._start_times[data.identifier]
             duration_string = format_duration(duration)
             if not data.rc:
-                msg = f'Finished <<< {data.identifier} [{duration_string}]'
+                msg = f'Finished <<< {job_id} [{duration_string}]'
                 job = event[1]
                 if job in self._with_test_failures:
-                    msg += '\t[ with test failures ]'
+                    msg += Style.Warning('\t[ with test failures ]')
                 writable = sys.stdout
 
             elif data.rc == SIGINT_RESULT:
-                msg = f'Aborted  <<< {data.identifier} [{duration_string}]'
+                msg = Style.Warning('Aborted') + f'  <<< {job_id} ' \
+                    f'[{duration_string}]'
                 writable = sys.stdout
 
             else:
-                msg = f'Failed   <<< {data.identifier} ' \
+                msg = Style.Error('Failed') + f'   <<< {job_id} ' \
                     f'[{duration_string}, exited with code {data.rc}]'
                 writable = sys.stderr
 
-            print(msg, file=writable, flush=True)
+            print(Style.SectionEnd(msg), file=writable, flush=True)
