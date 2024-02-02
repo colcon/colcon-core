@@ -79,6 +79,7 @@ purelib
 pydocstyle
 pytest
 pytests
+pythondontwritebytecode
 pythonpath
 pythonscriptspath
 pythonwarnings
