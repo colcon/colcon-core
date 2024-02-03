@@ -47,6 +47,7 @@ hookimpl
 hookwrapper
 https
 importlib
+importorskip
 isatty
 iterdir
 junit
@@ -56,6 +57,7 @@ lineno
 linter
 linux
 lstrip
+minversion
 mkdtemp
 monkeypatch
 namedtuple
