@@ -249,17 +249,38 @@ def create_parser(environment_variables_group_name):
     return parser
 
 
+def _normalize_exe_path(path_str):
+    if path_str is None:
+        return None
+    path_str = os.path.normpath(path_str)
+    if sys.platform == 'win32' and path_str.startswith('\\\\?\\'):
+        path_str = path_str[4:]
+    return Path.cwd() / Path(path_str)
+
+
 def get_prog_name():
     """Get the prog name used for the argparse parser."""
-    prog = sys.argv[0]
-    basename = os.path.basename(prog)
+    prog = _normalize_exe_path(sys.argv[0])
+    basename = prog.name
     if basename == '__main__.py':
         # use the module name in case the script was invoked with python -m ...
-        prog = os.path.basename(os.path.dirname(prog))
-    elif shutil.which(basename) == prog:
-        # use basename only if it is on the PATH
+        prog = prog.parent.name
+    elif basename == '-c':
+        # the script was invoked with python -c ...
         prog = basename
-    return prog
+    else:
+        default_prog = _normalize_exe_path(shutil.which(basename))
+        if prog == default_prog:
+            # use basename only if it is on the PATH
+            prog = basename
+        elif (
+            sys.platform == 'win32' and
+            default_prog and
+            prog == default_prog.with_suffix('')
+        ):
+            # easy-install on Windows drops the .exe on argv[0]
+            prog = basename
+    return str(prog)
 
 
 class CustomFormatter(argparse.RawDescriptionHelpFormatter):
