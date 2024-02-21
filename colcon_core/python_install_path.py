@@ -18,16 +18,21 @@ def get_python_install_path(name, vars_=()):
     """
     kwargs = {}
     kwargs['vars'] = dict(vars_)
-    # Avoid deb_system because it means using --install-layout deb
-    # which ignores --prefix and hardcodes it to /usr
-    if 'deb_system' in sysconfig.get_scheme_names() or \
-            'osx_framework_library' in sysconfig.get_scheme_names():
-        kwargs['scheme'] = 'posix_prefix'
-    # The presence of the rpm_prefix scheme indicates that posix_prefix
-    # has been patched to inject `local` into the installation locations.
-    # The rpm_prefix scheme is a backup of what posix_prefix was before it was
-    # patched.
-    elif 'rpm_prefix' in sysconfig.get_scheme_names():
-        kwargs['scheme'] = 'rpm_prefix'
+
+    install_base = kwargs['vars'].get('base', sysconfig.get_config_var('base'))
+    if install_base != sysconfig.get_config_var('base'):
+        # If we are not actually installing to the default location, the default
+        # path scheme may be inadequate. Check if we need to override.
+        schemes = sysconfig.get_scheme_names()
+        if 'deb_system' in schemes or 'osx_framework_library' in schemes:
+            # Avoid deb_system because it requires using --install-layout deb
+            # which ignores --prefix and hardcodes it to /usr
+            kwargs['scheme'] = 'posix_prefix'
+        elif 'rpm_prefix' in schemes:
+            # The presence of the rpm_prefix scheme indicates that posix_prefix
+            # has been patched to inject `local` into the installation
+            # locations. The rpm_prefix scheme is a backup of what posix_prefix
+            # was before it was patched.
+            kwargs['scheme'] = 'rpm_prefix'
 
     return Path(sysconfig.get_path(name, **kwargs))
