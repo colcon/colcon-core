@@ -50,6 +50,7 @@ importlib
 importorskip
 isatty
 iterdir
+itertools
 junit
 levelname
 libexec

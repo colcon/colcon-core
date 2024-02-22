@@ -3,8 +3,11 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import defaultdict
+from itertools import chain
 import os
+import sys
 import traceback
+import warnings
 
 try:
     from importlib.metadata import distributions
@@ -26,7 +29,6 @@ EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
 
 logger = colcon_logger.getChild(__name__)
 
-
 """
 The group name for entry points identifying colcon extension points.
 
@@ -36,6 +38,8 @@ Those need to be declared using this group name.
 """
 EXTENSION_POINT_GROUP_NAME = 'colcon_core.extension_point'
 
+_ENTRY_POINTS_CACHE = []
+
 
 def _get_unique_distributions():
     seen = set()
@@ -44,6 +48,50 @@ def _get_unique_distributions():
         if dist_name not in seen:
             seen.add(dist_name)
             yield dist
+
+
+def _get_entry_points():
+    for dist in _get_unique_distributions():
+        for entry_point in dist.entry_points:
+            # Modern EntryPoint instances should already have this set
+            if not hasattr(entry_point, 'dist'):
+                entry_point.dist = dist
+            yield entry_point
+
+
+def _get_cached_entry_points():
+    if not _ENTRY_POINTS_CACHE:
+        if sys.version_info >= (3, 10):
+            # We prefer using importlib.metadata.entry_points because it
+            # has an internal optimization which allows us to load the entry
+            # points without reading the individual PKG-INFO files, while
+            # still visiting each unique distribution only once.
+            all_entry_points = entry_points()
+            if isinstance(all_entry_points, dict):
+                # Prior to Python 3.12, entry_points returned a (deprecated)
+                # dict. Unfortunately, the "future-proof" recommended
+                # pattern is to add filter parameters, but we actually
+                # want to cache everything so that doesn't work here.
+                with warnings.catch_warnings():
+                    warnings.filterwarnings(
+                        'ignore',
+                        'SelectableGroups dict interface is deprecated',
+                        DeprecationWarning,
+                        module=__name__)
+                    all_entry_points = chain.from_iterable(
+                        all_entry_points.values())
+            _ENTRY_POINTS_CACHE.extend(all_entry_points)
+        else:
+            # If we don't have Python 3.10, we must read each PKG-INFO to
+            # get the name of the distribution so that we can skip the
+            # "shadowed" distributions properly.
+            _ENTRY_POINTS_CACHE.extend(_get_entry_points())
+    return _ENTRY_POINTS_CACHE
+
+
+def clear_entry_point_cache():
+    """Purge the entry point cache."""
+    _ENTRY_POINTS_CACHE.clear()
 
 
 def get_all_extension_points():
@@ -59,23 +107,24 @@ def get_all_extension_points():
     colcon_extension_points = get_extension_points(EXTENSION_POINT_GROUP_NAME)
     colcon_extension_points.setdefault(EXTENSION_POINT_GROUP_NAME, None)
 
-    entry_points = defaultdict(dict)
-    for dist in _get_unique_distributions():
-        for entry_point in dist.entry_points:
-            # skip groups which are not registered as extension points
-            if entry_point.group not in colcon_extension_points:
-                continue
+    extension_points = defaultdict(dict)
+    for entry_point in _get_cached_entry_points():
+        if entry_point.group not in colcon_extension_points:
+            continue
 
-            if entry_point.name in entry_points[entry_point.group]:
-                previous = entry_points[entry_point.group][entry_point.name]
-                logger.error(
-                    f"Entry point '{entry_point.group}.{entry_point.name}' is "
-                    f"declared multiple times, '{entry_point.value}' "
-                    f"from '{dist._path}' "
-                    f"overwriting '{previous}'")
-            entry_points[entry_point.group][entry_point.name] = \
-                (entry_point.value, dist.metadata['Name'], dist.version)
-    return entry_points
+        dist_metadata = entry_point.dist.metadata
+        ep_tuple = (
+            entry_point.value,
+            dist_metadata['Name'], dist_metadata['Version'],
+        )
+        if entry_point.name in extension_points[entry_point.group]:
+            previous = extension_points[entry_point.group][entry_point.name]
+            logger.error(
+                f"Entry point '{entry_point.group}.{entry_point.name}' is "
+                f"declared multiple times, '{ep_tuple}' "
+                f"overwriting '{previous}'")
+        extension_points[entry_point.group][entry_point.name] = ep_tuple
+    return extension_points
 
 
 def get_extension_points(group):
@@ -87,16 +136,9 @@ def get_extension_points(group):
     :rtype: dict
     """
     extension_points = {}
-    try:
-        # Python 3.10 and newer
-        query = entry_points(group=group)
-    except TypeError:
-        query = (
-            entry_point
-            for dist in _get_unique_distributions()
-            for entry_point in dist.entry_points
-            if entry_point.group == group)
-    for entry_point in query:
+    for entry_point in _get_cached_entry_points():
+        if entry_point.group != group:
+            continue
         if entry_point.name in extension_points:
             previous_entry_point = extension_points[entry_point.name]
             logger.error(
