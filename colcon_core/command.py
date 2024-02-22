@@ -232,14 +232,16 @@ def create_parser(environment_variables_group_name):
                 return None
             return result
 
+    epilog = get_environment_variables_epilog(environment_variables_group_name)
+    if epilog:
+        epilog += '\n\n'
+    epilog += READTHEDOCS_MESSAGE
+
     # top level parser
     parser = CustomArgumentParser(
         prog=get_prog_name(),
         formatter_class=CustomFormatter,
-        epilog=(
-            get_environment_variables_epilog(
-                environment_variables_group_name
-            ) + '\n\n' + READTHEDOCS_MESSAGE))
+        epilog=epilog)
 
     # enable introspecting and intercepting all command line arguments
     parser = decorate_argument_parser(parser)
@@ -287,6 +289,8 @@ def get_environment_variables_epilog(group_name):
     """
     # list environment variables with descriptions
     entry_points = load_extension_points(group_name)
+    if not entry_points:
+        return ''
     env_vars = {
         env_var.name: env_var.description for env_var in entry_points.values()}
     epilog_lines = []
@@ -376,7 +380,6 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
     :returns: The special action object
     """
     global colcon_logger
-    assert verb_extensions, 'No verb extensions'
 
     # list of available verbs with their descriptions
     verbs = []
@@ -387,9 +390,9 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
     # add subparser with description of verb extensions
     subparser = parser.add_subparsers(
         title=f'{cmd_name} verbs',
-        description='\n'.join(verbs),
+        description='\n'.join(verbs) or None,
         dest=attribute,
-        help=f'call `{cmd_name} VERB -h` for specific help',
+        help=f'call `{cmd_name} VERB -h` for specific help' if verbs else None,
     )
     return subparser
 
