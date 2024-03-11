@@ -12,6 +12,7 @@ except ImportError:
     # TODO: Drop this with Python 3.7 support
     from importlib_metadata import Distribution
 
+from colcon_core.extension_point import clear_entry_point_cache
 from colcon_core.extension_point import EntryPoint
 from colcon_core.extension_point import EXTENSION_POINT_GROUP_NAME
 from colcon_core.extension_point import get_all_extension_points
@@ -73,6 +74,8 @@ def test_all_extension_points():
             'colcon_core.extension_point.distributions',
             side_effect=_distributions
         ):
+            clear_entry_point_cache()
+
             # successfully load a known entry point
             extension_points = get_all_extension_points()
             assert set(extension_points.keys()) == {
@@ -94,12 +97,14 @@ def test_extension_point_blocklist():
             'colcon_core.extension_point.distributions',
             side_effect=_distributions
         ):
+            clear_entry_point_cache()
             extension_points = get_extension_points('group1')
     assert 'extA' in extension_points.keys()
     extension_point = extension_points['extA']
     assert extension_point == 'eA'
 
     with patch.object(EntryPoint, 'load', return_value=None) as load:
+        clear_entry_point_cache()
         load_extension_point('extA', 'eA', 'group1')
         assert load.call_count == 1
 
@@ -108,12 +113,14 @@ def test_extension_point_blocklist():
         with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST=os.pathsep.join([
             'group1.extB', 'group2.extC'])
         ):
+            clear_entry_point_cache()
             load_extension_point('extA', 'eA', 'group1')
         assert load.call_count == 1
 
         # entry point in a blocked group can't be loaded
         load.reset_mock()
         with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST='group1'):
+            clear_entry_point_cache()
             with pytest.raises(RuntimeError) as e:
                 load_extension_point('extA', 'eA', 'group1')
             assert 'The entry point group name is listed in the environment ' \
@@ -124,11 +131,44 @@ def test_extension_point_blocklist():
         with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST=os.pathsep.join([
             'group1.extA', 'group1.extB'])
         ):
+            clear_entry_point_cache()
             with pytest.raises(RuntimeError) as e:
                 load_extension_point('extA', 'eA', 'group1')
             assert 'The entry point name is listed in the environment ' \
                 'variable' in str(e.value)
         assert load.call_count == 0
+
+
+def test_redefined_extension_point():
+    def _duped_distributions():
+        yield from _distributions()
+        yield _FakeDistribution({
+            'group2': [('extC', 'eC-prime')],
+        })
+
+    def _duped_entry_points():
+        for dist in _duped_distributions():
+            yield from dist.entry_points
+
+    with patch('colcon_core.extension_point.logger.error') as error:
+        with patch(
+            'colcon_core.extension_point.entry_points',
+            side_effect=_duped_entry_points
+        ):
+            with patch(
+                'colcon_core.extension_point.distributions',
+                side_effect=_duped_distributions
+            ):
+                clear_entry_point_cache()
+                extension_points = get_all_extension_points()
+                assert 'eC-prime' == extension_points['group2']['extC'][0]
+                assert error.call_count == 1
+
+                error.reset_mock()
+                clear_entry_point_cache()
+                extension_points = get_extension_points('group2')
+                assert 'eC-prime' == extension_points.get('extC')
+                assert error.call_count == 1
 
 
 def entry_point_load(self, *args, **kwargs):
