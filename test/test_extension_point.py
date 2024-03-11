@@ -6,6 +6,12 @@ import os
 from unittest.mock import DEFAULT
 from unittest.mock import patch
 
+try:
+    from importlib.metadata import Distribution
+except ImportError:
+    # TODO: Drop this with Python 3.7 support
+    from importlib_metadata import Distribution
+
 from colcon_core.extension_point import EntryPoint
 from colcon_core.extension_point import EXTENSION_POINT_GROUP_NAME
 from colcon_core.extension_point import get_all_extension_points
@@ -17,57 +23,55 @@ import pytest
 from .environment_context import EnvironmentContext
 
 
-Group1 = EntryPoint('group1', 'g1', EXTENSION_POINT_GROUP_NAME)
-Group2 = EntryPoint('group2', 'g2', EXTENSION_POINT_GROUP_NAME)
-ExtA = EntryPoint('extA', 'eA', Group1.name)
-ExtB = EntryPoint('extB', 'eB', Group1.name)
-
-
-class Dist():
-
-    version = '0.0.0'
+class _FakeDistribution(Distribution):
 
     def __init__(self, entry_points):
-        self.metadata = {'Name': f'dist-{id(self)}'}
-        self._entry_points = entry_points
+        entry_points_spec = []
+        for group_name, group_members in entry_points.items():
+            entry_points_spec.append(f'[{group_name}]')
+            for member_name, member_value in group_members:
+                entry_points_spec.append(f'{member_name} = {member_value}')
+            entry_points_spec.append('')
 
-    @property
-    def entry_points(self):
-        return list(self._entry_points)
+        self._files = {
+            'PKG-INFO': f'Name: dist-{id(self)}\nVersion: 0.0.0\n',
+            'entry_points.txt': '\n'.join(entry_points_spec) + '\n',
+        }
 
-    @property
-    def name(self):
-        return self.metadata['Name']
+    def read_text(self, filename):
+        return self._files.get(filename)
 
-
-def iter_entry_points(*, group=None):
-    if group == EXTENSION_POINT_GROUP_NAME:
-        return [Group1, Group2]
-    elif group == Group1.name:
-        return [ExtA, ExtB]
-    assert not group
-    return {
-        EXTENSION_POINT_GROUP_NAME: [Group1, Group2],
-        Group1.name: [ExtA, ExtB],
-    }
+    def locate_file(self, path):
+        return path
 
 
-def distributions():
-    return [
-        Dist([Group1, ExtA, ExtB]),
-        Dist([Group2, EntryPoint('extC', 'eC', Group2.name)]),
-        Dist([EntryPoint('extD', 'eD', 'groupX')]),
-    ]
+def _distributions():
+    yield _FakeDistribution({
+        EXTENSION_POINT_GROUP_NAME: [('group1', 'g1')],
+        'group1': [('extA', 'eA'), ('extB', 'eB')],
+    })
+    yield _FakeDistribution({
+        EXTENSION_POINT_GROUP_NAME: [('group2', 'g2')],
+        'group2': [('extC', 'eC')],
+    })
+    yield _FakeDistribution({
+        'groupX': [('extD', 'eD')],
+    })
+
+
+def _entry_points():
+    for dist in _distributions():
+        yield from dist.entry_points
 
 
 def test_all_extension_points():
     with patch(
         'colcon_core.extension_point.entry_points',
-        side_effect=iter_entry_points
+        side_effect=_entry_points
     ):
         with patch(
             'colcon_core.extension_point.distributions',
-            side_effect=distributions
+            side_effect=_distributions
         ):
             # successfully load a known entry point
             extension_points = get_all_extension_points()
@@ -84,11 +88,11 @@ def test_extension_point_blocklist():
     # successful loading of extension point without a blocklist
     with patch(
         'colcon_core.extension_point.entry_points',
-        side_effect=iter_entry_points
+        side_effect=_entry_points
     ):
         with patch(
             'colcon_core.extension_point.distributions',
-            side_effect=distributions
+            side_effect=_distributions
         ):
             extension_points = get_extension_points('group1')
     assert 'extA' in extension_points.keys()
