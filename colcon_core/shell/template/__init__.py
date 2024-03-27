@@ -6,8 +6,8 @@ import os
 
 from colcon_core.logging import colcon_logger
 try:
+    from em import Configuration
     from em import Interpreter
-    from em import OVERRIDE_OPT
 except ImportError as e:
     try:
         import em  # noqa: F401
@@ -33,13 +33,16 @@ def expand_template(template_path, destination_path, data):
     :raises: Any exception which `em.Interpreter.string` might raise
     """
     output = StringIO()
+    interpreter = None
     try:
-        # disable OVERRIDE_OPT to avoid saving / restoring stdout
-        interpreter = CachingInterpreter(
-            output=output, options={OVERRIDE_OPT: False})
+        config = Configuration(
+            defaultRoot=str(template_path),
+            defaultStdout=output,
+            useProxy=False)
+        interpreter = CachingInterpreter(config=config, dispatcher=False)
         with template_path.open('r') as h:
             content = h.read()
-        interpreter.string(content, str(template_path), locals=data)
+        interpreter.string(content, locals=data)
         output = output.getvalue()
     except Exception as e:  # noqa: F841
         logger.error(
@@ -54,21 +57,14 @@ def expand_template(template_path, destination_path, data):
         with destination_path.open('w') as h:
             h.write(output)
     finally:
-        interpreter.shutdown()
-
-
-class BypassStdoutInterpreter(Interpreter):
-    """Interpreter for EmPy which keeps `stdout` unchanged."""
-
-    def installProxy(self):  # noqa: D102 N802
-        # avoid replacing stdout with ProxyFile
-        pass
+        if interpreter is not None:
+            interpreter.shutdown()
 
 
 cached_tokens = {}
 
 
-class CachingInterpreter(BypassStdoutInterpreter):
+class CachingInterpreter(Interpreter):
     """Interpreter for EmPy which which caches parsed tokens."""
 
     def parse(self, scanner, locals=None):  # noqa: A002 D102
@@ -90,4 +86,6 @@ class CachingInterpreter(BypassStdoutInterpreter):
         self.invoke('atParse', scanner=scanner, locals=locals)
         for token in tokens:
             self.invoke('atToken', token=token)
-            token.run(self, locals)
+            self.run(token, locals)
+            scanner.accumulate()
+        return True
