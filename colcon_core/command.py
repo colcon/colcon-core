@@ -226,7 +226,15 @@ def create_parser(environment_variables_group_name):
 
         def _parse_optional(self, arg_string):
             result = super()._parse_optional(arg_string)
-            if result == (None, arg_string, None):
+            # Up until https://github.com/python/cpython/pull/114180 ,
+            # _parse_optional() returned a 3-tuple when it couldn't classify
+            # the option.  As of that PR (which is in Python 3.13, and
+            # backported to Python 3.12), it returns a 4-tuple.  Check for
+            # either here.
+            if result in (
+                (None, arg_string, None),
+                (None, arg_string, None, None),
+            ):
                 # in the case there the arg is classified as an unknown 'O'
                 # override that and classify it as an 'A'
                 return None
