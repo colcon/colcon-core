@@ -3,6 +3,7 @@ apache
 argparse
 asyncio
 autouse
+backported
 basepath
 bazqux
 blocklist
@@ -17,6 +18,7 @@ configparser
 contextlib
 coroutine
 coroutines
+cpython
 datetime
 debian
 debinfo
