@@ -232,7 +232,8 @@ def create_parser(environment_variables_group_name):
             # backported to Python 3.12), it returns a 4-tuple.  Check for
             # either here.
             if result in (
-                (None, arg_string, None), (None, arg_string, None, None)
+                (None, arg_string, None),
+                (None, arg_string, None, None),
             ):
                 # in the case there the arg is classified as an unknown 'O'
                 # override that and classify it as an 'A'
