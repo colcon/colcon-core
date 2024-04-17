@@ -1,3 +1,4 @@
+addfinalizer
 addopts
 apache
 argparse
@@ -35,8 +36,10 @@ docstring
 executables
 exitstatus
 fdopen
+ffoo
 filterwarnings
 foobar
+fooo
 fromhex
 functools
 getcategory
@@ -139,5 +142,6 @@ unittest
 unittests
 unlinking
 unrenamed
+usefixtures
 wildcards
 workaround
