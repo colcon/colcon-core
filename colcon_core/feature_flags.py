@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-import re
 
 from colcon_core.environment_variable import EnvironmentVariable
 
@@ -39,7 +38,4 @@ def is_feature_flag_set(flag):
     :returns: True if the flag is set
     :rtype: bool
     """
-    return bool(flag and re.search(
-        fr'(?:^|{os.pathsep}){flag}(?:{os.pathsep}|$)',
-        os.environ.get(FEATURE_FLAGS_ENVIRONMENT_VARIABLE.name) or '',
-    ))
+    return flag in get_feature_flags()
