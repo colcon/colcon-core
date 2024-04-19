@@ -4,12 +4,16 @@
 import os
 
 from colcon_core.environment_variable import EnvironmentVariable
+from colcon_core.logging import colcon_logger
 
+logger = colcon_logger.getChild(__name__)
 
 """Environment variable to enable feature flags"""
 FEATURE_FLAGS_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_FEATURE_FLAGS',
     'Enable pre-production features and behaviors')
+
+_REPORTED_USES = set()
 
 
 def get_feature_flags():
@@ -38,4 +42,9 @@ def is_feature_flag_set(flag):
     :returns: True if the flag is set
     :rtype: bool
     """
-    return flag in get_feature_flags()
+    if flag in get_feature_flags():
+        if flag not in _REPORTED_USES:
+            logger.warning(f'Enabling feature: {flag}')
+            _REPORTED_USES.add(flag)
+        return True
+    return False
