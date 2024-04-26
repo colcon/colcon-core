@@ -274,8 +274,15 @@ def get_prog_name():
             sys.platform == 'win32' and
             os.path.splitext(real_prog)[1] != default_ext
         ):
+            # On Windows, setuptools entry points drop the file extension from
+            # argv[0], but shutil.which does not. If the two don't end in the
+            # same extension, try appending the shutil extension for a better
+            # chance at matching.
             real_prog += default_ext
         try:
+            # The os.path.samefile requires that both files exist on disk, but
+            # has the advantage of working around symlinks, UNC-style paths,
+            # DOS 8.3 path atoms, and path normalization.
             if os.path.samefile(default_prog, real_prog):
                 # use basename only if it is on the PATH
                 prog = basename
