@@ -77,9 +77,12 @@ class PythonBuildTask(TaskExtensionPoint):
         python_lib = os.path.join(
             args.install_base, self._get_python_lib(args))
         os.makedirs(python_lib, exist_ok=True)
+        distutils_commands = os.path.join(
+            os.path.dirname(__file__), 'colcon_distutils_commands')
         # and being in the PYTHONPATH
         env = dict(env)
         env['PYTHONPATH'] = str(prefix_override) + os.pathsep + \
+            distutils_commands + os.pathsep + \
             python_lib + os.pathsep + env.get('PYTHONPATH', '')
         # coverage capture interferes with sitecustomize
         # See also: https://docs.python.org/3/library/site.html#module-site
