@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import defaultdict
+from collections.abc import Mapping
 from copy import deepcopy
 import os
 from pathlib import Path
@@ -105,12 +106,15 @@ class PackageDescriptor:
           consider
         :param Iterable[str] direct_categories: The names of the direct
           categories
-        :param Iterable[str] recursive_categories: The names of the recursive
-          categories
+        :param Iterable[str]|Mapping[str, Iterable[str]] recursive_categories:
+          The names of the recursive categories, optionally mapped from the
+          immediate upstream category which included the dependency
         :returns: The dependencies
         :rtype: set[DependencyDescriptor]
         :raises AssertionError: if a package lists itself as a dependency
         """
+        if not isinstance(recursive_categories, Mapping):
+            recursive_categories = defaultdict(lambda: recursive_categories)
         # the following variable only exists for faster access within the loop
         descriptors_by_name = defaultdict(set)
         for d in descriptors:
@@ -132,11 +136,17 @@ class PackageDescriptor:
                 descs = descriptors_by_name[dep]
                 if not descs:
                     continue
+                categories = set()
+                for category in dep.metadata['categories']:
+                    cats = recursive_categories.get(category)
+                    if cats is None:
+                        categories = None
+                        break
+                    categories.update(cats)
                 # recursing into the same function of the dependency descriptor
                 # queue recursive dependencies
                 for d in descs:
-                    queue |= d.get_dependencies(
-                        categories=recursive_categories)
+                    queue |= d.get_dependencies(categories=categories)
                 # add the depth
                 dep.metadata['depth'] = depth
                 # add dependency to result set
