@@ -9,6 +9,8 @@ import warnings
 with warnings.catch_warnings():
     warnings.filterwarnings(
         'ignore', message='.*entry_point.*deprecated.*', category=UserWarning)
+    warnings.filterwarnings(
+        'ignore', message='.*pkg_resources.*', category=DeprecationWarning)
 
     from colcon_core.entry_point import EXTENSION_POINT_GROUP_NAME
     from colcon_core.entry_point import get_all_entry_points

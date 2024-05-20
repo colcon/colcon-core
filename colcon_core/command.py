@@ -52,6 +52,7 @@ if warnings_filters:
 from colcon_core.argument_parser import decorate_argument_parser  # noqa: E402 E501 I100 I202
 from colcon_core.argument_parser import SuppressUsageOutput  # noqa: E402
 from colcon_core.extension_point import load_extension_points  # noqa: E402
+from colcon_core.feature_flags import check_implemented_flags  # noqa: E402
 from colcon_core.location import create_log_path  # noqa: E402
 from colcon_core.location import get_log_path  # noqa: E402
 from colcon_core.location import set_default_config_path  # noqa: E402
@@ -134,6 +135,9 @@ def _main(*, command_name, argv):
     colcon_logger.debug(
         'Command line arguments: {argv}'
         .format(argv=argv if argv is not None else sys.argv))
+
+    # warn about any specified feature flags that are already implemented
+    check_implemented_flags()
 
     # set default locations for config files, for searchability: COLCON_HOME
     set_default_config_path(

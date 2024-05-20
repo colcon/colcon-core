@@ -15,6 +15,19 @@ FEATURE_FLAGS_ENVIRONMENT_VARIABLE = EnvironmentVariable(
 
 _REPORTED_USES = set()
 
+IMPLEMENTED_FLAGS = set()
+
+
+def check_implemented_flags():
+    """Check for and warn about flags which have been implemented."""
+    implemented = IMPLEMENTED_FLAGS.intersection(get_feature_flags())
+    if implemented:
+        logger.warning(
+            'The following feature flags have been implemented and should no '
+            'longer be specified in '
+            f'{FEATURE_FLAGS_ENVIRONMENT_VARIABLE.name}: '
+            f"{','.join(implemented)}")
+
 
 def get_feature_flags():
     """
@@ -42,8 +55,15 @@ def is_feature_flag_set(flag):
     :returns: True if the flag is set
     :rtype: bool
     """
-    if flag in get_feature_flags():
+    if flag in IMPLEMENTED_FLAGS:
+        return True
+    elif flag in get_feature_flags():
         if flag not in _REPORTED_USES:
+            if not _REPORTED_USES:
+                logger.warning(
+                    'One or more feature flags have been enabled. '
+                    'These features may be unstable and may change API or '
+                    'behavior at any time.')
             logger.warning(f'Enabling feature: {flag}')
             _REPORTED_USES.add(flag)
         return True
