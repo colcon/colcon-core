@@ -64,7 +64,7 @@ class PackageIdentificationExtensionPoint:
         raise NotImplementedError()
 
 
-def get_package_identification_extensions():
+def get_package_identification_extensions(*, group_name=__name__):
     """
     Get the available package identification extensions.
 
@@ -73,7 +73,7 @@ def get_package_identification_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PACKAGE_IDENTIFICATION_NAME = name
     return order_extensions_grouped_by_priority(extensions)

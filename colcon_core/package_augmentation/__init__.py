@@ -65,7 +65,7 @@ class PackageAugmentationExtensionPoint:
         raise NotImplementedError()
 
 
-def get_package_augmentation_extensions():
+def get_package_augmentation_extensions(*, group_name=__name__):
     """
     Get the available package augmentation extensions.
 
@@ -73,7 +73,7 @@ def get_package_augmentation_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PACKAGE_AUGMENTATION_NAME = name
     return order_extensions_by_priority(extensions)

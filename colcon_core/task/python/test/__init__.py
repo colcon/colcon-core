@@ -137,7 +137,9 @@ class PythonTestingStepExtensionPoint:
         raise NotImplementedError()
 
 
-def get_python_testing_step_extensions():
+def get_python_testing_step_extensions(
+    *, group_name='colcon_core.python_testing',
+):
     """
     Get the available Python testing step extensions.
 
@@ -145,8 +147,7 @@ def get_python_testing_step_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(
-        'colcon_core.python_testing', unique_instance=False)
+    extensions = instantiate_extensions(group_name, unique_instance=False)
     for name in list(extensions.keys()):
         extension = extensions[name]
         extension.STEP_TYPE = name
