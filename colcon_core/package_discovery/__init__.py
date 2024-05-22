@@ -84,7 +84,7 @@ class PackageDiscoveryExtensionPoint:
         raise NotImplementedError()
 
 
-def get_package_discovery_extensions(*, group_name=__name__):
+def get_package_discovery_extensions(*, group_name=None):
     """
     Get the available package discovery extensions.
 
@@ -92,6 +92,8 @@ def get_package_discovery_extensions(*, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PACKAGE_DISCOVERY_NAME = name

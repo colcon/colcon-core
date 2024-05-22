@@ -44,7 +44,7 @@ class EventHandlerExtensionPoint:
         raise NotImplementedError()
 
 
-def get_event_handler_extensions(*, context, group_name=__name__):
+def get_event_handler_extensions(*, context, group_name=None):
     """
     Get the available event handler extensions.
 
@@ -52,6 +52,8 @@ def get_event_handler_extensions(*, context, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.EVENT_HANDLER_NAME = name

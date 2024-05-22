@@ -40,7 +40,7 @@ class PrefixPathExtensionPoint:
         raise NotImplementedError()
 
 
-def get_prefix_path_extensions(*, group_name=__name__):
+def get_prefix_path_extensions(*, group_name=None):
     """
     Get the available prefix path extensions.
 
@@ -49,6 +49,8 @@ def get_prefix_path_extensions(*, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PREFIX_PATH_NAME = name

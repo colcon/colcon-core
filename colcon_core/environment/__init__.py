@@ -47,7 +47,7 @@ class EnvironmentExtensionPoint:
         raise NotImplementedError()
 
 
-def get_environment_extensions(*, group_name=__name__):
+def get_environment_extensions(*, group_name=None):
     """
     Get the available environment extensions.
 
@@ -55,6 +55,8 @@ def get_environment_extensions(*, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name in list(extensions.keys()):
         extension = extensions[name]

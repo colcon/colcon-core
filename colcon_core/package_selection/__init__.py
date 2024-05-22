@@ -85,7 +85,7 @@ def add_arguments(parser):
     _add_package_selection_arguments(parser)
 
 
-def get_package_selection_extensions(*, group_name=__name__):
+def get_package_selection_extensions(*, group_name=None):
     """
     Get the available package selection extensions.
 
@@ -93,6 +93,8 @@ def get_package_selection_extensions(*, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PACKAGE_SELECTION_NAME = name

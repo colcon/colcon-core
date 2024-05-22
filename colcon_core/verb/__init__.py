@@ -48,7 +48,7 @@ class VerbExtensionPoint:
         raise NotImplementedError()
 
 
-def get_verb_extensions(*, group_name=__name__):
+def get_verb_extensions(*, group_name=None):
     """
     Get the available verb extensions.
 
@@ -56,6 +56,8 @@ def get_verb_extensions(*, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.VERB_NAME = name

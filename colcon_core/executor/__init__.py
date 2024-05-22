@@ -197,7 +197,7 @@ class ExecutorExtensionPoint:
         self._event_controller.flush()
 
 
-def get_executor_extensions(*, group_name=__name__):
+def get_executor_extensions(*, group_name=None):
     """
     Get the available executor extensions.
 
@@ -206,6 +206,8 @@ def get_executor_extensions(*, group_name=__name__):
 
     :rtype: OrderedDict
     """
+    if group_name is None:
+        group_name = __name__
     extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.EXECUTOR_NAME = name
