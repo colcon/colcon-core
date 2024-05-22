@@ -61,9 +61,10 @@ def is_feature_flag_set(flag):
         if flag not in _REPORTED_USES:
             if not _REPORTED_USES:
                 logger.warning(
-                    'One or more feature flags have been enabled. '
-                    'These features may be unstable and may change API or '
-                    'behavior at any time.')
+                    'One or more feature flags have been enabled using the '
+                    f'{FEATURE_FLAGS_ENVIRONMENT_VARIABLE.name} environment '
+                    'variable. These features may be unstable and may change '
+                    'API or behavior at any time.')
             logger.warning(f'Enabling feature: {flag}')
             _REPORTED_USES.add(flag)
         return True
