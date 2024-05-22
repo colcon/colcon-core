@@ -22,10 +22,13 @@ except ImportError:
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.logging import colcon_logger
 
-"""Environment variable to block extensions"""
-EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
+_EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_EXTENSION_BLOCKLIST',
     'Block extensions which should not be used')
+
+"""Environment variable to block extensions"""
+EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = \
+    _EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
 
 logger = colcon_logger.getChild(__name__)
 
@@ -205,3 +208,16 @@ def load_extension_point(name, value, group):
                 'The entry point name is listed in the environment variable '
                 f"'{EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE.name}'")
     return EntryPoint(name, value, group).load()
+
+
+def override_blocklist_variable(variable):
+    """
+    Override the blocklist environment variable.
+
+    :param EnvironmentVariable variable: The new blocklist environment
+      variable, or None to reset to default.
+    """
+    if variable is None:
+        variable = _EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
+    global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
+    EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = variable
