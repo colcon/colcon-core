@@ -273,7 +273,7 @@ class ShellExtensionPoint:
         raise NotImplementedError()
 
 
-def get_shell_extensions():
+def get_shell_extensions(*, group_name=None):
     """
     Get the available shell extensions.
 
@@ -282,7 +282,9 @@ def get_shell_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.SHELL_NAME = name
     return order_extensions_grouped_by_priority(extensions)
@@ -593,7 +595,7 @@ class FindInstalledPackagesExtensionPoint:
         raise NotImplementedError()
 
 
-def get_find_installed_packages_extensions():
+def get_find_installed_packages_extensions(*, group_name=None):
     """
     Get the available package identification extensions.
 
@@ -602,7 +604,10 @@ def get_find_installed_packages_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__ + '.find_installed_packages')
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(
+        group_name + '.find_installed_packages')
     for name, extension in extensions.items():
         extension.PACKAGE_IDENTIFICATION_NAME = name
     return order_extensions_grouped_by_priority(extensions)
