@@ -2,8 +2,10 @@
 # Licensed under the Apache License, Version 2.0
 
 import logging
+from pathlib import Path
 from unittest.mock import Mock
 
+from colcon_core.logging import add_file_handler
 from colcon_core.logging import get_numeric_log_level
 from colcon_core.logging import set_logger_level_from_env
 import pytest
@@ -56,3 +58,21 @@ def test_get_numeric_log_level():
     with pytest.raises(ValueError) as e:
         get_numeric_log_level('-1')
     assert str(e.value).endswith('numeric log levels must be positive')
+
+
+def test_add_file_handler(tmpdir):
+    log_path = Path(tmpdir) / 'test_add_file_handler.log'
+    log_path.touch()
+    logger = logging.getLogger('test_add_file_handler')
+    try:
+        logger.setLevel(logging.WARN)
+        add_file_handler(logger, log_path)
+        assert logger.getEffectiveLevel() != logging.WARN
+        logger.info('test_add_file_handler')
+    finally:
+        for handler in logger.handlers:
+            logger.removeHandler(handler)
+            handler.close()
+
+    # check only that we logged SOMETHING to the file
+    assert log_path.stat().st_size > 10
