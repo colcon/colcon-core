@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from colcon_core.logging import add_file_handler
+from colcon_core.logging import get_effective_console_level
 from colcon_core.logging import get_numeric_log_level
 from colcon_core.logging import set_logger_level_from_env
 import pytest
@@ -76,3 +77,28 @@ def test_add_file_handler(tmpdir):
 
     # check only that we logged SOMETHING to the file
     assert log_path.stat().st_size > 10
+
+
+def test_get_effective_console_level(tmpdir):
+    logger = logging.getLogger('test_sync_console_log_level')
+
+    # no level set
+    level = get_effective_console_level(logger)
+    assert level == logger.getEffectiveLevel()
+
+    # change the level to ERROR
+    logger.setLevel(logging.ERROR)
+    level = get_effective_console_level(logger)
+    assert level == logger.getEffectiveLevel() == logging.ERROR
+
+    # after add_file_handler
+    log_path = Path(tmpdir) / 'test_add_file_handler.log'
+    log_path.touch()
+    try:
+        add_file_handler(logger, log_path)
+        level = get_effective_console_level(logger)
+        assert level == logging.ERROR
+    finally:
+        for handler in logger.handlers:
+            logger.removeHandler(handler)
+            handler.close()
