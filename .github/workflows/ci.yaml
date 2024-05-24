@@ -7,7 +7,7 @@ on:
 
 jobs:
   pytest:
-    uses: colcon/ci/.github/workflows/pytest.yaml@cottsay/codecov-token
+    uses: colcon/ci/.github/workflows/pytest.yaml@main
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   bootstrap:
