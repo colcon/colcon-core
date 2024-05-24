@@ -95,15 +95,15 @@ def add_file_handler(logger, path):
         if isinstance(handler, logging.StreamHandler):
             formatter = handler.formatter
             # filter colcon specific log messages from default stream handler
-            handler.addFilter(Filter(colcon_logger.name))
+            handler.addFilter(Filter(logger.name))
 
     # add a stream handler replacing the one filtered on the root logger
     handler = logging.StreamHandler()
     if formatter:
         # use same formatter as for stream handler
         handler.setFormatter(formatter)
-    handler.setLevel(colcon_logger.getEffectiveLevel())
-    colcon_logger.addHandler(handler)
+    handler.setLevel(logger.getEffectiveLevel())
+    logger.addHandler(handler)
 
     # add a file handler writing all log levels
     handler = logging.FileHandler(str(path))
@@ -121,9 +121,9 @@ def add_file_handler(logger, path):
         # use same formatter as for stream handler
         handler.setFormatter(formatter)
     handler.setLevel(1)
-    colcon_logger.addHandler(handler)
+    logger.addHandler(handler)
 
     # change the logger to handle all levels
-    colcon_logger.setLevel(1)
+    logger.setLevel(1)
 
     return handler
