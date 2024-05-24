@@ -7,8 +7,8 @@ on:
 
 jobs:
   pytest:
-    uses: colcon/ci/.github/workflows/pytest.yaml@main
-    with:
-      codecov: true
+    uses: colcon/ci/.github/workflows/pytest.yaml@cottsay/codecov-token
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   bootstrap:
     uses: ./.github/workflows/bootstrap.yaml
