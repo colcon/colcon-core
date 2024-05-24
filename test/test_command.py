@@ -82,6 +82,17 @@ def test_main():
             assert rc == signal.SIGINT
 
 
+def test_main_no_verbs_or_env():
+    with ExtensionPointContext():
+        with patch(
+            'colcon_core.command.load_extension_points',
+            return_value={},
+        ):
+            with pytest.raises(SystemExit) as e:
+                main(argv=['--help'])
+            assert e.value.code == 0
+
+
 def test_create_parser():
     with ExtensionPointContext():
         parser = create_parser('colcon_core.environment_variable')
