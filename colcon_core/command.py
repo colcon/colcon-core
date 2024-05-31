@@ -90,7 +90,10 @@ def register_command_exit_handler(handler):
         _command_exit_handlers.append(handler)
 
 
-def main(*, command_name='colcon', argv=None):
+def main(
+    *, command_name='colcon', argv=None, verb_group_name=None,
+    environment_variable_group_name=None,
+):
     """
     Execute the main logic of the command.
 
@@ -113,7 +116,10 @@ def main(*, command_name='colcon', argv=None):
     :returns: The return code
     """
     try:
-        return _main(command_name=command_name, argv=argv)
+        return _main(
+            command_name=command_name, argv=argv,
+            verb_group_name=verb_group_name,
+            environment_variable_group_name=environment_variable_group_name)
     except KeyboardInterrupt:
         return signal.SIGINT
     finally:
@@ -123,7 +129,9 @@ def main(*, command_name='colcon', argv=None):
             handler()
 
 
-def _main(*, command_name, argv):
+def _main(
+    *, command_name, argv, verb_group_name, environment_variable_group_name,
+):
     # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
     set_logger_level_from_env(
@@ -137,9 +145,9 @@ def _main(*, command_name, argv):
         path=(Path('~') / f'.{command_name}').expanduser(),
         env_var=f'{command_name}_HOME'.upper())
 
-    parser = create_parser('colcon_core.environment_variable')
+    parser = create_parser(environment_variable_group_name)
 
-    verb_extensions = get_verb_extensions()
+    verb_extensions = get_verb_extensions(group_name=verb_group_name)
 
     # add subparsers for all verb extensions but without arguments for now
     subparser = create_subparser(
@@ -203,7 +211,7 @@ def _main(*, command_name, argv):
     return verb_main(context, colcon_logger)
 
 
-def create_parser(environment_variables_group_name):
+def create_parser(environment_variables_group_name=None):
     """
     Create the argument parser.
 
@@ -283,7 +291,7 @@ class CustomFormatter(argparse.RawDescriptionHelpFormatter):
         return lines
 
 
-def get_environment_variables_epilog(group_name):
+def get_environment_variables_epilog(group_name=None):
     """
     Get a message enumerating the registered environment variables.
 
@@ -292,6 +300,8 @@ def get_environment_variables_epilog(group_name):
     :returns: The message for the argument parser epilog
     :rtype: str
     """
+    if group_name is None:
+        group_name = 'colcon_core.environment_variable'
     # list environment variables with descriptions
     entry_points = load_extension_points(group_name)
     if not entry_points:
