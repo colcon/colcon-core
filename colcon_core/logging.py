@@ -127,3 +127,20 @@ def add_file_handler(logger, path):
     logger.setLevel(1)
 
     return handler
+
+
+def get_effective_console_level(logger):
+    """
+    Determine the effective log level of to the console.
+
+    On a typical logger, this is the same as getEffectiveLevel(). After a call
+    to add_file_handler, this will continue to return the same level though
+    getEffectiveLevel() will now always return ``1``.
+
+    :param logger: The logger to inspect
+    :returns: the log level
+    """
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            return handler.level
+    return logger.getEffectiveLevel()
