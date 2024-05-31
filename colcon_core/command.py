@@ -87,7 +87,6 @@ def register_command_exit_handler(handler):
 
     :param handler: The callable
     """
-    global _command_exit_handlers
     if handler not in _command_exit_handlers:
         _command_exit_handlers.append(handler)
 
@@ -114,7 +113,6 @@ def main(*, command_name='colcon', argv=None):
     :param list argv: The list of arguments
     :returns: The return code
     """
-    global _command_exit_handlers
     try:
         return _main(command_name=command_name, argv=argv)
     except KeyboardInterrupt:
@@ -127,7 +125,6 @@ def main(*, command_name='colcon', argv=None):
 
 
 def _main(*, command_name, argv):
-    global colcon_logger
     # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
     set_logger_level_from_env(
@@ -391,8 +388,6 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
       selected verb
     :returns: The special action object
     """
-    global colcon_logger
-
     # list of available verbs with their descriptions
     verbs = []
     for name, extension in verb_extensions.items():
