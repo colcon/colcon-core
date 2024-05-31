@@ -131,6 +131,7 @@ testcase
 testsfailed
 testsuite
 thomas
+tmpdir
 todo
 traceback
 tryfirst

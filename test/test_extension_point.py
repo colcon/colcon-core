@@ -12,6 +12,7 @@ except ImportError:
     # TODO: Drop this with Python 3.7 support
     from importlib_metadata import Distribution
 
+from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.extension_point import clear_entry_point_cache
 from colcon_core.extension_point import EntryPoint
 from colcon_core.extension_point import EXTENSION_POINT_GROUP_NAME
@@ -19,6 +20,7 @@ from colcon_core.extension_point import get_all_extension_points
 from colcon_core.extension_point import get_extension_points
 from colcon_core.extension_point import load_extension_point
 from colcon_core.extension_point import load_extension_points
+from colcon_core.extension_point import override_blocklist_variable
 import pytest
 
 from .environment_context import EnvironmentContext
@@ -136,6 +138,45 @@ def test_extension_point_blocklist():
                 load_extension_point('extA', 'eA', 'group1')
             assert 'The entry point name is listed in the environment ' \
                 'variable' in str(e.value)
+        assert load.call_count == 0
+
+
+def test_extension_point_blocklist_override():
+    with patch.object(EntryPoint, 'load', return_value=None) as load:
+        clear_entry_point_cache()
+
+        my_extension_blocklist = EnvironmentVariable(
+            'MY_EXTENSION_BLOCKLIST', 'Foo bar baz')
+        override_blocklist_variable(my_extension_blocklist)
+
+        try:
+            # entry point in default blocklist variable can be loaded
+            load.reset_mock()
+            with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST='group1'):
+                clear_entry_point_cache()
+                load_extension_point('extA', 'eA', 'group1')
+            assert load.call_count == 1
+
+            # entry point in custom blocklist variable can't be loaded
+            load.reset_mock()
+            with EnvironmentContext(MY_EXTENSION_BLOCKLIST='group1'):
+                clear_entry_point_cache()
+                with pytest.raises(RuntimeError) as e:
+                    load_extension_point('extA', 'eA', 'group1')
+                assert 'The entry point group name is listed in the ' \
+                    'environment variable' in str(e.value)
+            assert load.call_count == 0
+        finally:
+            override_blocklist_variable(None)
+
+        # entry point in default blocklist variable can no longer be loaded
+        load.reset_mock()
+        with EnvironmentContext(COLCON_EXTENSION_BLOCKLIST='group1'):
+            clear_entry_point_cache()
+            with pytest.raises(RuntimeError) as e:
+                load_extension_point('extA', 'eA', 'group1')
+            assert 'The entry point group name is listed in the ' \
+                'environment variable' in str(e.value)
         assert load.call_count == 0
 
 
