@@ -286,7 +286,7 @@ def get_prog_name():
             if os.path.samefile(default_prog, real_prog):
                 # use basename only if it is on the PATH
                 prog = basename
-        except FileNotFoundError:
+        except (FileNotFoundError, NotADirectoryError):
             pass
     return prog
 

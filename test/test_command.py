@@ -1,15 +1,18 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+import os
 import shutil
 import signal
 import sys
 from tempfile import mkdtemp
+from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 from unittest.mock import patch
 
 from colcon_core.command import CommandContext
 from colcon_core.command import create_parser
+from colcon_core.command import get_prog_name
 from colcon_core.command import main
 from colcon_core.command import verb_main
 from colcon_core.environment_variable import EnvironmentVariable
@@ -151,3 +154,86 @@ def test_verb_main():
     assert logger.error.call_args[0][0].startswith(
         'command_name verb_name: custom error message\n')
     assert 'Exception: custom error message' in logger.error.call_args[0][0]
+
+
+def test_prog_name_module():
+    argv = [os.path.join('foo', 'bar', '__main__.py')]
+    with patch('colcon_core.command.sys.argv', argv):
+        # prog should be the module containing __main__.py
+        assert get_prog_name() == 'bar'
+
+
+def test_prog_name_on_path():
+    # use __file__ since we know it exists
+    argv = [__file__]
+    with patch('colcon_core.command.sys.argv', argv):
+        with patch(
+            'colcon_core.command.shutil.which',
+            return_value=__file__
+        ):
+            # prog should be shortened to the basename
+            assert get_prog_name() == 'test_command.py'
+
+
+def test_prog_name_not_on_path():
+    # use __file__ since we know it exists
+    argv = [__file__]
+    with patch('colcon_core.command.sys.argv', argv):
+        with patch('colcon_core.command.shutil.which', return_value=None):
+            # prog should remain unchanged
+            assert get_prog_name() == __file__
+
+
+def test_prog_name_different_on_path():
+    # use __file__ since we know it exists
+    argv = [__file__]
+    with patch('colcon_core.command.sys.argv', argv):
+        with patch(
+            'colcon_core.command.shutil.which',
+            return_value=sys.executable
+        ):
+            # prog should remain unchanged
+            assert get_prog_name() == __file__
+
+
+def test_prog_name_not_a_file():
+    # pick some file that doesn't actually exist on disk
+    no_such_file = os.path.join(__file__, 'foobar')
+    argv = [no_such_file]
+    with patch('colcon_core.command.sys.argv', argv):
+        with patch(
+            'colcon_core.command.shutil.which',
+            return_value=no_such_file
+        ):
+            # prog should remain unchanged
+            assert get_prog_name() == no_such_file
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='Symlinks not supported.')
+def test_prog_name_symlink():
+    # use __file__ since we know it exists
+    with TemporaryDirectory(prefix='test_colcon_') as temp_dir:
+        linked_file = os.path.join(temp_dir, 'test_command.py')
+        os.symlink(__file__, linked_file)
+
+        argv = [linked_file]
+        with patch('colcon_core.command.sys.argv', argv):
+            with patch(
+                'colcon_core.command.shutil.which',
+                return_value=__file__
+            ):
+                # prog should be shortened to the basename
+                assert get_prog_name() == 'test_command.py'
+
+
+@pytest.mark.skipif(sys.platform != 'win32', reason='Only valid on Windows.')
+def test_prog_name_easy_install():
+    # use __file__ since we know it exists
+    argv = [__file__[:-3]]
+    with patch('colcon_core.command.sys.argv', argv):
+        with patch(
+            'colcon_core.command.shutil.which',
+            return_value=__file__
+        ):
+            # prog should be shortened to the basename
+            assert get_prog_name() == 'test_command'
