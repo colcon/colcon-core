@@ -138,8 +138,9 @@ def get_packages(
     :param additional_argument_names: A list of additional arguments to
       consider
     :param Iterable[str] direct_categories: The names of the direct categories
-    :param Iterable[str] recursive_categories: The names of the recursive
-      categories
+    :param Iterable[str]|Mapping[str, Iterable[str]] recursive_categories:
+      The names of the recursive categories, optionally mapped from the
+      immediate upstream category which included the dependency
     :rtype: list
     :raises RuntimeError: if the returned set of packages contains duplicates
       package names
