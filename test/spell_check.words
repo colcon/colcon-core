@@ -116,6 +116,7 @@ setuptools
 shlex
 sigint
 sitecustomize
+skipif
 sloretz
 stacklevel
 staticmethod

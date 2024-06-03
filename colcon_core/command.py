@@ -275,9 +275,28 @@ def get_prog_name():
     if basename == '__main__.py':
         # use the module name in case the script was invoked with python -m ...
         prog = os.path.basename(os.path.dirname(prog))
-    elif shutil.which(basename) == prog:
-        # use basename only if it is on the PATH
-        prog = basename
+    else:
+        default_prog = shutil.which(basename) or ''
+        default_ext = os.path.splitext(default_prog)[1]
+        real_prog = prog
+        if (
+            sys.platform == 'win32' and
+            os.path.splitext(real_prog)[1] != default_ext
+        ):
+            # On Windows, setuptools entry points drop the file extension from
+            # argv[0], but shutil.which does not. If the two don't end in the
+            # same extension, try appending the shutil extension for a better
+            # chance at matching.
+            real_prog += default_ext
+        try:
+            # The os.path.samefile requires that both files exist on disk, but
+            # has the advantage of working around symlinks, UNC-style paths,
+            # DOS 8.3 path atoms, and path normalization.
+            if os.path.samefile(default_prog, real_prog):
+                # use basename only if it is on the PATH
+                prog = basename
+        except (FileNotFoundError, NotADirectoryError):
+            pass
     return prog
 
 
