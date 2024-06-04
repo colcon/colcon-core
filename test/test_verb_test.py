@@ -29,12 +29,10 @@ class NoopTestTask(TaskExtensionPoint):
 
 @pytest.fixture(scope='module', autouse=True)
 def patch_other_extension_args():
-    with (
-        patch('colcon_core.verb.test.add_event_handler_arguments'),
-        patch('colcon_core.verb.test.add_executor_arguments'),
-        patch('colcon_core.verb.test.add_packages_arguments'),
-        patch('colcon_core.verb.test.add_task_arguments'),
-    ):
+    with patch('colcon_core.verb.test.add_event_handler_arguments'), \
+            patch('colcon_core.verb.test.add_executor_arguments'), \
+            patch('colcon_core.verb.test.add_packages_arguments'), \
+            patch('colcon_core.verb.test.add_task_arguments'):
         yield
 
 
