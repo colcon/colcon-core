@@ -15,6 +15,7 @@ from colcon_core.executor import add_executor_arguments
 from colcon_core.executor import execute_jobs
 from colcon_core.executor import Job
 from colcon_core.executor import OnError
+from colcon_core.feature_flags import is_feature_flag_set
 from colcon_core.logging import colcon_logger
 from colcon_core.package_selection import add_arguments \
     as add_packages_arguments
@@ -181,6 +182,7 @@ class TestVerb(VerbExtensionPoint):
 
     def _get_jobs(self, args, decorators, install_base):
         jobs = OrderedDict()
+        drop_test_deps = is_feature_flag_set('drop_test_deps')
         for decorator in decorators:
             if not decorator.selected:
                 continue
@@ -216,7 +218,9 @@ class TestVerb(VerbExtensionPoint):
 
             job = Job(
                 identifier=pkg.name,
-                dependencies=set(),
+                dependencies=set(
+                    () if drop_test_deps else recursive_dependencies.keys()
+                ),
                 task=extension, task_context=task_context)
 
             jobs[pkg.name] = job
