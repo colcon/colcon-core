@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 from collections import defaultdict
+from collections.abc import Mapping
 from copy import deepcopy
 import os
 from pathlib import Path
@@ -71,16 +72,26 @@ class PackageDescriptor:
         :raises AssertionError: if the package name is listed as a dependency
         """
         dependencies = set()
+        categories_by_dependency = defaultdict(list)
         if categories is None:
             categories = self.dependencies.keys()
         for category in sorted(categories):
-            dependencies |= self.dependencies[category]
+            for dependency in self.dependencies[category]:
+                categories_by_dependency[dependency].append(category)
+        for dependency, categories in categories_by_dependency.items():
+            if isinstance(dependency, DependencyDescriptor):
+                # duplicate the descriptor and metadata
+                dependency = deepcopy(dependency)
+            else:
+                dependency = DependencyDescriptor(dependency)
+            # note that the category list is not merged when a dependency
+            # appears multiple times in a package's tree, and the most shallow
+            # instance prevails.
+            dependency.metadata['categories'] = categories
+            dependencies.add(dependency)
         assert self.name not in dependencies, \
             f"The package '{self.name}' has a dependency with the same name"
-        return {
-            (DependencyDescriptor(d)
-                if not isinstance(d, DependencyDescriptor) else d)
-            for d in dependencies}
+        return dependencies
 
     def get_recursive_dependencies(
         self, descriptors, direct_categories=None, recursive_categories=None,
@@ -95,12 +106,15 @@ class PackageDescriptor:
           consider
         :param Iterable[str] direct_categories: The names of the direct
           categories
-        :param Iterable[str] recursive_categories: The names of the recursive
-          categories
+        :param Iterable[str]|Mapping[str, Iterable[str]] recursive_categories:
+          The names of the recursive categories, optionally mapped from the
+          immediate upstream category which included the dependency
         :returns: The dependencies
         :rtype: set[DependencyDescriptor]
         :raises AssertionError: if a package lists itself as a dependency
         """
+        if not isinstance(recursive_categories, Mapping):
+            recursive_categories = defaultdict(lambda: recursive_categories)
         # the following variable only exists for faster access within the loop
         descriptors_by_name = defaultdict(set)
         for d in descriptors:
@@ -122,13 +136,18 @@ class PackageDescriptor:
                 descs = descriptors_by_name[dep]
                 if not descs:
                     continue
+                categories = set()
+                for category in dep.metadata['categories']:
+                    cats = recursive_categories.get(category)
+                    if cats is None:
+                        categories = None
+                        break
+                    categories.update(cats)
                 # recursing into the same function of the dependency descriptor
                 # queue recursive dependencies
                 for d in descs:
-                    queue |= d.get_dependencies(
-                        categories=recursive_categories)
-                # duplicate the descriptor and metadata and add the depth
-                dep = deepcopy(dep)
+                    queue |= d.get_dependencies(categories=categories)
+                # add the depth
                 dep.metadata['depth'] = depth
                 # add dependency to result set
                 dependencies.add(dep)
@@ -140,7 +159,7 @@ class PackageDescriptor:
         return hash((self.type, self.name))
 
     def __eq__(self, other):  # noqa: D105
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return NotImplemented
         if (self.type, self.name) != (other.type, other.name):
             return False

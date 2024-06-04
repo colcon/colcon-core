@@ -65,7 +65,7 @@ class PackageAugmentationExtensionPoint:
         raise NotImplementedError()
 
 
-def get_package_augmentation_extensions():
+def get_package_augmentation_extensions(*, group_name=None):
     """
     Get the available package augmentation extensions.
 
@@ -73,7 +73,9 @@ def get_package_augmentation_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PACKAGE_AUGMENTATION_NAME = name
     return order_extensions_by_priority(extensions)
@@ -213,7 +215,7 @@ def update_metadata(desc, key, value):
         old_value |= value
         return
 
-    if type(old_value) != type(value):
+    if type(old_value) is not type(value):
         logger.warning(
             f"update package '{desc.name}' metadata '{key}' from value "
             f"'{old_value}' to '{value}'")

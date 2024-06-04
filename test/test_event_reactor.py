@@ -11,7 +11,7 @@ from colcon_core.event_handler import EventHandlerExtensionPoint
 from colcon_core.event_reactor import create_event_reactor
 from colcon_core.event_reactor import EventReactorShutdown
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 class CustomExtension(EventHandlerExtensionPoint):
@@ -49,7 +49,7 @@ def test_create_event_reactor():
     context = Mock()
     context.args = Mock()
     context.args.event_handlers = []
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
     ):
         event_reactor = create_event_reactor(context)
@@ -66,15 +66,15 @@ def test_create_event_reactor():
             assert error.call_count == 0
 
             queue.put(('first', None))
-            event_reactor.flush()
+            queue.join()
             assert error.call_count == 1
 
             queue.put(('second', None))
-            event_reactor.flush()
+            queue.join()
             assert error.call_count == 1
 
             queue.put(('third', None))
-            event_reactor.flush()
+            queue.join()
             assert error.call_count == 2
 
         # 1 timer event, 3 mock string events

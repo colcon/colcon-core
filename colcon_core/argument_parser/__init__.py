@@ -5,6 +5,7 @@ import traceback
 import types
 import warnings
 
+from colcon_core.generic_decorator import GenericDecorator
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
 from colcon_core.plugin_system import order_extensions_by_priority
@@ -41,7 +42,7 @@ class ArgumentParserDecoratorExtensionPoint:
         raise NotImplementedError()
 
 
-def get_argument_parser_extensions():
+def get_argument_parser_extensions(*, group_name=None):
     """
     Get the available argument parser extensions.
 
@@ -49,7 +50,9 @@ def get_argument_parser_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.ARGUMENT_PARSER_DECORATOR_NAME = name
     return order_extensions_by_priority(extensions)
@@ -85,7 +88,7 @@ def decorate_argument_parser(parser):
     return parser
 
 
-class ArgumentParserDecorator:
+class ArgumentParserDecorator(GenericDecorator):
     """
     Decorate an argument parser as well as all recursive subparsers.
 
@@ -107,15 +110,13 @@ class ArgumentParserDecorator:
           instance
         """
         assert '_parser' not in kwargs
-        kwargs['_parser'] = parser
         assert '_nested_decorators_' not in kwargs
         kwargs['_nested_decorators_'] = []
         assert '_group_decorators' not in kwargs
         kwargs['_group_decorators'] = []
         assert '_recursive_decorators' not in kwargs
         kwargs['_recursive_decorators'] = []
-        for k, v in kwargs.items():
-            self.__dict__[k] = v
+        super().__init__(parser, **kwargs)
 
     @property
     def _nested_decorators(self):  # pragma: no cover
@@ -125,40 +126,14 @@ class ArgumentParserDecorator:
             'deprecated', stacklevel=2)
         return self._nested_decorators_
 
-    def __getattr__(self, name):
+    @property
+    def _parser(self):
         """
-        Get an attribute from this decorator if it exists or the decoree.
+        Get the parser that this instance decorates (the decoree).
 
-        :param str name: The name of the attribute
-        :returns: The attribute value
-        :raises AttributeError: if the attribute doesn't exist in either of the
-          two instances
+        TODO: Deprecate _parser in favor of _decoree
         """
-        # when argcomplete changes self.__class__ at runtime
-        # the instance might not have a _parser attribute anymore
-        if '_parser' not in self.__dict__:
-            raise AttributeError(name)
-        # get attribute from decoree
-        return getattr(self.__dict__['_parser'], name)
-
-    def __setattr__(self, name, value):
-        """
-        Set an attribute value on this decorator if it exists or the decoree.
-
-        :param str name: The name of the attribute
-        :param value: The attribute value
-        """
-        # overwrite existing attribute
-        if name in self.__dict__:
-            self.__dict__[name] = value
-            return
-        # when argcomplete changes self.__class__ at runtime
-        # the instance might not have a _parser attribute anymore
-        if '_parser' not in self.__dict__:
-            self.__dict__[name] = value
-            return
-        # get attribute on decoree
-        setattr(self.__dict__['_parser'], name, value)
+        return self._decoree
 
     def add_argument(self, *args, **kwargs):
         """

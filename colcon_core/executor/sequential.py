@@ -10,6 +10,7 @@ import traceback
 from colcon_core.executor import ExecutorExtensionPoint
 from colcon_core.executor import OnError
 from colcon_core.logging import colcon_logger
+from colcon_core.logging import get_effective_console_level
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.subprocess import new_event_loop
 from colcon_core.subprocess import SIGINT_RESULT
@@ -32,7 +33,8 @@ class SequentialExecutor(ExecutorExtensionPoint):
     def execute(self, args, jobs, *, on_error=OnError.interrupt):  # noqa: D102
         # avoid debug message from asyncio when colcon uses debug log level
         asyncio_logger = logging.getLogger('asyncio')
-        asyncio_logger.setLevel(logging.INFO)
+        log_level = get_effective_console_level(colcon_logger)
+        asyncio_logger.setLevel(log_level)
 
         rc = 0
         loop = new_event_loop()
@@ -92,9 +94,11 @@ class SequentialExecutor(ExecutorExtensionPoint):
                 if not task.done():
                     logger.error(f"Task '{task}' not done")
             # HACK on Windows closing the event loop seems to hang after Ctrl-C
-            # even though no futures are pending
-            if sys.platform != 'win32':
+            # even though no futures are pending, but appears fixed in py3.8
+            if sys.platform != 'win32' or sys.version_info >= (3, 8):
                 logger.debug('closing loop')
                 loop.close()
                 logger.debug('loop closed')
+            else:
+                logger.debug('skipping loop closure')
         return rc

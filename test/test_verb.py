@@ -14,7 +14,7 @@ from colcon_core.verb import update_object
 from colcon_core.verb import VerbExtensionPoint
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 def test_verb_interface():
@@ -34,7 +34,7 @@ class Extension2(VerbExtensionPoint):
 
 
 def test_get_verb_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_verb_extensions()
     assert list(extensions.keys()) == ['extension1', 'extension2']
 

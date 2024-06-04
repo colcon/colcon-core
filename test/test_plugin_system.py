@@ -12,7 +12,7 @@ from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 def test_instantiate_extensions():
@@ -22,7 +22,7 @@ def test_instantiate_extensions():
     class Extension2:
         pass
 
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         # successful instantiation of extensions
         extensions = instantiate_extensions('group')
         assert 'extension1' in extensions.keys()
@@ -56,7 +56,7 @@ def test_instantiate_extensions_exception():
             raise SkipExtensionException(
                 'extension raising skip extension exception')
 
-    with EntryPointContext(
+    with ExtensionPointContext(
         exception=ExtensionRaisingException,
         skip_extension_exception=ExtensionSkipExtensionException
     ):
@@ -97,7 +97,7 @@ class ExtensionC:
 
 
 def test_order_extensions_by_name():
-    with EntryPointContext(foo=ExtensionA, bar=ExtensionB, baz=ExtensionC):
+    with ExtensionPointContext(foo=ExtensionA, bar=ExtensionB, baz=ExtensionC):
         extensions = instantiate_extensions('group')
     # ensure correct order based on name
     ordered_extensions = order_extensions_by_name(extensions)
@@ -105,7 +105,7 @@ def test_order_extensions_by_name():
 
 
 def test_order_extensions_by_priority():
-    with EntryPointContext(foo=ExtensionA, bar=ExtensionB, baz=ExtensionC):
+    with ExtensionPointContext(foo=ExtensionA, bar=ExtensionB, baz=ExtensionC):
         extensions = instantiate_extensions('group')
     # ensure correct order based on priority
     ordered_extensions = order_extensions_by_priority(extensions)
@@ -113,7 +113,7 @@ def test_order_extensions_by_priority():
 
 
 def test_order_extensions_grouped_by_priority():
-    with EntryPointContext(foo=ExtensionA, bar=ExtensionB, baz=ExtensionC):
+    with ExtensionPointContext(foo=ExtensionA, bar=ExtensionB, baz=ExtensionC):
         extensions = instantiate_extensions('group')
     # ensure correct order based on priority
     grouped_extensions = order_extensions_grouped_by_priority(extensions)

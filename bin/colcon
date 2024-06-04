@@ -18,28 +18,28 @@ sys.path.insert(0, pkg_root)
 
 
 # override entry point discovery
-from colcon_core import entry_point  # noqa: E402
+from colcon_core import extension_point  # noqa: E402
 
-custom_entry_points = {}
+custom_extension_points = {}
 
 
-def custom_load_entry_points(group_name, *, exclude_names=None):  # noqa: D103
-    global custom_entry_points
-    assert group_name in custom_entry_points, \
-        f"get_entry_points() not overridden for group '{group_name}'"
+def custom_load_extension_points(  # noqa: D103
+    group_name, *, excludes=None
+):
+    global custom_extension_points
+    assert group_name in custom_extension_points, \
+        f"get_extension_points() not overridden for group '{group_name}'"
     return {
-        k: v for k, v in custom_entry_points[group_name].items()
-        if exclude_names is None or k not in exclude_names}
+        k: v for k, v in custom_extension_points[group_name].items()
+        if excludes is None or k not in excludes}
 
 
 # override function before importing other modules
-entry_point.load_entry_points = custom_load_entry_points
+extension_point.load_extension_points = custom_load_extension_points
 
 
 from colcon_core.command import HOME_ENVIRONMENT_VARIABLE  # noqa: E402 I202
 from colcon_core.command import LOG_LEVEL_ENVIRONMENT_VARIABLE  # noqa: E402
-from colcon_core.entry_point \
-    import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.environment.path import PathEnvironment  # noqa: E402
 from colcon_core.environment.path \
     import PythonScriptsPathEnvironment  # noqa: E402
@@ -54,6 +54,8 @@ from colcon_core.event_handler.log_command \
 from colcon_core.executor \
     import DEFAULT_EXECUTOR_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.executor.sequential import SequentialExecutor  # noqa: E402
+from colcon_core.extension_point \
+    import EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE  # noqa: E402
 from colcon_core.package_augmentation.python \
     import PythonPackageAugmentation  # noqa: E402
 from colcon_core.package_discovery.path \
@@ -77,7 +79,7 @@ from colcon_core.verb.build import BuildVerb  # noqa: E402
 from colcon_core.verb.test import TestVerb  # noqa: E402
 
 
-custom_entry_points.update({
+custom_extension_points.update({
     'colcon_core.argument_parser': {},
     'colcon_core.environment': {
         'path': PathEnvironment,

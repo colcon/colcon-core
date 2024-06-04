@@ -17,6 +17,12 @@ EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_EXTENSION_BLOCKLIST',
     'Block extensions which should not be used')
 
+# See colcon/colcon-core#562
+warnings.warn(
+    "'colcon_core.entry_point' has been deprecated, "
+    "use 'colcon_core.extension_point' instead",
+    stacklevel=2)
+
 if sys.version_info[:2] >= (3, 7):
     def __getattr__(name):
         global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE

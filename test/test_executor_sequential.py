@@ -148,10 +148,17 @@ def test_sequential():
     ran_jobs.clear()
 
 
-async def job8():
-    global ran_jobs
-    await asyncio.sleep(1)
-    ran_jobs.append('job8')
+class Job8(Job):
+
+    def __init__(self):
+        super().__init__(
+            identifier='job8', dependencies=set(), task=None,
+            task_context=None)
+
+    async def __call__(self, *args, **kwargs):
+        global ran_jobs
+        await asyncio.sleep(3)
+        ran_jobs.append(self.identifier)
 
 
 @pytest.fixture
@@ -174,11 +181,12 @@ def test_sequential_keyboard_interrupt(restore_sigint_handler):
     args = None
     jobs = OrderedDict()
     jobs['one'] = Job1()
-    jobs['aborted'] = job8
+    jobs['aborted'] = Job8()
     jobs['four'] = Job4()
 
     def delayed_sigint():
         time.sleep(0.1)
+        # Note: a real Ctrl-C would signal the whole process group
         os.kill(
             os.getpid(),
             signal.SIGINT if sys.platform != 'win32' else signal.CTRL_C_EVENT)
@@ -186,9 +194,11 @@ def test_sequential_keyboard_interrupt(restore_sigint_handler):
             os.kill(os.getpid(), signal.CTRL_C_EVENT)
 
     thread = Thread(target=delayed_sigint)
+    thread.start()
     try:
-        thread.start()
         rc = extension.execute(args, jobs)
-        assert rc == signal.SIGINT
     finally:
         thread.join()
+
+    assert rc == signal.SIGINT
+    ran_jobs.clear()

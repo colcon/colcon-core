@@ -25,8 +25,8 @@ from colcon_core.shell.installed_packages import IsolatedInstalledPackageFinder
 from colcon_core.shell.installed_packages import MergedInstalledPackageFinder
 import pytest
 
-from .entry_point_context import EntryPointContext
 from .environment_context import EnvironmentContext
+from .extension_point_context import ExtensionPointContext
 from .run_until_complete import run_until_complete
 
 
@@ -59,7 +59,7 @@ def test_extension_interface():
 
 
 def test_get_shell_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_shell_extensions()
     assert list(extensions.keys()) == [100, 90]
     assert list(extensions[100].keys()) == ['extension2']
@@ -71,7 +71,7 @@ async def generate_command_environment(task_name, build_base, dependencies):
 
 
 def test_get_command_environment():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_shell_extensions()
 
         # one not implemented, one skipped extension
@@ -169,7 +169,7 @@ class Extension5(ShellExtensionPoint):
 
 
 def test_create_environment_hook():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         # no primary shell extension
         with pytest.raises(RuntimeError) as e:
             create_environment_hook(None, None, None, None, None)
@@ -177,7 +177,7 @@ def test_create_environment_hook():
             'Could not find a primary shell extension for creating an '
             'environment hook')
 
-    with EntryPointContext(
+    with ExtensionPointContext(
         extension3=Extension3, extension4=Extension4, extension5=Extension5
     ):
         extensions = get_shell_extensions()
@@ -327,7 +327,9 @@ class FIExtension2(FindInstalledPackagesExtensionPoint):
 
 
 def test_get_find_installed_packages_extensions():
-    with EntryPointContext(extension1=FIExtension1, extension2=FIExtension2):
+    with ExtensionPointContext(
+        extension1=FIExtension1, extension2=FIExtension2
+    ):
         extensions = get_find_installed_packages_extensions()
     assert list(extensions.keys()) == [100, 90]
     assert list(extensions[100].keys()) == ['extension2']
@@ -366,7 +368,7 @@ def test_find_installed_packages_in_environment():
 
 
 def test_find_installed_packages():
-    with EntryPointContext(
+    with ExtensionPointContext(
         colcon_isolated=IsolatedInstalledPackageFinder,
         colcon_merged=MergedInstalledPackageFinder
     ):
@@ -427,7 +429,7 @@ class FIExtensionPathNotExist(FindInstalledPackagesExtensionPoint):
 
 
 def test_inconsistent_package_finding_extensions():
-    with EntryPointContext(dne=FIExtensionPathNotExist):
+    with ExtensionPointContext(dne=FIExtensionPathNotExist):
         with TemporaryDirectory(prefix='test_colcon_') as install_base:
             install_base = Path(install_base)
             with patch('colcon_core.shell.logger.warning') as mock_warn:
@@ -456,7 +458,9 @@ def test_find_package_two_locations():
             def find_installed_packages(self, base: Path):
                 return {'pkgA': location2}
 
-        with EntryPointContext(loc1=PackageLocation1, loc2=PackageLocation2):
+        with ExtensionPointContext(
+            loc1=PackageLocation1, loc2=PackageLocation2
+        ):
             with patch('colcon_core.shell.logger.warning') as mock_warn:
                 assert {'pkgA': location1} == find_installed_packages(base)
                 mock_warn.assert_called_once_with(

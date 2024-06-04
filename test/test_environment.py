@@ -15,7 +15,7 @@ from colcon_core.shell import get_shell_extensions
 from colcon_core.shell import ShellExtensionPoint
 import pytest
 
-from .entry_point_context import EntryPointContext
+from .extension_point_context import ExtensionPointContext
 
 
 def test_extension_interface():
@@ -38,7 +38,7 @@ class Extension2(EnvironmentExtensionPoint):
 
 
 def test_get_environment_extensions():
-    with EntryPointContext(extension1=Extension1, extension2=Extension2):
+    with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_environment_extensions()
     assert list(extensions.keys()) == ['extension2', 'extension1']
 
@@ -70,7 +70,9 @@ def test_create_environment_scripts():
                 create_environment_scripts(pkg, args)
 
         pkg.hooks = [os.path.join(basepath, 'subA')]
-        with EntryPointContext(extension3=Extension3, extension4=Extension4):
+        with ExtensionPointContext(
+            extension3=Extension3, extension4=Extension4
+        ):
             extensions = get_shell_extensions()
             # one invalid return value, one check correct hooks argument
             extensions[100]['extension3'].create_package_script = Mock()
@@ -101,7 +103,9 @@ def test_create_environment_scripts():
 
 def test_create_environment_hooks():
     with TemporaryDirectory(prefix='test_colcon_') as basepath:
-        with EntryPointContext(extension1=Extension1, extension2=Extension2):
+        with ExtensionPointContext(
+            extension1=Extension1, extension2=Extension2
+        ):
             with patch('colcon_core.environment.logger.error') as error:
                 hooks = create_environment_hooks(basepath, 'pkg_name')
     assert len(hooks) == 2
