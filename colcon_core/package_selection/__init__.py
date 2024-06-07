@@ -85,7 +85,7 @@ def add_arguments(parser):
     _add_package_selection_arguments(parser)
 
 
-def get_package_selection_extensions():
+def get_package_selection_extensions(*, group_name=None):
     """
     Get the available package selection extensions.
 
@@ -93,7 +93,9 @@ def get_package_selection_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.PACKAGE_SELECTION_NAME = name
     return order_extensions_by_priority(extensions)
@@ -136,8 +138,9 @@ def get_packages(
     :param additional_argument_names: A list of additional arguments to
       consider
     :param Iterable[str] direct_categories: The names of the direct categories
-    :param Iterable[str] recursive_categories: The names of the recursive
-      categories
+    :param Iterable[str]|Mapping[str, Iterable[str]] recursive_categories:
+      The names of the recursive categories, optionally mapped from the
+      immediate upstream category which included the dependency
     :rtype: list
     :raises RuntimeError: if the returned set of packages contains duplicates
       package names

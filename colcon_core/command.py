@@ -52,6 +52,7 @@ if warnings_filters:
 from colcon_core.argument_parser import decorate_argument_parser  # noqa: E402 E501 I100 I202
 from colcon_core.argument_parser import SuppressUsageOutput  # noqa: E402
 from colcon_core.extension_point import load_extension_points  # noqa: E402
+from colcon_core.feature_flags import check_implemented_flags  # noqa: E402
 from colcon_core.location import create_log_path  # noqa: E402
 from colcon_core.location import get_log_path  # noqa: E402
 from colcon_core.location import set_default_config_path  # noqa: E402
@@ -86,12 +87,14 @@ def register_command_exit_handler(handler):
 
     :param handler: The callable
     """
-    global _command_exit_handlers
     if handler not in _command_exit_handlers:
         _command_exit_handlers.append(handler)
 
 
-def main(*, command_name='colcon', argv=None):
+def main(
+    *, command_name='colcon', argv=None, verb_group_name=None,
+    environment_variable_group_name=None,
+):
     """
     Execute the main logic of the command.
 
@@ -113,9 +116,11 @@ def main(*, command_name='colcon', argv=None):
     :param list argv: The list of arguments
     :returns: The return code
     """
-    global _command_exit_handlers
     try:
-        return _main(command_name=command_name, argv=argv)
+        return _main(
+            command_name=command_name, argv=argv,
+            verb_group_name=verb_group_name,
+            environment_variable_group_name=environment_variable_group_name)
     except KeyboardInterrupt:
         return signal.SIGINT
     finally:
@@ -125,8 +130,9 @@ def main(*, command_name='colcon', argv=None):
             handler()
 
 
-def _main(*, command_name, argv):
-    global colcon_logger
+def _main(
+    *, command_name, argv, verb_group_name, environment_variable_group_name,
+):
     # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
     set_logger_level_from_env(
@@ -135,14 +141,17 @@ def _main(*, command_name, argv):
         'Command line arguments: {argv}'
         .format(argv=argv if argv is not None else sys.argv))
 
+    # warn about any specified feature flags that are already implemented
+    check_implemented_flags()
+
     # set default locations for config files, for searchability: COLCON_HOME
     set_default_config_path(
         path=(Path('~') / f'.{command_name}').expanduser(),
         env_var=f'{command_name}_HOME'.upper())
 
-    parser = create_parser('colcon_core.environment_variable')
+    parser = create_parser(environment_variable_group_name)
 
-    verb_extensions = get_verb_extensions()
+    verb_extensions = get_verb_extensions(group_name=verb_group_name)
 
     # add subparsers for all verb extensions but without arguments for now
     subparser = create_subparser(
@@ -206,7 +215,7 @@ def _main(*, command_name, argv):
     return verb_main(context, colcon_logger)
 
 
-def create_parser(environment_variables_group_name):
+def create_parser(environment_variables_group_name=None):
     """
     Create the argument parser.
 
@@ -226,20 +235,30 @@ def create_parser(environment_variables_group_name):
 
         def _parse_optional(self, arg_string):
             result = super()._parse_optional(arg_string)
-            if result == (None, arg_string, None):
+            # Up until https://github.com/python/cpython/pull/114180 ,
+            # _parse_optional() returned a 3-tuple when it couldn't classify
+            # the option.  As of that PR (which is in Python 3.13, and
+            # backported to Python 3.12), it returns a 4-tuple.  Check for
+            # either here.
+            if result in (
+                (None, arg_string, None),
+                (None, arg_string, None, None),
+            ):
                 # in the case there the arg is classified as an unknown 'O'
                 # override that and classify it as an 'A'
                 return None
             return result
 
+    epilog = get_environment_variables_epilog(environment_variables_group_name)
+    if epilog:
+        epilog += '\n\n'
+    epilog += READTHEDOCS_MESSAGE
+
     # top level parser
     parser = CustomArgumentParser(
         prog=get_prog_name(),
         formatter_class=CustomFormatter,
-        epilog=(
-            get_environment_variables_epilog(
-                environment_variables_group_name
-            ) + '\n\n' + READTHEDOCS_MESSAGE))
+        epilog=epilog)
 
     # enable introspecting and intercepting all command line arguments
     parser = decorate_argument_parser(parser)
@@ -256,9 +275,28 @@ def get_prog_name():
     if basename == '__main__.py':
         # use the module name in case the script was invoked with python -m ...
         prog = os.path.basename(os.path.dirname(prog))
-    elif shutil.which(basename) == prog:
-        # use basename only if it is on the PATH
-        prog = basename
+    else:
+        default_prog = shutil.which(basename) or ''
+        default_ext = os.path.splitext(default_prog)[1]
+        real_prog = prog
+        if (
+            sys.platform == 'win32' and
+            os.path.splitext(real_prog)[1] != default_ext
+        ):
+            # On Windows, setuptools entry points drop the file extension from
+            # argv[0], but shutil.which does not. If the two don't end in the
+            # same extension, try appending the shutil extension for a better
+            # chance at matching.
+            real_prog += default_ext
+        try:
+            # The os.path.samefile requires that both files exist on disk, but
+            # has the advantage of working around symlinks, UNC-style paths,
+            # DOS 8.3 path atoms, and path normalization.
+            if os.path.samefile(default_prog, real_prog):
+                # use basename only if it is on the PATH
+                prog = basename
+        except (FileNotFoundError, NotADirectoryError):
+            pass
     return prog
 
 
@@ -276,7 +314,7 @@ class CustomFormatter(argparse.RawDescriptionHelpFormatter):
         return lines
 
 
-def get_environment_variables_epilog(group_name):
+def get_environment_variables_epilog(group_name=None):
     """
     Get a message enumerating the registered environment variables.
 
@@ -285,8 +323,12 @@ def get_environment_variables_epilog(group_name):
     :returns: The message for the argument parser epilog
     :rtype: str
     """
+    if group_name is None:
+        group_name = 'colcon_core.environment_variable'
     # list environment variables with descriptions
     entry_points = load_extension_points(group_name)
+    if not entry_points:
+        return ''
     env_vars = {
         env_var.name: env_var.description for env_var in entry_points.values()}
     epilog_lines = []
@@ -375,9 +417,6 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
       selected verb
     :returns: The special action object
     """
-    global colcon_logger
-    assert verb_extensions, 'No verb extensions'
-
     # list of available verbs with their descriptions
     verbs = []
     for name, extension in verb_extensions.items():
@@ -387,9 +426,9 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
     # add subparser with description of verb extensions
     subparser = parser.add_subparsers(
         title=f'{cmd_name} verbs',
-        description='\n'.join(verbs),
+        description='\n'.join(verbs) or None,
         dest=attribute,
-        help=f'call `{cmd_name} VERB -h` for specific help',
+        help=f'call `{cmd_name} VERB -h` for specific help' if verbs else None,
     )
     return subparser
 
