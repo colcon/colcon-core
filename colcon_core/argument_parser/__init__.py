@@ -42,7 +42,7 @@ class ArgumentParserDecoratorExtensionPoint:
         raise NotImplementedError()
 
 
-def get_argument_parser_extensions():
+def get_argument_parser_extensions(*, group_name=None):
     """
     Get the available argument parser extensions.
 
@@ -50,7 +50,9 @@ def get_argument_parser_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(group_name)
     for name, extension in extensions.items():
         extension.ARGUMENT_PARSER_DECORATOR_NAME = name
     return order_extensions_by_priority(extensions)

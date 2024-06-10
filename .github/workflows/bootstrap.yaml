@@ -1,0 +1,52 @@
+name: Run bootstrap tests
+
+on:
+  workflow_call:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      strategy: ${{steps.load.outputs.strategy}}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: colcon/ci
+      - id: load
+        run: |
+          strategy=$(jq -c -M '.' strategy.json)
+          echo "strategy=${strategy}" >> $GITHUB_OUTPUT
+
+  bootstrap:
+    needs: [setup]
+    strategy: ${{ fromJson(needs.setup.outputs.strategy) }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python}}
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip setuptools
+          python -m pip install -U -e .[test]
+          python -m pip uninstall -y colcon-core
+      - name: Build and test
+        run: |
+          cd ..
+          python ${{ github.workspace }}/bin/colcon build --paths ${{ github.workspace }}
+          python ${{ github.workspace }}/bin/colcon test --paths ${{ github.workspace }} --return-code-on-test-failure
+      - name: Use the installed package (Bash)
+        if: ${{runner.os != 'windows'}}
+        shell: bash
+        run: |
+          . ../install/local_setup.sh
+          colcon --help
+      - name: Use the installed package (CMD)
+        if: ${{runner.os == 'windows'}}
+        shell: cmd
+        run: |
+          call ..\install\local_setup.bat
+          colcon --help

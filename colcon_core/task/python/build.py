@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import shutil
 import sys
-from sys import executable
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
@@ -25,6 +24,12 @@ from colcon_core.task.python import get_setup_data
 from colcon_core.task.python.template import expand_template
 
 logger = colcon_logger.getChild(__name__)
+
+_PYTHON_CMD = [
+    sys.executable,
+    '-W',
+    'ignore:setup.py install is deprecated',
+]
 
 
 def _get_install_scripts(path):
@@ -72,9 +77,12 @@ class PythonBuildTask(TaskExtensionPoint):
         python_lib = os.path.join(
             args.install_base, self._get_python_lib(args))
         os.makedirs(python_lib, exist_ok=True)
+        distutils_commands = os.path.join(
+            os.path.dirname(__file__), 'colcon_distutils_commands')
         # and being in the PYTHONPATH
         env = dict(env)
         env['PYTHONPATH'] = str(prefix_override) + os.pathsep + \
+            distutils_commands + os.pathsep + \
             python_lib + os.pathsep + env.get('PYTHONPATH', '')
         # coverage capture interferes with sitecustomize
         # See also: https://docs.python.org/3/library/site.html#module-site
@@ -92,7 +100,7 @@ class PythonBuildTask(TaskExtensionPoint):
 
             # invoke `setup.py install` step with lots of arguments
             # to avoid placing any files in the source space
-            cmd = [executable, 'setup.py']
+            cmd = _PYTHON_CMD + ['setup.py']
             if 'egg_info' in available_commands:
                 # `setup.py egg_info` requires the --egg-base to exist
                 os.makedirs(args.build_base, exist_ok=True)
@@ -118,13 +126,19 @@ class PythonBuildTask(TaskExtensionPoint):
                 # prevent installation of dependencies specified in setup.py
                 cmd.append('--single-version-externally-managed')
             self._append_install_layout(args, cmd)
+            if setup_py_data.get('data_files'):
+                cmd += ['install_data']
+                if rc is not None:
+                    cmd += ['--force']
             completed = await run(
                 self.context, cmd, cwd=args.path, env=env)
             if completed.returncode:
                 return completed.returncode
 
         else:
-            self._undo_install(pkg, args, setup_py_data, python_lib)
+            rc = self._undo_install(pkg, args, setup_py_data, python_lib)
+            if rc:
+                return rc
             temp_symlinks = self._symlinks_in_build(args, setup_py_data)
 
             # invoke `setup.py develop` step in build space
@@ -133,8 +147,8 @@ class PythonBuildTask(TaskExtensionPoint):
             try:
                 # --editable causes this to skip creating/editing the
                 # easy-install.pth file
-                cmd = [
-                    executable, 'setup.py',
+                cmd = _PYTHON_CMD + [
+                    'setup.py',
                     'develop',
                     '--editable',
                     '--build-directory',
@@ -142,7 +156,9 @@ class PythonBuildTask(TaskExtensionPoint):
                     '--no-deps',
                 ]
                 if setup_py_data.get('data_files'):
-                    cmd += ['install_data']
+                    cmd += ['symlink_data']
+                    if rc is not None:
+                        cmd += ['--force']
                 completed = await run(
                     self.context, cmd, cwd=args.build_base, env=env)
             finally:
@@ -173,7 +189,7 @@ class PythonBuildTask(TaskExtensionPoint):
 
     async def _get_available_commands(self, path, env):
         output = await check_output(
-            [executable, 'setup.py', '--help-commands'], cwd=path, env=env)
+            _PYTHON_CMD + ['setup.py', '--help-commands'], cwd=path, env=env)
         commands = set()
         for line in output.splitlines():
             if not line.startswith(b'  '):
@@ -189,13 +205,19 @@ class PythonBuildTask(TaskExtensionPoint):
         return commands
 
     async def _undo_develop(self, pkg, args, env):
+        """
+        Undo a previously run 'develop' command.
+
+        :returns: None if develop was not previously detected, otherwise
+                  an integer return code where zero indicates success.
+        """
         # undo previous develop if .egg-info is found and develop symlinks
         egg_info = os.path.join(
             args.build_base, '%s.egg-info' % pkg.name.replace('-', '_'))
         setup_py_build_space = os.path.join(args.build_base, 'setup.py')
         if os.path.exists(egg_info) and os.path.islink(setup_py_build_space):
-            cmd = [
-                executable, 'setup.py',
+            cmd = _PYTHON_CMD + [
+                'setup.py',
                 'develop',
                 '--uninstall', '--editable',
                 '--build-directory', os.path.join(args.build_base, 'build')
@@ -207,6 +229,12 @@ class PythonBuildTask(TaskExtensionPoint):
             return completed.returncode
 
     def _undo_install(self, pkg, args, setup_py_data, python_lib):
+        """
+        Undo a previously run 'install' command.
+
+        :returns: None if install was not previously detected, otherwise
+                  an integer return code where zero indicates success.
+        """
         # undo previous install if install.log is found
         install_log = os.path.join(args.build_base, 'install.log')
         if not os.path.exists(install_log):
@@ -246,6 +274,7 @@ class PythonBuildTask(TaskExtensionPoint):
             with suppress(OSError):
                 os.rmdir(d)
         os.remove(install_log)
+        return 0
 
     def _symlinks_in_build(self, args, setup_py_data):
         items = ['setup.py']
