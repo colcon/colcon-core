@@ -21,8 +21,8 @@ def get_python_install_path(name, vars_=()):
 
     install_base = kwargs['vars'].get('base', sysconfig.get_config_var('base'))
     if install_base != sysconfig.get_config_var('base'):
-        # If we are not actually installing to the default location, the default
-        # path scheme may be inadequate. Check if we need to override.
+        # If we are not actually installing to the default location, the
+        # default path scheme may be inadequate. Check if we need to override.
         schemes = sysconfig.get_scheme_names()
         if 'deb_system' in schemes or 'osx_framework_library' in schemes:
             # Avoid deb_system because it requires using --install-layout deb
