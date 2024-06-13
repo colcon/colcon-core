@@ -1,6 +1,7 @@
 # Copyright 2024 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+from collections import namedtuple
 import os
 from types import SimpleNamespace
 
@@ -14,14 +15,17 @@ DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_DEFAULT_OUTPUT_STYLE', 'Select the default output style extension')
 
 
-class Stylizer:
+class Stylizer(namedtuple('Stylizer', ('start', 'end'))):
     """A text style modifier."""
 
-    __slots__ = ('start', 'end')
+    __slots__ = ()
 
-    def __init__(self, start=None, end=None):  # noqa: D107
-        self.start = start or ''
-        self.end = end or ''
+    def __new__(cls, start=None, end=None):  # noqa: D102
+        if start is None:
+            start = ''
+        if end is None:
+            end = ''
+        return super(Stylizer, cls).__new__(cls, start, end)
 
     def __add__(self, other):
         """Combine two modifiers into a single modifier."""
@@ -41,17 +45,20 @@ class Stylizer:
         return self.start + text + self.end
 
 
+Stylizer.Default = Stylizer()
+
+
 Style = SimpleNamespace(
-    Critical=Stylizer('', ''),
-    Default=Stylizer('', ''),
-    Error=Stylizer('', ''),
-    PackageOrJobName=Stylizer('', ''),
-    SectionEnd=Stylizer('', ''),
-    SectionStart=Stylizer('', ''),
-    Strong=Stylizer('', ''),
-    Success=Stylizer('', ''),
-    Warning=Stylizer('', ''),
-    Weak=Stylizer('', ''),
+    Critical=Stylizer.Default,
+    Default=Stylizer.Default,
+    Error=Stylizer.Default,
+    PackageOrJobName=Stylizer.Default,
+    SectionEnd=Stylizer.Default,
+    SectionStart=Stylizer.Default,
+    Strong=Stylizer.Default,
+    Success=Stylizer.Default,
+    Warning=Stylizer.Default,
+    Weak=Stylizer.Default,
 )
 
 
