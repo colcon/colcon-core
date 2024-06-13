@@ -70,6 +70,7 @@ class PythonBuildTask(TaskExtensionPoint):
             Path(__file__).parent / 'template' / 'sitecustomize.py.em',
             prefix_override / 'sitecustomize.py',
             {
+                'current_prefix': sys.prefix,
                 'site_prefix': args.install_base,
             })
 
