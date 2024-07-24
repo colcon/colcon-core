@@ -190,6 +190,17 @@ def test_create_log_path(reset_log_path_creation_global):
         assert (log_path / subdirectory).exists()
         assert not (log_path / 'latest').is_symlink()
 
+        # check that `latest_verb` is skipped when there is no verb
+        (log_path / subdirectory).rmdir()
+        (log_path / 'latest').rmdir()
+        (log_path / 'latest_verb').unlink()
+        location._create_log_path_called = False
+        create_log_path(None)
+        assert (log_path / subdirectory).exists()
+        assert (log_path / 'latest').is_symlink()
+        assert (log_path / 'latest').resolve() == \
+            (log_path / subdirectory).resolve()
+
 
 def test__create_symlink():
     # check cases where functions raise exceptions and ensure it is being
