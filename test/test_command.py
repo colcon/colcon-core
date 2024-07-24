@@ -96,6 +96,30 @@ def test_main_no_verbs_or_env():
             assert e.value.code == 0
 
 
+def test_main_default_verb():
+    default_verb = Extension2()
+    default_verb.main = Mock(wraps=default_verb.main)
+    with ExtensionPointContext():
+        with patch(
+            'colcon_core.argument_parser.get_argument_parser_extensions',
+            return_value={}
+        ):
+            with pytest.raises(SystemExit) as e:
+                main(argv=['--help'], default_verb=default_verb)
+            assert e.value.code == 0
+
+            with pytest.raises(SystemExit) as e:
+                main(
+                    argv=['--log-level', 'invalid'],
+                    default_verb=default_verb)
+            assert e.value.code == 2
+
+            assert not main(
+                argv=['--log-base', '/dev/null'],
+                default_verb=default_verb)
+            default_verb.main.assert_called_once()
+
+
 def test_create_parser():
     with ExtensionPointContext():
         parser = create_parser('colcon_core.environment_variable')
