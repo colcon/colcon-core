@@ -117,7 +117,7 @@ def main(
     :param str verb_group_name: The extension point group name for verbs
     :param str environment_variable_group_name: The extension point group name
       for environment variables
-    :param VerbExtensionPoint default_verb: The verb to invoke if no explicit
+    :param Type default_verb: The verb class type to invoke if no explicit
       verb was provided on the command line
     :returns: The return code
     """
@@ -159,10 +159,11 @@ def _main(
     parser = create_parser(environment_variable_group_name)
 
     if default_verb is not None:
+        default_verb_instance = default_verb()
         parser.set_defaults(
-            verb_parser=parser, verb_extension=default_verb,
-            main=default_verb.main)
-        add_parser_arguments(parser, default_verb)
+            verb_parser=parser, verb_extension=default_verb_instance,
+            main=default_verb_instance.main)
+        add_parser_arguments(parser, default_verb_instance)
 
     verb_extensions = get_verb_extensions(group_name=verb_group_name)
 
@@ -189,7 +190,7 @@ def _main(
     colcon_logger.debug(f'Parsed command line arguments: {args}')
 
     # error: no verb provided
-    if args.verb_name is None and default_verb is None:
+    if not getattr(args, 'main', None):
         print(parser.format_usage())
         return 'Error: No verb provided'
 
