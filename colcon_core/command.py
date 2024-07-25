@@ -93,7 +93,7 @@ def register_command_exit_handler(handler):
 
 def main(
     *, command_name='colcon', argv=None, verb_group_name=None,
-    environment_variable_group_name=None,
+    environment_variable_group_name=None, default_verb=None,
 ):
     """
     Execute the main logic of the command.
@@ -114,13 +114,19 @@ def main(
 
     :param str command_name: The name of the command invoked
     :param list argv: The list of arguments
+    :param str verb_group_name: The extension point group name for verbs
+    :param str environment_variable_group_name: The extension point group name
+      for environment variables
+    :param Type default_verb: The verb class type to invoke if no explicit
+      verb was provided on the command line
     :returns: The return code
     """
     try:
         return _main(
             command_name=command_name, argv=argv,
             verb_group_name=verb_group_name,
-            environment_variable_group_name=environment_variable_group_name)
+            environment_variable_group_name=environment_variable_group_name,
+            default_verb=default_verb)
     except KeyboardInterrupt:
         return signal.SIGINT
     finally:
@@ -132,6 +138,7 @@ def main(
 
 def _main(
     *, command_name, argv, verb_group_name, environment_variable_group_name,
+    default_verb
 ):
     # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
@@ -151,6 +158,13 @@ def _main(
 
     parser = create_parser(environment_variable_group_name)
 
+    if default_verb is not None:
+        default_verb_instance = default_verb()
+        parser.set_defaults(
+            verb_parser=parser, verb_extension=default_verb_instance,
+            main=default_verb_instance.main)
+        add_parser_arguments(parser, default_verb_instance)
+
     verb_extensions = get_verb_extensions(group_name=verb_group_name)
 
     # add subparsers for all verb extensions but without arguments for now
@@ -163,7 +177,7 @@ def _main(
         known_args, _ = parser.parse_known_args(args=argv)
 
     # add the arguments for the requested verb
-    if known_args.verb_name:
+    if known_args.verb_name is not None:
         add_parser_arguments(known_args.verb_parser, known_args.verb_extension)
 
     args = parser.parse_args(args=argv)
@@ -175,18 +189,22 @@ def _main(
 
     colcon_logger.debug(f'Parsed command line arguments: {args}')
 
-    # error: no verb provided
-    if args.verb_name is None:
+    # verify that one of the verbs set the 'main' attribute to be invoked later
+    if getattr(args, 'main', None) is None:
         print(parser.format_usage())
         return 'Error: No verb provided'
 
     # set default locations for log files, for searchability: COLCON_LOG_PATH
     now = datetime.datetime.now()
     now_str = str(now)[:-7].replace(' ', '_').replace(':', '-')
+    if args.verb_name is None:
+        subdirectory = now_str
+    else:
+        subdirectory = f'{args.verb_name}_{now_str}'
     set_default_log_path(
         base_path=args.log_base,
         env_var=f'{command_name}_LOG_PATH'.upper(),
-        subdirectory=f'{args.verb_name}_{now_str}')
+        subdirectory=subdirectory)
 
     # add a file handler writing all levels if logging isn't disabled
     log_path = get_log_path()
