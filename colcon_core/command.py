@@ -428,7 +428,9 @@ def create_subparser(parser, cmd_name, verb_extensions, *, attribute):
         title=f'{cmd_name} verbs',
         description='\n'.join(verbs) or None,
         dest=attribute,
-        help=f'call `{cmd_name} VERB -h` for specific help' if verbs else None,
+        help=(
+            f'call `{cmd_name} VERB -h` for specific help' if
+            verbs else argparse.SUPPRESS),
     )
     return subparser
 
