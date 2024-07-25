@@ -189,7 +189,7 @@ def _main(
 
     colcon_logger.debug(f'Parsed command line arguments: {args}')
 
-    # error: no verb provided
+    # verify that one of the verbs set the 'main' attribute to be invoked later
     if getattr(args, 'main', None) is None:
         print(parser.format_usage())
         return 'Error: No verb provided'
