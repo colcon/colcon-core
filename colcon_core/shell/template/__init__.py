@@ -3,20 +3,26 @@
 
 from io import StringIO
 import os
-
 from colcon_core.logging import colcon_logger
+from packaging import version
 try:
     from em import Configuration
     from em import Interpreter
+    import em
 except ImportError as e:
     try:
-        import em  # noqa: F401
-    except ImportError:
-        e.msg += " The Python package 'empy' must be installed"
+        from em import Interpreter
+        from em import OVERRIDE_OPT
+        import em
+    except ImportError as e:
+        try:
+            import em  # noqa: F401
+        except ImportError:
+            e.msg += " The Python package 'empy' must be installed"
+            raise e from None
+        e.msg += " The Python package 'empy' must be installed and 'em' must " \
+            'not be installed since both packages share the same namespace'
         raise e from None
-    e.msg += " The Python package 'empy' must be installed and 'em' must " \
-        'not be installed since both packages share the same namespace'
-    raise e from None
 
 logger = colcon_logger.getChild(__name__)
 
@@ -35,14 +41,24 @@ def expand_template(template_path, destination_path, data):
     output = StringIO()
     interpreter = None
     try:
-        config = Configuration(
-            defaultRoot=str(template_path),
-            defaultStdout=output,
-            useProxy=False)
-        interpreter = CachingInterpreter(config=config, dispatcher=False)
+
+        if version.parse(em.__version__) >= version.parse('4.0.0'):
+            config = Configuration(
+                defaultRoot=str(template_path),
+                defaultStdout=output,
+                useProxy=False)
+            interpreter = CachingInterpreter(config=config, dispatcher=False)
+        else:
+            # disable OVERRIDE_OPT to avoid saving / restoring stdout
+            interpreter = CachingInterpreter(
+                output=output, options={OVERRIDE_OPT: False})
         with template_path.open('r') as h:
             content = h.read()
-        interpreter.string(content, locals=data)
+        if version.parse(em.__version__) >= version.parse('4.0.0'):
+            interpreter.string(content, locals=data)
+        else:
+            interpreter.string(content, str(template_path), locals=data)
+
         output = output.getvalue()
     except Exception as e:  # noqa: F841
         logger.error(
@@ -63,8 +79,20 @@ def expand_template(template_path, destination_path, data):
 
 cached_tokens = {}
 
+empy_inheritance = None
+if version.parse(em.__version__) >= version.parse('4.0.0'):
+    empy_inheritance = Interpreter
+else:
+    class BypassStdoutInterpreter(Interpreter):
+        """Interpreter for EmPy which keeps `stdout` unchanged."""
 
-class CachingInterpreter(Interpreter):
+        def installProxy(self):  # noqa: D102 N802
+            # avoid replacing stdout with ProxyFile
+            pass
+
+    empy_inheritance = BypassStdoutInterpreter
+
+class CachingInterpreter(empy_inheritance):
     """Interpreter for EmPy which which caches parsed tokens."""
 
     def parse(self, scanner, locals=None):  # noqa: A002 D102
@@ -86,6 +114,10 @@ class CachingInterpreter(Interpreter):
         self.invoke('atParse', scanner=scanner, locals=locals)
         for token in tokens:
             self.invoke('atToken', token=token)
-            self.run(token, locals)
-            scanner.accumulate()
-        return True
+            if version.parse(em.__version__) >= version.parse('4.0.0'):
+                self.run(token, locals)
+                scanner.accumulate()
+            else:
+                token.run(self, locals)
+        if version.parse(em.__version__) >= version.parse('4.0.0'):
+            return True
