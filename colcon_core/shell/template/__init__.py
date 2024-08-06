@@ -3,26 +3,36 @@
 
 from io import StringIO
 import os
+
 from colcon_core.logging import colcon_logger
-from packaging import version
+
+# The complicated import below is meant to handle 3 things:
+# 1.  Empy 4 - the newest version as of this writing, which has a different API from Empy 3
+# 2.  Empy 3 - the version available since 2003
+# 3.  The ancient "em" tool, which has no relation to what we are doing here but sadly
+#     shares the "em" package name with empy.  This isn't supported, but we detect it.
+
 try:
-    from em import Configuration
+    # Both Empy 4 and Empy 3 have the Interpreter object, while the ancient "em" does not.
     from em import Interpreter
-    import em
 except ImportError as e:
     try:
-        from em import Interpreter
-        from em import OVERRIDE_OPT
-        import em
-    except ImportError as e:
-        try:
-            import em  # noqa: F401
-        except ImportError:
-            e.msg += " The Python package 'empy' must be installed"
-            raise e from None
-        e.msg += " The Python package 'empy' must be installed and 'em' must " \
-            'not be installed since both packages share the same namespace'
+        import em  # noqa: F401
+    except ImportError:
+        e.msg += " The Python package 'empy' must be installed"
         raise e from None
+    e.msg += " The Python package 'empy' must be installed and 'em' must " \
+        'not be installed since both packages share the same namespace'
+    raise e from None
+
+try:
+    # Only Empy 4 has the Configuration object
+    from em import Configuration
+    em_has_configuration = True
+except ImportError as e:
+    # We have Empy 3
+    from em import OVERRIDE_OPT
+    em_has_configuration = False
 
 logger = colcon_logger.getChild(__name__)
 
@@ -41,8 +51,7 @@ def expand_template(template_path, destination_path, data):
     output = StringIO()
     interpreter = None
     try:
-
-        if version.parse(em.__version__) >= version.parse('4.0.0'):
+        if em_has_configuration:
             config = Configuration(
                 defaultRoot=str(template_path),
                 defaultStdout=output,
@@ -54,7 +63,7 @@ def expand_template(template_path, destination_path, data):
                 output=output, options={OVERRIDE_OPT: False})
         with template_path.open('r') as h:
             content = h.read()
-        if version.parse(em.__version__) >= version.parse('4.0.0'):
+        if em_has_configuration:
             interpreter.string(content, locals=data)
         else:
             interpreter.string(content, str(template_path), locals=data)
@@ -80,7 +89,7 @@ def expand_template(template_path, destination_path, data):
 cached_tokens = {}
 
 empy_inheritance = None
-if version.parse(em.__version__) >= version.parse('4.0.0'):
+if em_has_configuration:
     empy_inheritance = Interpreter
 else:
     class BypassStdoutInterpreter(Interpreter):
@@ -114,10 +123,10 @@ class CachingInterpreter(empy_inheritance):
         self.invoke('atParse', scanner=scanner, locals=locals)
         for token in tokens:
             self.invoke('atToken', token=token)
-            if version.parse(em.__version__) >= version.parse('4.0.0'):
+            if em_has_configuration:
                 self.run(token, locals)
                 scanner.accumulate()
             else:
                 token.run(self, locals)
-        if version.parse(em.__version__) >= version.parse('4.0.0'):
+        if em_has_configuration:
             return True
