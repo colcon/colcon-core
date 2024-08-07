@@ -7,13 +7,15 @@ import os
 from colcon_core.logging import colcon_logger
 
 # The complicated import below is meant to handle 3 things:
-# 1.  Empy 4 - the newest version as of this writing, which has a different API from Empy 3
-# 2.  Empy 3 - the version available since 2003
-# 3.  The ancient "em" tool, which has no relation to what we are doing here but sadly
-#     shares the "em" package name with empy.  This isn't supported, but we detect it.
+# 1.  Empy 4 - the newest version as of 2024-08-07, which has a different
+#     API from Empy 3.
+# 2.  Empy 3 - the version available since 2003.
+# 3.  The ancient "em" tool, which has no relation to what we are doing here
+#     but sadly shares the "em" package name with empy. We can't use that
+#     package, but we detect if it is installed.
 
 try:
-    # Both Empy 4 and Empy 3 have the Interpreter object, while the ancient "em" does not.
+    # Empy 4 and Empy 3 have the Interpreter object, while "em" does not.
     from em import Interpreter
 except ImportError as e:
     try:
@@ -29,7 +31,7 @@ try:
     # Only Empy 4 has the Configuration object
     from em import Configuration
     em_has_configuration = True
-except ImportError as e:
+except ImportError:
     # We have Empy 3
     from em import OVERRIDE_OPT
     em_has_configuration = False
@@ -100,6 +102,7 @@ else:
             pass
 
     empy_inheritance = BypassStdoutInterpreter
+
 
 class CachingInterpreter(empy_inheritance):
     """Interpreter for EmPy which which caches parsed tokens."""
