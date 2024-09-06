@@ -37,10 +37,13 @@ def expand_template(template_path, destination_path, data):
         # disable OVERRIDE_OPT to avoid saving / restoring stdout
         interpreter = CachingInterpreter(
             output=output, options={OVERRIDE_OPT: False})
-        with template_path.open('r') as h:
-            content = h.read()
-        interpreter.string(content, str(template_path), locals=data)
-        output = output.getvalue()
+        try:
+            with template_path.open('r') as h:
+                content = h.read()
+            interpreter.string(content, str(template_path), locals=data)
+            output = output.getvalue()
+        finally:
+            interpreter.shutdown()
     except Exception as e:  # noqa: F841
         logger.error(
             f"{e.__class__.__name__} processing template '{template_path}'")
@@ -53,8 +56,6 @@ def expand_template(template_path, destination_path, data):
             destination_path.unlink()
         with destination_path.open('w') as h:
             h.write(output)
-    finally:
-        interpreter.shutdown()
 
 
 class BypassStdoutInterpreter(Interpreter):
