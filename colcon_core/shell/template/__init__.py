@@ -8,7 +8,6 @@ from colcon_core.generic_decorator import GenericDecorator
 from colcon_core.logging import colcon_logger
 try:
     from em import Interpreter
-    from em import OVERRIDE_OPT
 except ImportError as e:
     try:
         import em  # noqa: F401
@@ -35,13 +34,24 @@ def expand_template(template_path, destination_path, data):
     """
     output = StringIO()
     try:
-        # disable OVERRIDE_OPT to avoid saving / restoring stdout
-        interpreter = CachingInterpreter(
-            output=output, options={OVERRIDE_OPT: False})
+        try:
+            from em import Configuration
+        except ImportError:
+            from em import OVERRIDE_OPT
+            # disable OVERRIDE_OPT to avoid saving / restoring stdout
+            interpreter = CachingInterpreter(
+                output=output, options={OVERRIDE_OPT: False})
+        else:
+            interpreter = CachingInterpreter(
+                config=Configuration(
+                    defaultRoot=str(template_path),
+                    defaultStdout=output,
+                    useProxy=False),
+                dispatcher=False)
         try:
             with template_path.open('r') as h:
                 content = h.read()
-            interpreter.string(content, str(template_path), locals=data)
+            interpreter.string(content, locals=data)
             output = output.getvalue()
         finally:
             interpreter.shutdown()
