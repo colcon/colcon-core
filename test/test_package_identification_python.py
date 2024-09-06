@@ -74,7 +74,6 @@ def test_identify():
             'install_requires =\n'
             '  runA > 1.2.3\n'
             '  runB\n'
-            'tests_require = test == 2.0.0\n'
             'zip_safe = false\n'
             '[options.extras_require]\n'
             'test = test2 == 3.0.0\n'
@@ -93,7 +92,7 @@ def test_identify():
         assert desc.dependencies['run'] == {'runA', 'runB'}
         dep = next(x for x in desc.dependencies['run'] if x == 'runA')
         assert dep.metadata['version_gt'] == '1.2.3'
-        assert desc.dependencies['test'] == {'test', 'test2', 'test3', 'test4'}
+        assert desc.dependencies['test'] == {'test2', 'test3', 'test4'}
 
         assert callable(desc.metadata['get_python_setup_options'])
         options = desc.metadata['get_python_setup_options'](None)
