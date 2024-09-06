@@ -4,6 +4,7 @@
 from io import StringIO
 import os
 
+from colcon_core.generic_decorator import GenericDecorator
 from colcon_core.logging import colcon_logger
 try:
     from em import Interpreter
@@ -69,25 +70,31 @@ cached_tokens = {}
 
 
 class CachingInterpreter(BypassStdoutInterpreter):
-    """Interpreter for EmPy which which caches parsed tokens."""
+    """Interpreter for EmPy which caches parsed tokens."""
 
-    def parse(self, scanner, locals=None):  # noqa: A002 D102
-        global cached_tokens
-        data = scanner.buffer
-        # try to use cached tokens
-        tokens = cached_tokens.get(data)
-        if tokens is None:
-            # collect tokens and cache them
-            tokens = []
-            while True:
-                token = scanner.one()
-                if token is None:
-                    break
-                tokens.append(token)
-            cached_tokens[data] = tokens
+    class _CachingScannerDecorator(GenericDecorator):
 
-        # reimplement the parse method using the (cached) tokens
-        self.invoke('atParse', scanner=scanner, locals=locals)
-        for token in tokens:
-            self.invoke('atToken', token=token)
-            token.run(self, locals)
+        def __init__(self, decoree, cache):
+            super().__init__(decoree, _cache=cache, _idx=0)
+
+        def one(self, *args, **kwargs):
+            try:
+                token, count = self._cache[self._idx]
+            except IndexError:
+                count = len(self._decoree)
+                token = self._decoree.one(*args, **kwargs)
+                count -= len(self._decoree)
+                self._cache.append((token, count))
+            else:
+                self.advance(count)
+                self.sync()
+
+            self._idx += 1
+            return token
+
+    def parse(self, scanner, *args, **kwargs):  # noqa: A002 D102
+        cache = cached_tokens.setdefault(scanner.buffer, [])
+        return super().parse(
+            CachingInterpreter._CachingScannerDecorator(scanner, cache),
+            *args,
+            **kwargs)
