@@ -42,6 +42,17 @@ def test_expand_template():
             f" processing template '{template_path}'")
         assert not destination_path.exists()
 
+        # proper use
+        expand_template(template_path, destination_path, {'var': 'value1'})
+        assert destination_path.exists()
+        assert destination_path.read_text() == 'value1'
+        # overwrite with a different value
+        expand_template(template_path, destination_path, {'var': 'value2'})
+        assert destination_path.exists()
+        assert destination_path.read_text() == 'value2'
+
+        destination_path.unlink()
+
         # skip all symlink tests on Windows for now
         if sys.platform == 'win32':  # pragma: no cover
             return
