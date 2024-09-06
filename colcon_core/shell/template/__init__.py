@@ -61,9 +61,12 @@ def expand_template(template_path, destination_path, data):
 class BypassStdoutInterpreter(Interpreter):
     """Interpreter for EmPy which keeps `stdout` unchanged."""
 
-    def installProxy(self):  # noqa: D102 N802
+    def installProxy(self, *args, **kwargs):  # noqa: D102 N802
         # avoid replacing stdout with ProxyFile
-        pass
+        # in EmPy 3.x, this function performed in-place modification.
+        # in EmPy 4.x, it is passed the output stream and is expected to
+        # return the output stream.
+        return next(iter(args), None)
 
 
 cached_tokens = {}
