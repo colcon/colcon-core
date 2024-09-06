@@ -78,16 +78,15 @@ class CachingInterpreter(BypassStdoutInterpreter):
             super().__init__(decoree, _cache=cache, _idx=0)
 
         def one(self, *args, **kwargs):
-            try:
+            if self._idx < len(self._cache):
                 token, count = self._cache[self._idx]
-            except IndexError:
+                self.advance(count)
+                self.sync()
+            else:
                 count = len(self._decoree)
                 token = self._decoree.one(*args, **kwargs)
                 count -= len(self._decoree)
                 self._cache.append((token, count))
-            else:
-                self.advance(count)
-                self.sync()
 
             self._idx += 1
             return token
