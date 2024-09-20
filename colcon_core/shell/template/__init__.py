@@ -43,9 +43,9 @@ def expand_template(template_path, destination_path, data):
                 output=output, options={OVERRIDE_OPT: False})
         else:
             interpreter = CachingInterpreter(
+                output=output,
                 config=Configuration(
                     defaultRoot=str(template_path),
-                    defaultStdout=output,
                     useProxy=False),
                 dispatcher=False)
         try:
