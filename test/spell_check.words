@@ -4,6 +4,7 @@ apache
 argparse
 asyncio
 autouse
+backend
 backported
 basepath
 bazqux
@@ -85,6 +86,7 @@ prepending
 proactor
 purelib
 pydocstyle
+pyproject
 pytest
 pytests
 pythondontwritebytecode
@@ -136,6 +138,9 @@ testsuite
 thomas
 tmpdir
 todo
+toml
+tomli
+tomllib
 traceback
 tryfirst
 tuples
