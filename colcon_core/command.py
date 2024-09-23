@@ -94,6 +94,7 @@ def register_command_exit_handler(handler):
 def main(
     *, command_name='colcon', argv=None, verb_group_name=None,
     environment_variable_group_name=None, default_verb=None,
+    default_log_base='log',
 ):
     """
     Execute the main logic of the command.
@@ -119,6 +120,8 @@ def main(
       for environment variables
     :param Type default_verb: The verb class type to invoke if no explicit
       verb was provided on the command line
+    :param str default_log_base: The default logging base path if the command
+      line argument isn't specified and the environment variable is not set
     :returns: The return code
     """
     try:
@@ -126,7 +129,7 @@ def main(
             command_name=command_name, argv=argv,
             verb_group_name=verb_group_name,
             environment_variable_group_name=environment_variable_group_name,
-            default_verb=default_verb)
+            default_verb=default_verb, default_log_base=default_log_base)
     except KeyboardInterrupt:
         return signal.SIGINT
     finally:
@@ -138,7 +141,7 @@ def main(
 
 def _main(
     *, command_name, argv, verb_group_name, environment_variable_group_name,
-    default_verb
+    default_verb, default_log_base,
 ):
     # default log level, for searchability: COLCON_LOG_LEVEL
     colcon_logger.setLevel(logging.WARNING)
@@ -204,7 +207,7 @@ def _main(
     set_default_log_path(
         base_path=args.log_base,
         env_var=f'{command_name}_LOG_PATH'.upper(),
-        subdirectory=subdirectory)
+        subdirectory=subdirectory, default=default_log_base)
 
     # add a file handler writing all levels if logging isn't disabled
     log_path = get_log_path()
