@@ -3,9 +3,12 @@
 
 try:
     # Python 3.11+
-    from tomllib import load as toml_load
+    from tomllib import loads as toml_loads
 except ImportError:
-    from tomli import load as toml_load
+    try:
+        from tomli import loads as toml_loads
+    except ImportError:
+        from toml import loads as toml_loads
 
 
 SPEC_NAME = 'pyproject.toml'
@@ -25,7 +28,7 @@ def load_spec(project_path):
     spec_file = project_path / SPEC_NAME
     try:
         with spec_file.open('rb') as f:
-            spec = toml_load(f)
+            spec = toml_loads(f.read().decode())
     except FileNotFoundError:
         spec = {}
 
