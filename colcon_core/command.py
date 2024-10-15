@@ -261,9 +261,13 @@ def create_parser(environment_variables_group_name=None):
             # the option.  As of that PR (which is in Python 3.13, and
             # backported to Python 3.12), it returns a 4-tuple.  Check for
             # either here.
+            # A similar regression later occurred when _parse_optional()
+            # started returning a list of tuples, brought in by
+            # https://github.com/python/cpython/pull/124631 .
             if result in (
                 (None, arg_string, None),
                 (None, arg_string, None, None),
+                [(None, arg_string, None, None)],
             ):
                 # in the case there the arg is classified as an unknown 'O'
                 # override that and classify it as an 'A'
