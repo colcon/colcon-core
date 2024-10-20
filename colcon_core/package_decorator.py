@@ -46,8 +46,9 @@ def add_recursive_dependencies(
 
     :param set decorators: The known packages to consider
     :param Iterable[str] direct_categories: The names of the direct categories
-    :param Iterable[str] recursive_categories: The names of the recursive
-    categories
+    :param Iterable[str]|Mapping[str, Iterable[str]] recursive_categories:
+      The names of the recursive categories, optionally mapped from the
+      immediate upstream category which included the dependency
     """
     descriptors = [decorator.descriptor for decorator in decorators]
     for decorator in decorators:

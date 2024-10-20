@@ -1,8 +1,11 @@
+addfinalizer
 addopts
 apache
 argparse
 asyncio
 autouse
+backend
+backported
 basepath
 bazqux
 blocklist
@@ -17,6 +20,7 @@ configparser
 contextlib
 coroutine
 coroutines
+cpython
 datetime
 debian
 debinfo
@@ -33,8 +37,10 @@ docstring
 executables
 exitstatus
 fdopen
+ffoo
 filterwarnings
 foobar
+fooo
 fromhex
 functools
 getcategory
@@ -47,8 +53,10 @@ hookimpl
 hookwrapper
 https
 importlib
+importorskip
 isatty
 iterdir
+itertools
 junit
 levelname
 libexec
@@ -56,6 +64,7 @@ lineno
 linter
 linux
 lstrip
+minversion
 mkdtemp
 monkeypatch
 namedtuple
@@ -77,8 +86,10 @@ prepending
 proactor
 purelib
 pydocstyle
+pyproject
 pytest
 pytests
+pythondontwritebytecode
 pythonpath
 pythonscriptspath
 pythonwarnings
@@ -107,6 +118,7 @@ setuptools
 shlex
 sigint
 sitecustomize
+skipif
 sloretz
 stacklevel
 staticmethod
@@ -125,7 +137,11 @@ testcase
 testsfailed
 testsuite
 thomas
+tmpdir
 todo
+toml
+tomli
+tomllib
 traceback
 tryfirst
 tuples
@@ -134,5 +150,6 @@ unittest
 unittests
 unlinking
 unrenamed
+usefixtures
 wildcards
 workaround

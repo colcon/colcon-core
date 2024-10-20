@@ -211,10 +211,13 @@ def create_log_path(verb_name):
     ignore_marker.touch()
 
     # create latest symlinks
-    _create_symlink(path, path.parent / f'latest_{verb_name}')
-    _create_symlink(
-        path.parent / f'latest_{verb_name}',
-        path.parent / 'latest')
+    if verb_name is None:
+        _create_symlink(path, path.parent / 'latest')
+    else:
+        _create_symlink(path, path.parent / f'latest_{verb_name}')
+        _create_symlink(
+            path.parent / f'latest_{verb_name}',
+            path.parent / 'latest')
 
 
 def _reset_log_path_creation_global():

@@ -73,6 +73,9 @@ class PythonTestTask(TaskExtensionPoint):
 
         logger.log(1, f"test.step() by extension '{key}'")
         try:
+            if 'PYTHONDONTWRITEBYTECODE' not in env:
+                env = dict(env)
+                env['PYTHONDONTWRITEBYTECODE'] = '1'
             return await extension.step(self.context, env, setup_py_data)
         except Exception as e:  # noqa: F841
             # catch exceptions raised in python testing step extension
@@ -134,7 +137,7 @@ class PythonTestingStepExtensionPoint:
         raise NotImplementedError()
 
 
-def get_python_testing_step_extensions():
+def get_python_testing_step_extensions(*, group_name=None):
     """
     Get the available Python testing step extensions.
 
@@ -142,8 +145,9 @@ def get_python_testing_step_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(
-        'colcon_core.python_testing', unique_instance=False)
+    if group_name is None:
+        group_name = 'colcon_core.python_testing'
+    extensions = instantiate_extensions(group_name, unique_instance=False)
     for name in list(extensions.keys()):
         extension = extensions[name]
         extension.STEP_TYPE = name

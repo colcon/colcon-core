@@ -5,7 +5,7 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 
 --- setup.cfg	2018-05-27 11:22:33.000000000 -0700
 +++ setup.cfg.patched	2018-05-27 11:22:33.000000000 -0700
-@@ -33,9 +33,12 @@
+@@ -33,11 +33,16 @@
  	importlib-metadata; python_version < "3.8"
  	packaging
  	pytest
@@ -19,5 +19,10 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 +	# pytest-repeat
 +	# pytest-rerunfailures
  	setuptools>=30.3.0
+-	tomli>=1.0.0; python_version < "3.11"
++	# toml is also supported, rely on deb dependencies to select the
++	# appropriate package
++	# tomli>=1.0.0; python_version < "3.11"
  packages = find:
  zip_safe = false
+ 
