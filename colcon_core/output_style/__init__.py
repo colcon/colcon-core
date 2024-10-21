@@ -23,6 +23,14 @@ class Stylizer:
         self.start = start or ''
         self.end = end or ''
 
+    def __add__(self, other):
+        """Combine two modifiers into a single modifier."""
+        if not isinstance(other, Stylizer):
+            raise TypeError()
+        return Stylizer(
+            self.start + other.start,
+            other.end + self.end)
+
     def __call__(self, text):
         """
         Apply style modification to the given text.
@@ -68,7 +76,7 @@ class OutputStyleExtensionPoint:
         pass
 
 
-def get_output_style_extensions():
+def get_output_style_extensions(*, group_name=None):
     """
     Get the available output style extensions.
 
@@ -77,18 +85,24 @@ def get_output_style_extensions():
 
     :rtype: OrderedDict
     """
-    extensions = instantiate_extensions(__name__)
+    if group_name is None:
+        group_name = __name__
+    extensions = instantiate_extensions(group_name)
     return order_extensions_grouped_by_priority(extensions)
 
 
-def add_output_style_arguments(parser):
+def add_output_style_arguments(parser, *, extensions=None):
     """
     Add the command line arguments for the output style extensions.
 
     :param parser: The argument parser
+    :param extensions: The output style extensions to use, if `None` is passed
+      use the extensions provided by
+      :function:`get_output_style_extensions`
     """
+    if extensions is None:
+        extensions = get_output_style_extensions()
     group = parser.add_argument_group(title='Output style arguments')
-    extensions = get_output_style_extensions()
     keys = []
     descriptions = ''
     for priority in extensions.keys():
@@ -118,32 +132,40 @@ def add_output_style_arguments(parser):
              f'(default: {default}){descriptions}')  # noqa: E131
 
 
-def select_output_style_extension(args):
+def select_output_style_extension(args, *, extensions=None):
     """
     Get the output style extension.
 
     :param args: The parsed command line arguments
+    :param extensions: The output style extensions to use, if `None` is passed
+      use the extensions provided by
+      :function:`get_output_style_extensions`
+
     :returns: The output style extension (or None if not available)
     """
-    output_style_extensions = get_output_style_extensions()
-    for priority in output_style_extensions.keys():
-        extensions_same_prio = output_style_extensions[priority]
+    if extensions is None:
+        extensions = get_output_style_extensions()
+    for priority in extensions.keys():
+        extensions_same_prio = extensions[priority]
         for key, extension in extensions_same_prio.items():
             if key == args.output_style:
                 return extension
 
 
-def apply_output_style(args):
+def apply_output_style(args, *, extensions=None):
     """
     Apply output style for the appropriate extension if any are available.
 
     :param args: The parsed command line arguments
+    :param extensions: The output style extensions to use, if `None` is passed
+      use the extensions provided by
+      :function:`get_output_style_extensions`
     """
     # TODO: This approach chooses only a single extension. Should it be
     #       possible to apply styles on top of each other, possibly ones which
     #       serve different purposes?
     #       Expressing styles similar to event handlers might be the only way
     #       to expose that on the command line.
-    extension = select_output_style_extension(args)
+    extension = select_output_style_extension(args, extensions=extensions)
     if extension is not None:
         extension.apply_style(Style)
