@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -16,9 +17,14 @@ def known_words():
 
 @pytest.mark.linter
 def test_spell_check(known_words):
-    from scspell import Report
-    from scspell import SCSPELL_BUILTIN_DICT
-    from scspell import spell_check
+    try:
+        from scspell import Report
+        from scspell import SCSPELL_BUILTIN_DICT
+        from scspell import spell_check
+    except ModuleNotFoundError:
+        if sys.version_info >= (3, 13):
+            pytest.skip('scspell3k is not available for Python 3.13+')
+        raise
 
     source_filenames = [
         Path(__file__).parents[1] / 'bin' / 'colcon',
