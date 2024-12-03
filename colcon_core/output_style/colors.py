@@ -11,8 +11,8 @@ class AnsiEscape(Stylizer):
 
     __slots__ = ()
 
-    def __init__(self, start, end=0):  # noqa: D107
-        super().__init__(f'\033[{start}m', f'\033[{end}m')
+    def __new__(cls, start, end=0):  # noqa: D102
+        return super().__new__(cls, f'\033[{start}m', f'\033[{end}m')
 
     def __add__(self, other):  # noqa: D105
         if not isinstance(other, AnsiEscape):
