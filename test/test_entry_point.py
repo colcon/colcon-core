@@ -2,21 +2,29 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+import sys
 from unittest.mock import Mock
 from unittest.mock import patch
 import warnings
+
+import pytest
 
 with warnings.catch_warnings():
     warnings.filterwarnings(
         'ignore', message='.*entry_point.*deprecated.*', category=UserWarning)
 
-    from colcon_core.entry_point import EXTENSION_POINT_GROUP_NAME
-    from colcon_core.entry_point import get_all_entry_points
-    from colcon_core.entry_point import get_entry_points
-    from colcon_core.entry_point import load_entry_point
-    from colcon_core.entry_point import load_entry_points
-
-import pytest
+    try:
+        from colcon_core.entry_point import EXTENSION_POINT_GROUP_NAME
+        from colcon_core.entry_point import get_all_entry_points
+        from colcon_core.entry_point import get_entry_points
+        from colcon_core.entry_point import load_entry_point
+        from colcon_core.entry_point import load_entry_points
+    except ModuleNotFoundError:
+        if sys.version_info >= (3, 13):
+            pytest.skip(
+                'pkg_resources is no longer available in Python 3.13+',
+                allow_module_level=True)
+        raise
 
 from .environment_context import EnvironmentContext
 

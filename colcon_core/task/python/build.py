@@ -29,6 +29,8 @@ _PYTHON_CMD = [
     sys.executable,
     '-W',
     'ignore:setup.py install is deprecated',
+    '-W',
+    'ignore:easy_install command is deprecated',
 ]
 
 
