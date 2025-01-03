@@ -161,9 +161,6 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             # support pytest < 5.0
             from _pytest.main import EXIT_TESTSFAILED
             EXIT_CODE_TESTS_FAILED = EXIT_TESTSFAILED  # noqa: N806
-        if completed.returncode == EXIT_CODE_TESTS_FAILED:
-            context.put_event_into_queue(
-                TestFailure(context.pkg.name))
 
         try:
             from _pytest.main import ExitCode
@@ -172,7 +169,15 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             # support pytest < 5.0
             from _pytest.main import EXIT_NOTESTSCOLLECTED
             EXIT_CODE_NO_TESTS = EXIT_NOTESTSCOLLECTED  # noqa: N806
-        if completed.returncode not in (
-            EXIT_CODE_NO_TESTS, EXIT_CODE_TESTS_FAILED
+
+        if sys.platform == 'win32':
+            EXIT_CODE_TESTS_CRASHED = 3221225477
+        else:
+            EXIT_CODE_TESTS_CRASHED = -11
+
+        if completed.returncode in (
+            EXIT_CODE_TESTS_FAILED, EXIT_CODE_TESTS_CRASHED
         ):
+            context.put_event_into_queue(TestFailure(context.pkg.name))
+        elif completed.returncode != EXIT_CODE_NO_TESTS:
             return completed.returncode
