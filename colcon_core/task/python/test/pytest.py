@@ -171,9 +171,9 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
             EXIT_CODE_NO_TESTS = EXIT_NOTESTSCOLLECTED  # noqa: N806
 
         if sys.platform == 'win32':
-            EXIT_CODE_TESTS_CRASHED = 3221225477
+            EXIT_CODE_TESTS_CRASHED = 3221225477  # noqa: N806
         else:
-            EXIT_CODE_TESTS_CRASHED = -11
+            EXIT_CODE_TESTS_CRASHED = -11  # noqa: N806
 
         if completed.returncode in (
             EXIT_CODE_TESTS_FAILED, EXIT_CODE_TESTS_CRASHED
