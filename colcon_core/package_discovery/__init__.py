@@ -25,14 +25,14 @@ class PackageDiscoveryExtensionPoint:
     """
 
     """The version of the discovery extension interface."""
-    EXTENSION_POINT_VERSION = '1.0'
+    EXTENSION_POINT_VERSION = '1.1'
 
     """The default priority of discovery extensions."""
     PRIORITY = 100
 
     def has_default(self):
         """
-        Check if the extension has a default parameter is none are provided.
+        Check if the extension has a default parameter if none are provided.
 
         The method is intended to be overridden in a subclass.
 
@@ -62,7 +62,9 @@ class PackageDiscoveryExtensionPoint:
         This method must be overridden in a subclass.
 
         :param args: The parsed command line arguments
-        :returns: True if `discover()` should be called, False otherwise
+        :returns: True if `discover()` should be called, False if no
+          parameters were given, or None if this extension has no
+          parameters to be specified.
         :rtype: bool
         """
         raise NotImplementedError()
@@ -219,6 +221,7 @@ def expand_dir_wildcards(paths):
 def _get_extensions_with_parameters(
     args, discovery_extensions
 ):
+    explicitly_specified = False
     with_parameters = OrderedDict()
     for extension in discovery_extensions.values():
         logger.log(
@@ -234,9 +237,13 @@ def _get_extensions_with_parameters(
                 f"'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
         else:
-            if has_parameter:
-                with_parameters[extension.PACKAGE_DISCOVERY_NAME] = extension
-    return with_parameters
+            if has_parameter is not None:
+                if has_parameter:
+                    explicitly_specified = True
+                else:
+                    continue
+            with_parameters[extension.PACKAGE_DISCOVERY_NAME] = extension
+    return with_parameters if explicitly_specified else OrderedDict()
 
 
 def _discover_packages(
