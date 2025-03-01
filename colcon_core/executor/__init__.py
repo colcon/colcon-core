@@ -141,7 +141,7 @@ class ExecutorExtensionPoint:
     """
 
     """The version of the executor extension interface."""
-    EXTENSION_POINT_VERSION = '1.0'
+    EXTENSION_POINT_VERSION = '1.1'
 
     """The default priority of executor extensions."""
     PRIORITY = 100
@@ -190,6 +190,14 @@ class ExecutorExtensionPoint:
           `on_error` instead)
         """
         raise NotImplementedError()
+
+    def put_event_into_queue(self, event):
+        """
+        Post a message event into the event queue.
+
+        :param event: The event
+        """
+        self._event_controller.get_queue().put((event, self))
 
     def _flush(self):
         if self._event_controller is None:
