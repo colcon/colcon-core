@@ -19,6 +19,7 @@ from colcon_core.shell import get_colcon_prefix_path
 from colcon_core.shell import get_command_environment
 from colcon_core.shell import get_environment_variables
 from colcon_core.shell import get_find_installed_packages_extensions
+from colcon_core.shell import get_null_separated_environment_variables
 from colcon_core.shell import get_shell_extensions
 from colcon_core.shell import ShellExtensionPoint
 from colcon_core.shell.installed_packages import IsolatedInstalledPackageFinder
@@ -136,6 +137,42 @@ def test_get_environment_variables():
     assert env['NAME'] == 'value\nSOMETHING'
     assert 'NAME2' in env.keys()
     assert env['NAME2'] == 'value with spaces'
+
+    # test with environment strings which isn't decodable
+    async def check_output(cmd, **kwargs):
+        return b'DECODE_ERROR=\x81\nNAME=value'
+    with patch('colcon_core.shell.check_output', side_effect=check_output):
+        with patch('colcon_core.shell.logger.warning') as warn:
+            coroutine = get_environment_variables(['not-used'], shell=False)
+            env = run_until_complete(coroutine)
+
+    assert len(env.keys()) == 1
+    assert 'NAME' in env.keys()
+    assert env['NAME'] == 'value'
+    # the raised decode error is catched and results in a warning message
+    assert warn.call_count == 1
+    assert len(warn.call_args[0]) == 1
+    assert warn.call_args[0][0].startswith(
+        "Failed to decode line from the environment using the encoding '")
+    assert 'DECODE_ERROR=' in warn.call_args[0][0]
+
+
+def test_get_null_separated_environment_variables():
+    cmd = [
+        sys.executable, '-c',
+        r'print("FOO\0NAME=value\nSOMETHING\0NAME2=value with spaces'
+        r'\0NAME3=NAME4\nNAME5=NAME6")']
+
+    coroutine = get_null_separated_environment_variables(cmd, shell=False)
+    env = run_until_complete(coroutine)
+
+    assert len(env.keys()) == 3
+    assert 'NAME' in env.keys()
+    assert env['NAME'] == f'value{os.linesep}SOMETHING'
+    assert 'NAME2' in env.keys()
+    assert env['NAME2'] == 'value with spaces'
+    assert 'NAME3' in env.keys()
+    assert env['NAME3'] == f'NAME4{os.linesep}NAME5=NAME6'
 
     # test with environment strings which isn't decodable
     async def check_output(cmd, **kwargs):

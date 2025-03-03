@@ -332,6 +332,40 @@ async def get_command_environment(task_name, build_base, dependencies):
         'Could not find a shell extension for the command environment')
 
 
+async def get_null_separated_environment_variables(
+    cmd, *, cwd=None, shell=True,
+):
+    """
+    Get null-separated environment variables from the output of the command.
+
+    :param args: the sequence of program arguments
+    :param cwd: the working directory for the subprocess
+    :param shell: whether to use the shell as the program to execute
+    :rtype: dict
+    """
+    encoding = locale.getpreferredencoding()
+    output = await check_output(cmd, cwd=cwd, shell=shell)
+    env = OrderedDict()
+    for kvp in output.split(b'\0'):
+        kvp = kvp.rstrip()
+        if not kvp:
+            continue
+        try:
+            parts = kvp.decode(encoding).split('=', 1)
+        except UnicodeDecodeError:
+            kvp_replaced = kvp.decode(encoding=encoding, errors='replace')
+            logger.warning(
+                'Failed to decode line from the environment using the '
+                f"encoding '{encoding}': {kvp_replaced}")
+            continue
+        if len(parts) != 2:
+            # skip lines which don't contain an equal sign
+            continue
+        env[parts[0]] = parts[1]
+    assert len(env) > 0, "The environment shouldn't be empty"
+    return env
+
+
 async def get_environment_variables(cmd, *, cwd=None, shell=True):
     """
     Get the environment variables from the output of the command.
