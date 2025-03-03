@@ -123,9 +123,12 @@ def test_interface():
     interface = ExecutorExtensionPoint()
     interface._flush()
     event_controller = Mock()
+    event_controller.get_queue.returns = Mock()
     interface.set_event_controller(event_controller)
+    interface.put_event_into_queue(object())
     interface._flush()
     assert event_controller.flush.call_count == 1
+    assert event_controller.get_queue().put.call_count == 1
 
 
 class Extension1(ExecutorExtensionPoint):
