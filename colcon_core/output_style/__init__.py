@@ -1,4 +1,4 @@
-# Copyright 2024 Open Source Robotics Foundation, Inc.
+# Copyright 2025 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
 from collections import namedtuple
@@ -54,6 +54,7 @@ Style = SimpleNamespace(
     Error=Stylizer.Default,
     Measurement=Stylizer.Default,
     PackageOrJobName=Stylizer.Default,
+    Path=Stylizer.Default,
     Pictogram=Stylizer.Default,
     SectionEnd=Stylizer.Default,
     SectionStart=Stylizer.Default,
@@ -82,7 +83,7 @@ class OutputStyleExtensionPoint:
 
         :param style: The current output style
         """
-        pass
+        raise NotImplementedError()
 
 
 def get_output_style_extensions(*, group_name=None):
@@ -111,15 +112,17 @@ def add_output_style_arguments(parser, *, extensions=None):
     """
     if extensions is None:
         extensions = get_output_style_extensions()
-    group = parser.add_argument_group(title='Output style arguments')
     keys = []
     descriptions = ''
+    default = None
     for priority in extensions.keys():
         extensions_same_prio = extensions[priority]
         assert len(extensions_same_prio) == 1, \
             'Output style extensions must have unique priorities'
         for key, extension in extensions_same_prio.items():
             keys.append(key)
+            if default is None and priority >= 100:
+                default = key
             desc = get_first_line_doc(extension)
             if not desc:
                 # show extensions without a description
@@ -131,11 +134,10 @@ def add_output_style_arguments(parser, *, extensions=None):
     if not keys:
         return
 
-    default = os.environ.get(DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE.name)
-    if default not in keys:
-        default = keys[0]
-
-    group.add_argument(
+    default = os.environ.get(
+        DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE.name,
+        default)
+    parser.add_argument(
         '--output-style', type=str, choices=keys, default=default,
         help='The style extension to use when producing output '
              f'(default: {default}){descriptions}')  # noqa: E131

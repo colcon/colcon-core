@@ -1,4 +1,4 @@
-# Copyright 2024 Open Source Robotics Foundation, Inc.
+# Copyright 2025 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
 import copy
@@ -10,7 +10,7 @@ from colcon_core.output_style import Stylizer
 
 
 blank_style = SimpleNamespace(
-    **{k: Stylizer('', '') for k in vars(Style).keys()})
+    **{k: Stylizer.Default for k in vars(Style).keys()})
 
 
 extension_groups = get_output_style_extensions()

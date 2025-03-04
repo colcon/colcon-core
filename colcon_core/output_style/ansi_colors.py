@@ -1,4 +1,4 @@
-# Copyright 2024 Open Source Robotics Foundation, Inc.
+# Copyright 2025 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
 import os
@@ -56,6 +56,8 @@ AnsiEscape.Yellow = AnsiEscape(33)
 
 class AnsiColorsOutputStyle(OutputStyleExtensionPoint):
     """Basic ANSI colorizing for console output."""
+
+    PRIORITY = 90
 
     def __init__(self):  # noqa: D107
         super().__init__()

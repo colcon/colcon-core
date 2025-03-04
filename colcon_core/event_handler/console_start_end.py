@@ -59,7 +59,7 @@ class ConsoleStartEndEventHandler(EventHandlerExtensionPoint):
 
             elif data.rc == SIGINT_RESULT:
                 msg = Style.Warning('Aborted') + '  ' + \
-                    Style.Pictogram('<<<') + ' {job_id} [{duration_string}]'
+                    Style.Pictogram('<<<') + f' {job_id} [{duration_string}]'
                 writable = sys.stdout
 
             else:
