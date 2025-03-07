@@ -48,7 +48,18 @@ class Stylizer(namedtuple('Stylizer', ('start', 'end'))):
 Stylizer.Default = Stylizer()
 
 
-Style = SimpleNamespace(
+class StyleCollection(SimpleNamespace):
+    """Collection of Stylizers to use when styling console output."""
+
+    Default = Stylizer.Default
+
+    def __getattr__(self, name):  # noqa: D105
+        if name.startswith('_'):
+            return super().__getattr__(name)
+        return self.Default
+
+
+Style = StyleCollection(
     Critical=Stylizer.Default,
     Default=Stylizer.Default,
     Error=Stylizer.Default,

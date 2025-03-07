@@ -2,14 +2,14 @@
 # Licensed under the Apache License, Version 2.0
 
 import copy
-from types import SimpleNamespace
 
 from colcon_core.output_style import get_output_style_extensions
 from colcon_core.output_style import Style
+from colcon_core.output_style import StyleCollection
 from colcon_core.output_style import Stylizer
 
 
-blank_style = SimpleNamespace(
+blank_style = StyleCollection(
     **{k: Stylizer.Default for k in vars(Style).keys()})
 
 

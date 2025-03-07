@@ -12,6 +12,7 @@ from colcon_core.output_style import add_output_style_arguments
 from colcon_core.output_style import apply_output_style
 from colcon_core.output_style import DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE
 from colcon_core.output_style import OutputStyleExtensionPoint
+from colcon_core.output_style import StyleCollection
 from colcon_core.output_style import Stylizer
 import pytest
 
@@ -108,6 +109,11 @@ def test_combine_stylizers():
 
     with pytest.raises(TypeError):
         MarkdownBold + 'x'
+
+
+def test_style_default():
+    style = StyleCollection()
+    assert style.DoesNotExist == Stylizer.Default
 
 
 @patch('sys.stdout', new_callable=StringIO)
