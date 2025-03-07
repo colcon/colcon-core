@@ -65,9 +65,7 @@ class AnsiColorsOutputStyle(OutputStyleExtensionPoint):
             OutputStyleExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def apply_style(self, style):  # noqa: D102
-        if os.environ.get('NO_COLOR') not in (
-            None, '', '0', 'no', 'No', 'NO', 'false', 'False', 'FALSE',
-        ):
+        if os.environ.get('NO_COLOR'):
             return
 
         style.Critical = AnsiEscape.Bright + AnsiEscape.Red
