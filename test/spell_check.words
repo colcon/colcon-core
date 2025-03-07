@@ -1,5 +1,6 @@
 addfinalizer
 addopts
+ansi
 apache
 argparse
 asyncio
@@ -106,6 +107,7 @@ rindex
 rmtree
 rstrip
 rtype
+runpy
 samefile
 scspell
 sdist
@@ -124,6 +126,8 @@ stacklevel
 staticmethod
 stdeb
 stringify
+stylizer
+stylizers
 subparser
 subparsers
 subprocesses

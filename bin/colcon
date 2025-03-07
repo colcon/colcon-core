@@ -105,6 +105,7 @@ custom_extension_points.update({
         # there is no point in registering the extension_point extensions here
         # since they can't be queried through pkg_resources without installing
     },
+    'colcon_core.output_style': {},
     'colcon_core.package_augmentation': {
         'python': PythonPackageAugmentation,
     },
