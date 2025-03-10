@@ -237,11 +237,10 @@ def _get_extensions_with_parameters(
                 f"'{extension.PACKAGE_DISCOVERY_NAME}': {e}\n{exc}")
             # skip failing extension, continue with next one
         else:
-            if has_parameter is not None:
-                if has_parameter:
-                    explicitly_specified = True
-                else:
-                    continue
+            if has_parameter:
+                explicitly_specified = True
+            elif has_parameter is not None:
+                continue
             with_parameters[extension.PACKAGE_DISCOVERY_NAME] = extension
     return with_parameters if explicitly_specified else OrderedDict()
 
