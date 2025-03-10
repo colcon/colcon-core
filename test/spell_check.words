@@ -106,6 +106,7 @@ rindex
 rmtree
 rstrip
 rtype
+runpy
 samefile
 scspell
 sdist
@@ -124,6 +125,8 @@ stacklevel
 staticmethod
 stdeb
 stringify
+stylizer
+stylizers
 subparser
 subparsers
 subprocesses

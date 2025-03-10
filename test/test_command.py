@@ -39,6 +39,7 @@ class Extension3(VerbExtensionPoint):
         raise RuntimeError('custom exception')
 
 
+@patch('colcon_core.output_style.get_output_style_extensions', dict)
 def test_main():
     with ExtensionPointContext(
         extension1=Extension1, extension2=Extension2, extension3=Extension3
