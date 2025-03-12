@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import sys
+import warnings
 
 from colcon_core import shell
 from colcon_core.plugin_system import satisfies_version
@@ -158,6 +159,11 @@ class ShShell(ShellExtensionPoint):
             env = await get_null_separated_environment_variables(
                 cmd, cwd=str(build_base))
         except AssertionError:
+            warnings.warn(
+                'This platform does not support null-separated output from '
+                "'env', and may not be supported in future releases of "
+                'colcon-core. See colcon/colcon-core#684 for details.',
+                DeprecationWarning)
             cmd.pop()
             env = await get_environment_variables(cmd, cwd=str(build_base))
 
