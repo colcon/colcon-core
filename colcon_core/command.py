@@ -61,6 +61,8 @@ from colcon_core.logging import add_file_handler  # noqa: E402
 from colcon_core.logging import colcon_logger  # noqa: E402
 from colcon_core.logging import get_numeric_log_level  # noqa: E402
 from colcon_core.logging import set_logger_level_from_env  # noqa: E402
+from colcon_core.output_style import add_output_style_arguments  # noqa: E402
+from colcon_core.output_style import apply_output_style  # noqa: E402
 from colcon_core.plugin_system import get_first_line_doc  # noqa: E402
 from colcon_core.verb import get_verb_extensions  # noqa: E402
 
@@ -192,6 +194,8 @@ def _main(
 
     colcon_logger.debug(f'Parsed command line arguments: {args}')
 
+    apply_output_style(args)
+
     # verify that one of the verbs set the 'main' attribute to be invoked later
     if getattr(args, 'main', None) is None:
         print(parser.format_usage())
@@ -289,6 +293,7 @@ def create_parser(environment_variables_group_name=None):
     parser = decorate_argument_parser(parser)
 
     add_log_level_argument(parser)
+    add_output_style_arguments(parser)
 
     return parser
 
