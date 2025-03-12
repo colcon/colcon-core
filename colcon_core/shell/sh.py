@@ -151,11 +151,13 @@ class ShShell(ShellExtensionPoint):
             hook_path,
             {'dependencies': dependencies})
 
+        # Attempt to use null-separated env output, but fall back to the
+        # best-effort implementation if not supported (i.e. older macOS)
         cmd = ['.', str(hook_path), '&&', 'env', '-0']
         try:
             env = await get_null_separated_environment_variables(
                 cmd, cwd=str(build_base))
-        except Exception:  # noqa: B902
+        except AssertionError:
             cmd.pop()
             env = await get_environment_variables(cmd, cwd=str(build_base))
 

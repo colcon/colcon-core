@@ -160,19 +160,19 @@ def test_get_environment_variables():
 def test_get_null_separated_environment_variables():
     cmd = [
         sys.executable, '-c',
-        r'print("FOO\0NAME=value\nSOMETHING\0NAME2=value with spaces'
-        r'\0NAME3=NAME4\nNAME5=NAME6")']
+        r'import sys; sys.stdout.buffer.write(b"FOO\0NAME=value\nSOMETHING'
+        r'\0NAME2=value with spaces\0NAME3=NAME4\nNAME5=NAME6")']
 
     coroutine = get_null_separated_environment_variables(cmd, shell=False)
     env = run_until_complete(coroutine)
 
     assert len(env.keys()) == 3
     assert 'NAME' in env.keys()
-    assert env['NAME'] == f'value{os.linesep}SOMETHING'
+    assert env['NAME'] == 'value\nSOMETHING'
     assert 'NAME2' in env.keys()
     assert env['NAME2'] == 'value with spaces'
     assert 'NAME3' in env.keys()
-    assert env['NAME3'] == f'NAME4{os.linesep}NAME5=NAME6'
+    assert env['NAME3'] == 'NAME4\nNAME5=NAME6'
 
     # test with environment strings which isn't decodable
     async def check_output(cmd, **kwargs):
