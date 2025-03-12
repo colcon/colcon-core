@@ -110,6 +110,7 @@ def test_discover_packages():
             return_value={PackageDescriptor('/extension1/pkg1')})
         extensions['extension2'].discover = Mock(
             return_value={PackageDescriptor('/extension2/pkg1')})
+        extensions['extension2'].has_parameters = Mock(return_value=None)
 
         descs = discover_packages(None, None, discovery_extensions=extensions)
         assert len(descs) == 2
@@ -126,10 +127,12 @@ def test_discover_packages():
                 PackageDescriptor('/extension3/pkg2')})
 
         descs = discover_packages(None, None, discovery_extensions=extensions)
-        assert len(descs) == 2
+        assert len(descs) == 3
         expected_path = '/extension3/pkg1'.replace('/', os.sep)
         assert expected_path in (str(d.path) for d in descs)
         expected_path = '/extension3/pkg2'.replace('/', os.sep)
+        assert expected_path in (str(d.path) for d in descs)
+        expected_path = '/extension2/pkg1'.replace('/', os.sep)
         assert expected_path in (str(d.path) for d in descs)
 
 
