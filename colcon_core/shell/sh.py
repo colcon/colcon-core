@@ -3,6 +3,7 @@
 
 from pathlib import Path
 import sys
+import warnings
 
 from colcon_core import shell
 from colcon_core.plugin_system import satisfies_version
@@ -10,6 +11,7 @@ from colcon_core.plugin_system import SkipExtensionException
 from colcon_core.prefix_path import get_chained_prefix_path
 from colcon_core.shell import check_dependency_availability
 from colcon_core.shell import get_environment_variables
+from colcon_core.shell import get_null_separated_environment_variables
 from colcon_core.shell import logger
 from colcon_core.shell import ShellExtensionPoint
 from colcon_core.shell.template import expand_template
@@ -150,8 +152,20 @@ class ShShell(ShellExtensionPoint):
             hook_path,
             {'dependencies': dependencies})
 
-        cmd = ['.', str(hook_path), '&&', 'env']
-        env = await get_environment_variables(cmd, cwd=str(build_base))
+        # Attempt to use null-separated env output, but fall back to the
+        # best-effort implementation if not supported (i.e. older macOS)
+        cmd = ['.', str(hook_path), '&&', 'env', '-0']
+        try:
+            env = await get_null_separated_environment_variables(
+                cmd, cwd=str(build_base))
+        except AssertionError:
+            warnings.warn(
+                'This platform does not support null-separated output from '
+                "'env', and may not be supported in future releases of "
+                'colcon-core. See colcon/colcon-core#684 for details.',
+                DeprecationWarning)
+            cmd.pop()
+            env = await get_environment_variables(cmd, cwd=str(build_base))
 
         # write environment variables to file for debugging
         env_path = build_base / ('colcon_command_prefix_%s.sh.env' % task_name)
