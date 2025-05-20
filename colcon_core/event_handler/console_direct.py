@@ -32,17 +32,27 @@ class ConsoleDirectEventHandler(EventHandlerExtensionPoint):
             StderrLine: sys.stderr,
         }
 
+    @staticmethod
+    def write_event(data, writable):
+        """
+        Write event data using the appropriate buffer.
+
+        :param data: The event data
+        :param writable: A writable stream such as sys.stdout
+        """
+        if isinstance(data.line, bytes):
+            writable.buffer.write(data.line)
+        else:
+            writable.write(data.line)
+        writable.flush()
+
     def __call__(self, event):  # noqa: D102
         data = event[0]
 
         for event_type, writable in self._handlers.items():
             if isinstance(data, event_type):
                 try:
-                    if isinstance(data.line, bytes):
-                        writable.buffer.write(data.line)
-                    else:
-                        writable.write(data.line)
-                    writable.flush()
+                    self.write_event(data, writable)
                 except BrokenPipeError:
                     self._handlers.pop(event_type)
                     raise

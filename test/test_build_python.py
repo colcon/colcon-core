@@ -4,9 +4,13 @@
 import asyncio
 from contextlib import suppress
 from pathlib import Path
+import sys
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
+from colcon_core.event.output import StderrLine
+from colcon_core.event.output import StdoutLine
+from colcon_core.event_handler.console_direct import ConsoleDirectEventHandler
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.plugin_system import SkipExtensionException
 import colcon_core.shell
@@ -40,8 +44,13 @@ def monkey_patch_get_shell_extensions(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def monkey_patch_put_event_into_queue(monkeypatch):
+    def relay_stdout_stderr(_, event):
+        if isinstance(event, StdoutLine):
+            ConsoleDirectEventHandler.write_event(event, sys.stdout)
+        elif isinstance(event, StderrLine):
+            ConsoleDirectEventHandler.write_event(event, sys.stderr)
     monkeypatch.setattr(
-        TaskContext, 'put_event_into_queue', lambda *args: None
+        TaskContext, 'put_event_into_queue', relay_stdout_stderr
     )
 
 
