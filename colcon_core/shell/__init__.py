@@ -504,7 +504,6 @@ def get_colcon_prefix_path(*, skip=None):
         "'colcon_core.shell.get_colcon_prefix_path()' has been deprecated, "
         "use 'colcon_core.prefix_path.get_chained_prefix_path()' instead",
         stacklevel=2)
-    global _get_colcon_prefix_path_warnings
     prefix_path = []
     colcon_prefix_path = os.environ.get('COLCON_PREFIX_PATH', '')
     for path in colcon_prefix_path.split(os.pathsep):
