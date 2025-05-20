@@ -93,7 +93,6 @@ def add_event_handler_arguments(parser):
              (' '.join(defaults), descriptions))
 
     def choices_completer(prefix, **kwargs):
-        nonlocal completions
         return (c for c in completions if c.startswith(prefix))
 
     argument.completer = choices_completer

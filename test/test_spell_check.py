@@ -11,7 +11,6 @@ spell_check_words_path = Path(__file__).parent / 'spell_check.words'
 
 @pytest.fixture(scope='module')
 def known_words():
-    global spell_check_words_path
     return spell_check_words_path.read_text().splitlines()
 
 

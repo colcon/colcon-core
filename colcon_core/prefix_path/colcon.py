@@ -21,7 +21,6 @@ class ColconPrefixPath(PrefixPathExtensionPoint):
             PrefixPathExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
     def extend_prefix_path(self, paths):  # noqa: D102
-        global _get_colcon_prefix_path_warnings
         colcon_prefix_path = os.environ.get('COLCON_PREFIX_PATH', '')
         for path in colcon_prefix_path.split(os.pathsep):
             if not path:

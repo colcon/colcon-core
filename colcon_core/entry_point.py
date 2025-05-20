@@ -25,7 +25,6 @@ warnings.warn(
 
 if sys.version_info[:2] >= (3, 7):
     def __getattr__(name):
-        global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
         if name == 'EXTENSION_BLACKLIST_ENVIRONMENT_VARIABLE':
             warnings.warn(
                 "'colcon_core.entry_point.EXTENSION_BLACKLIST_ENVIRONMENT_"
@@ -61,7 +60,6 @@ def get_all_entry_points():
       instances
     :rtype: dict
     """
-    global EXTENSION_POINT_GROUP_NAME
     colcon_extension_points = get_entry_points(EXTENSION_POINT_GROUP_NAME)
 
     entry_points = defaultdict(dict)
@@ -148,7 +146,6 @@ def load_entry_point(entry_point):
       listed in the environment variable
       :const:`EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE`
     """
-    global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
     blocklist = os.environ.get(
         EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE.name, None)
     if blocklist is None:
