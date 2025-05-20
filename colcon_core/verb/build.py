@@ -142,7 +142,6 @@ class BuildVerb(VerbExtensionPoint):
             if not context.args.continue_on_error else OnError.skip_downstream
 
         def post_unselected_packages(*, event_queue):
-            nonlocal unselected_packages
             names = [pkg.name for pkg in unselected_packages]
             for name in sorted(names):
                 event_queue.put(

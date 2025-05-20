@@ -114,7 +114,6 @@ def add_file_handler(logger, path):
             format_message = formatter.formatMessage
 
             def format_message_with_relative_time(record):
-                nonlocal format_message
                 return '[%.3fs] ' % (record.created - logging._startTime) + \
                     format_message(record)
             formatter.formatMessage = format_message_with_relative_time

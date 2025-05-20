@@ -18,7 +18,6 @@ class ExtensionPointContext:
         self._memento = plugin_system.load_extension_points
 
         def load_extension_points(_, *, excludes=None):
-            nonlocal self
             return {
                 k: v for k, v in self._kwargs.items()
                 if excludes is None or k not in excludes}
