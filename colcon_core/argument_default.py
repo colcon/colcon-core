@@ -45,7 +45,6 @@ def wrap_default_value(value):
     :returns: The wrapped value if the value type is supported, otherwise the
       passed value
     """
-    global _types
     if is_default_value(value):
         raise ValueError(
             'the passed value is already wrapped: ' + str(type(value)))
@@ -62,7 +61,6 @@ def unwrap_default_value(value):
     :returns: The unwrapped value
     :raises ValueError: if the value is not a wrapped default value
     """
-    global _types
     if not is_default_value(value):
         raise ValueError(
             'the passed value is not a wrapped default value: ' +
@@ -73,5 +71,4 @@ def unwrap_default_value(value):
 
 def is_default_value(value):
     """Check if a value is a default value."""
-    global _types
     return isinstance(value, tuple(_types.values()))

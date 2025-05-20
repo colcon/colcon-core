@@ -23,12 +23,10 @@ def get_config_path():
     :returns: The base path for configuration files
     :rtype: Path
     """
-    global _config_path_env_var
     if _config_path_env_var is not None:
         path = os.environ.get(_config_path_env_var)
         if path:
             return Path(str(path))
-    global _config_path
     assert _config_path is not None
     return _config_path
 
@@ -79,8 +77,6 @@ def get_log_path():
     :returns: The base path for logging or None if logging is disabled
     :rtype: Path or None
     """
-    global _log_base_path
-    global _log_base_path_env_var
     path = None
     if _log_base_path is not None:
         path = _log_base_path
@@ -90,7 +86,6 @@ def get_log_path():
     ):
         path = os.environ.get(_log_base_path_env_var)
     else:
-        global _log_base_path_default
         path = _log_base_path_default
 
     if path == os.devnull:

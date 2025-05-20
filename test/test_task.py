@@ -53,7 +53,6 @@ def test_extension_interface():
     events = []
 
     def put_event_into_queue(event):
-        nonlocal events
         events.append(event)
 
     context.put_event_into_queue = put_event_into_queue
@@ -83,7 +82,6 @@ def test_run():
     events = []
 
     def put_event_into_queue(event):
-        nonlocal events
         events.append(event)
 
     context.put_event_into_queue = put_event_into_queue
