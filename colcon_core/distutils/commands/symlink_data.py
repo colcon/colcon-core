@@ -1,8 +1,9 @@
 # Copyright 2023 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
-from distutils.command.install_data import install_data
 import os
+
+from distutils.command.install_data import install_data  # noqa: I100,I202
 
 
 class symlink_data(install_data):  # noqa: N801
