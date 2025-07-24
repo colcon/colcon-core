@@ -46,11 +46,9 @@ def test_run():
     stderr_lines = []
 
     def stdout_callback(line):
-        nonlocal stdout_lines
         stdout_lines.append(line)
 
     def stderr_callback(line):
-        nonlocal stderr_lines
         stderr_lines.append(line)
 
     coroutine = run(
@@ -79,7 +77,6 @@ def test_run_cancel():
     stdout_lines = []
 
     def stdout_callback(line):
-        nonlocal stdout_lines
         stdout_lines.append(line)
 
     coroutine = run(

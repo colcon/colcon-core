@@ -155,11 +155,8 @@ class TestVerb(VerbExtensionPoint):
             any_test_failures = False
 
             def check_for_test_failures(put_event_into_queue):
-                nonlocal any_test_failures
-
                 def put_event_into_queue_(self, event):
                     nonlocal any_test_failures
-                    nonlocal put_event_into_queue
                     if isinstance(event, TestFailure):
                         any_test_failures = True
                     return put_event_into_queue(event)

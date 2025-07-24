@@ -52,7 +52,6 @@ _extension_instances = {}
 def _instantiate_extension(
     group_name, extension_name, extension_class, *, unique_instance=False
 ):
-    global _extension_instances
     if not unique_instance and extension_class in _extension_instances:
         return _extension_instances[extension_class]
 

@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 from pathlib import Path
-import sys
 
 import pytest
 
@@ -11,20 +10,14 @@ spell_check_words_path = Path(__file__).parent / 'spell_check.words'
 
 @pytest.fixture(scope='module')
 def known_words():
-    global spell_check_words_path
     return spell_check_words_path.read_text().splitlines()
 
 
 @pytest.mark.linter
 def test_spell_check(known_words):
-    try:
-        from scspell import Report
-        from scspell import SCSPELL_BUILTIN_DICT
-        from scspell import spell_check
-    except ModuleNotFoundError:
-        if sys.version_info >= (3, 13):
-            pytest.skip('scspell3k is not available for Python 3.13+')
-        raise
+    from scspell import Report
+    from scspell import SCSPELL_BUILTIN_DICT
+    from scspell import spell_check
 
     source_filenames = [
         Path(__file__).parents[1] / 'bin' / 'colcon',

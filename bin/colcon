@@ -26,7 +26,6 @@ custom_extension_points = {}
 def custom_load_extension_points(  # noqa: D103
     group_name, *, excludes=None
 ):
-    global custom_extension_points
     assert group_name in custom_extension_points, \
         f"get_extension_points() not overridden for group '{group_name}'"
     return {

@@ -18,7 +18,7 @@ Author: Dirk Thomas <web@dirk-thomas.net>
 +	# pytest-cov
 +	# pytest-repeat
 +	# pytest-rerunfailures
- 	setuptools>=30.3.0
+ 	setuptools>=30.3.0,<80
 -	tomli>=1.0.0; python_version < "3.11"
 +	# toml is also supported, rely on deb dependencies to select the
 +	# appropriate package

@@ -106,7 +106,6 @@ def get_all_extension_points():
       and dist version
     :rtype: dict
     """
-    global EXTENSION_POINT_GROUP_NAME
     colcon_extension_points = get_extension_points(EXTENSION_POINT_GROUP_NAME)
     colcon_extension_points.setdefault(EXTENSION_POINT_GROUP_NAME, None)
 
@@ -193,7 +192,6 @@ def load_extension_point(name, value, group):
       listed in the environment variable
       :const:`EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE`
     """
-    global EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE
     blocklist = os.environ.get(
         EXTENSION_BLOCKLIST_ENVIRONMENT_VARIABLE.name, None)
     if blocklist:
