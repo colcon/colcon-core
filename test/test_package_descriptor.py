@@ -4,6 +4,7 @@
 from collections import defaultdict
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_descriptor import PackageDescriptor
@@ -80,15 +81,22 @@ def recursive_dependencies():
 
     d5 = PackageDescriptor('/yet-more/path')
     d5.name = 'I'
+    d5.dependencies['build'].add('K')
     # circular dependencies should be ignored
     d5.dependencies['run'].add('A')
 
     d6 = PackageDescriptor('/paths/galore')
     d6.name = 'J'
 
-    return d, {d, d1, d2, d3, d4, d5, d6}
+    d7 = PackageDescriptor('/never/enough/paths')
+    d7.name = 'K'
+
+    return d, {d, d1, d2, d3, d4, d5, d6, d7}
 
 
+@patch(
+    'colcon_core.feature_flags.get_feature_flags',
+    lambda: ['restore_build_isolation'])
 def test_get_recursive_dependencies(recursive_dependencies):
     desc, all_descs = recursive_dependencies
     rec_deps = desc.get_recursive_dependencies(
@@ -103,6 +111,9 @@ def test_get_recursive_dependencies(recursive_dependencies):
     }
 
 
+@patch(
+    'colcon_core.feature_flags.get_feature_flags',
+    lambda: ['restore_build_isolation'])
 def test_get_recursive_dependencies_map(recursive_dependencies):
     recursive_categories = defaultdict(lambda: ('run', 'test'))
     recursive_categories['run'] = ('run',)

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
+from colcon_core.feature_flags import is_feature_flag_set
 
 
 class PackageDescriptor:
@@ -139,7 +140,10 @@ class PackageDescriptor:
                     continue
                 categories = set()
                 for category in dep.metadata['categories']:
-                    cats = recursive_categories[category]
+                    if is_feature_flag_set('restore_build_isolation'):
+                        cats = recursive_categories[category]
+                    else:
+                        cats = recursive_categories.get(category)
                     if cats is None:
                         categories = None
                         break
