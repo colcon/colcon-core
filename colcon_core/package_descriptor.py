@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
+from colcon_core.feature_flags import is_feature_flag_set
 
 
 class PackageDescriptor:
@@ -114,7 +115,8 @@ class PackageDescriptor:
         :raises AssertionError: if a package lists itself as a dependency
         """
         if not isinstance(recursive_categories, Mapping):
-            recursive_categories = defaultdict(lambda: recursive_categories)
+            non_map_categories = recursive_categories
+            recursive_categories = defaultdict(lambda: non_map_categories)
         # the following variable only exists for faster access within the loop
         descriptors_by_name = defaultdict(set)
         for d in descriptors:
@@ -138,7 +140,10 @@ class PackageDescriptor:
                     continue
                 categories = set()
                 for category in dep.metadata['categories']:
-                    cats = recursive_categories.get(category)
+                    if is_feature_flag_set('restore_build_isolation'):
+                        cats = recursive_categories[category]
+                    else:
+                        cats = recursive_categories.get(category)
                     if cats is None:
                         categories = None
                         break
