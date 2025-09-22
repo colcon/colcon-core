@@ -121,6 +121,9 @@ def create_dependency_descriptor(requirement_string):
         '<': 'version_lt',
     }
 
+    # Drop inline comments
+    requirement_string = requirement_string.partition(' #')[0]
+
     requirement = parse_requirement(requirement_string)
     metadata = {
         'origin': 'python',
