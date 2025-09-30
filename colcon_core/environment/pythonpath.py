@@ -27,4 +27,14 @@ class PythonPathEnvironment(EnvironmentExtensionPoint):
                 'pythonpath', prefix_path, pkg_name,
                 'PYTHONPATH', str(rel_python_path), mode='prepend')
 
+        platlib_path = get_python_install_path(
+            'platlib', {'base': prefix_path, 'platbase': prefix_path})
+        if python_path != platlib_path:
+            logger.log(1, "checking '%s'" % platlib_path)
+            if platlib_path.exists():
+                rel_platlib_path = platlib_path.relative_to(prefix_path)
+                hooks += shell.create_environment_hook(
+                    'pythonpath', prefix_path, pkg_name,
+                    'PYTHONPATH', str(rel_platlib_path), mode='prepend')
+
         return hooks
