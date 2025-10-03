@@ -161,3 +161,7 @@ def test_create_dependency_descriptor():
     dep = create_dependency_descriptor(multi_str)
     assert dep.metadata['version_gte'] == '2.2.0'
     assert dep.metadata['version_lte'] == '3.2.0'
+
+    commented_str = 'pkgname  # This is needed for foo'
+    dep = create_dependency_descriptor(commented_str)
+    assert dep.name == 'pkgname'
