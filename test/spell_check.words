@@ -78,6 +78,8 @@ optionxform
 pathlib
 pkgname
 pkgs
+platbase
+platlib
 plugin
 popitem
 prepend
