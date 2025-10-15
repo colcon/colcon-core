@@ -76,7 +76,7 @@ def create_environment_scripts(
     :param pkg: The package descriptor
     :param args: The parsed command line arguments
     :param list default_hooks: If none are parsed explicitly the hooks provided
-      by :function:`create_environment_hooks` are used
+      by :func:`create_environment_hooks` are used
     :param list additional_hooks: Any additional hooks which should be
       referenced by the generated scripts
     :returns: iterable of generated file paths
@@ -101,7 +101,7 @@ def create_environment_scripts_only(
     :param prefix_path: The prefix path
     :param pkg: The package descriptor
     :param list default_hooks: If none are parsed explicitly the hooks provided
-      by :function:`create_environment_hooks` are used
+      by :func:`create_environment_hooks` are used
     :param list additional_hooks: Any additional hooks which should be
       referenced by the generated scripts
     :returns: iterable of generated script paths

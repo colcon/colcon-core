@@ -182,6 +182,7 @@ class ExecutorExtensionPoint:
         :param arguments: The passed arguments
 
         The deprecated API accepts the following separate arguments:
+
         :param args: The parsed command line arguments
         :param jobs: The jobs
         :param on_error: The decision how to proceed when one job fails
@@ -279,14 +280,14 @@ def execute_jobs(
     Execute jobs.
 
     The overview of the process:
-    * One executor extension is being chosen based on the command line
-      arguments.
-    * Create an event controller.
-    * Pass the event controller to the executor extension.
-    * Pass the event queue to all jobs.
-    * Start the event controller.
-    * Invoke the executor extension to execute the jobs.
-    * Join the event controller.
+      * One executor extension is being chosen based on the command line
+        arguments.
+      * Create an event controller.
+      * Pass the event controller to the executor extension.
+      * Pass the event queue to all jobs.
+      * Start the event controller.
+      * Invoke the executor extension to execute the jobs.
+      * Join the event controller.
 
     :param jobs: The ordered dictionary of jobs
     :param on_error: The decision how to proceed when one job fails

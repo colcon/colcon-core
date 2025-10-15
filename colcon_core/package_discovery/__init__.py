@@ -109,7 +109,7 @@ def add_package_discovery_arguments(parser, *, extensions=None):
     :param parser: The argument parser
     :param extensions: The package discovery extensions to use, if `None` is
       passed use the extensions provided by
-      :function:`get_package_discovery_extensions`
+      :func:`get_package_discovery_extensions`
     """
     if extensions is None:
         extensions = get_package_discovery_extensions()
@@ -165,10 +165,10 @@ def discover_packages(
     :param args: The parsed command line arguments
     :param identification_extensions: The package identification extensions to
       pass to each invocation of
-      :function:`PackageDiscoveryExtensionPoint.discover`
+      :func:`PackageDiscoveryExtensionPoint.discover`
     :param discovery_extensions: The package discovery extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_discovery_extensions`
+      :func:`get_package_discovery_extensions`
     :returns: set of
       :py:class:`colcon_core.package_descriptor.PackageDescriptor`
     :rtype: set
