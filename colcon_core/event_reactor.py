@@ -42,7 +42,7 @@ class EventReactor:
         """
         Process events and notify all observers.
 
-        If no events are being process for :py:attribute:`TIMER_INTERVAL`
+        If no events are being process for :attr:`TIMER_INTERVAL`
         seconds a :class:`TimerEvent` is being generated and processed.
 
         An :class:`EventReactorShutdown` event will stop the loop.
