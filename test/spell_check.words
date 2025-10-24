@@ -16,8 +16,10 @@ changelog
 classname
 colcon
 coloredlogs
+compileall
 configparser
 contextlib
+copytree
 coroutine
 coroutines
 cpython
@@ -33,6 +35,7 @@ depreated
 deps
 descs
 distlib
+dists
 docstring
 executables
 exitstatus
@@ -87,6 +90,7 @@ prepended
 prepending
 proactor
 purelib
+pycache
 pydocstyle
 pyproject
 pytest
