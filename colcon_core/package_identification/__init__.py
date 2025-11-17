@@ -21,7 +21,7 @@ class IgnoreLocationException(Exception):
     This also excludes all recursive subdirectories from being considered.
 
     It should be raised in the
-    :function:`PackageIdentificationExtensionPoint.identify` method of package
+    :func:`PackageIdentificationExtensionPoint.identify` method of package
     identification extensions.
     """
 
