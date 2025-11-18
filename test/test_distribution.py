@@ -20,17 +20,23 @@ TEST_DISTS_PYTHONPATH = TEST_DISTS_ROOT / 'lib' / 'python' / 'site-packages'
 
 @pytest.fixture
 def dist_info_compiled(tmp_path):
+    site_path = tmp_path / 'lib' / 'python' / 'site-packages'
+    site_path.mkdir(parents=True)
+
+    metadata_path = site_path / 'typical_dist_info-0.0.0.dist-info'
+
     shutil.copytree(
         TEST_DISTS_PYTHONPATH / 'typical_dist_info-0.0.0.dist-info',
-        tmp_path / 'typical_dist_info-0.0.0.dist-info')
+        metadata_path)
     shutil.copytree(
         TEST_DISTS_PYTHONPATH / 'typical_dist_info',
-        tmp_path / 'typical_dist_info')
+        site_path / 'typical_dist_info')
     shutil.copyfile(
         TEST_DISTS_PYTHONPATH / 'typical_dist_info_again.py',
-        tmp_path / 'typical_dist_info_again.py')
-    compileall.compile_dir(tmp_path, quiet=1)
-    yield tmp_path / 'typical_dist_info-0.0.0.dist-info'
+        site_path / 'typical_dist_info_again.py')
+    compileall.compile_dir(site_path, quiet=1)
+
+    yield metadata_path
 
 
 @pytest.fixture
@@ -87,9 +93,11 @@ def test_egg_info():
     meta_path = TEST_DISTS_PYTHONPATH / 'typical_egg_info-0.0.0.egg-info'
     dist = AllFilesDistribution.at(meta_path)
     assert sorted(dist.all_files) == [PurePosixPath(p) for p in (
+        '../../../bin/typical_egg_info',
         'typical_egg_info/__init__.py',
         'typical_egg_info/submodule/__init__.py',
         'typical_egg_info-0.0.0.egg-info/PKG-INFO',
+        'typical_egg_info-0.0.0.egg-info/entry_points.txt',
         'typical_egg_info-0.0.0.egg-info/top_level.txt',
         'typical_egg_info_again.py',
     )]

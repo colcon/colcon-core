@@ -9,10 +9,20 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import sys
 
+from colcon_core.python_install_path import get_python_install_path
+from distlib.scripts import ScriptMaker
+
 try:
     from importlib.metadata import Distribution
 except ImportError:
     from importlib_metadata import Distribution
+
+
+def _get_install_path(key, install_base):
+    return get_python_install_path(key, {
+        'base': str(install_base),
+        'platbase': str(install_base),
+    })
 
 
 def _enumerate_files(path, _depth=1):
@@ -21,6 +31,14 @@ def _enumerate_files(path, _depth=1):
     elif path.is_dir():
         for child in path.iterdir():
             yield from _enumerate_files(child, _depth + 1)
+
+
+def _find_prefix_path(metadata_path):
+    # Walk the metadata path looking for either lib, Lib, or
+    # sys.platlibdir. We can match that to determine our base directory.
+    for i, part in enumerate(reversed(metadata_path.parent.parts), start=2):
+        if part in ('lib', 'Lib', sys.platlibdir):
+            return Path(*metadata_path.parts[:-i])
 
 
 class PathLikeDistribution(Distribution):
@@ -40,7 +58,7 @@ class PathLikeDistribution(Distribution):
     used to create the instance to begin with.
     """
 
-    def __new__(cls, path):
+    def __new__(cls, path, *args, **kwargs):
         """
         Create a new PathLikeDistribution object.
 
@@ -102,6 +120,16 @@ class AllFilesDistribution(PathLikeDistribution):
     are not declared as such.
     """
 
+    def __init__(self, path, *, prefix=None):
+        """
+        Construct a AllFilesDistribution.
+
+        :param path: The path to the distribution metadata directory
+        :param prefix: The path to the top-level installation prefix
+        """
+        super().__init__(path)
+        self._prefix_path = prefix or _find_prefix_path(self.path)
+
     def _enumerate_top_level(self):
         top_level = (self.read_text('top_level.txt') or '').strip()
         if not top_level:
@@ -123,9 +151,42 @@ class AllFilesDistribution(PathLikeDistribution):
             if origin.parent == self.path.parent:
                 yield from _enumerate_files(origin)
 
+    @classmethod
+    @lru_cache
+    def _get_script_maker(cls, script_dir):
+        sm = ScriptMaker(None, script_dir, dry_run=True)
+        sm.clobber = True
+        sm.variants = {''}
+        return sm
+
+    def _enumerate_console_scripts(self):
+        if not self.prefix:
+            return
+        entry_points = set(self.entry_points.select(group='console_scripts'))
+        if not entry_points:
+            return
+        script_dir = _get_install_path('scripts', self.prefix)
+        if not script_dir.is_dir():
+            return
+        script_maker = self._get_script_maker(script_dir)
+        specs = [
+            f'{script.name} = {script.value}'
+            for script in entry_points
+        ]
+        for full_path in script_maker.make_multiple(specs):
+            file = Path(full_path)
+            if file.is_file():
+                yield PurePosixPath(
+                    file.relative_to(self.path.parent, walk_up=True))
+
     @staticmethod
-    def at(path):  # noqa: D102
-        return AllFilesDistribution(path)
+    def at(path, *, prefix=None):  # noqa: D102
+        return AllFilesDistribution(path, prefix=prefix)
+
+    @property
+    def prefix(self):
+        """Get the prefix path to which the distribution is installed."""
+        return self._prefix_path
 
     @property
     def all_files(self):
@@ -161,6 +222,9 @@ class AllFilesDistribution(PathLikeDistribution):
             if not self.locate_file(file_cache).exists():
                 continue
             files.add(file_cache)
+
+        # Add any missing executables
+        files.update(self._enumerate_console_scripts())
 
         return list(files)
 
