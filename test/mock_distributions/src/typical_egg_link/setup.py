@@ -9,6 +9,7 @@ setup(
     version='0.0.0',
     packages=[
         'typical_egg_link',
+        'typical_egg_link_again',
     ],
     entry_points={
         'console_scripts': [
