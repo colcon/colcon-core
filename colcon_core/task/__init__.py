@@ -138,7 +138,7 @@ async def check_call(
     :param shell: whether to use the shell as the program to execute
     :param use_pty: whether to use a pseudo terminal
     :returns: the result of the completed process
-    :rtype subprocess.CompletedProcess
+    :rtype: subprocess.CompletedProcess
     """
     warnings.warn(
         'colcon_core.task.check_call() has been deprecated, use '
@@ -166,7 +166,7 @@ async def run(
     :param use_pty: whether to use a pseudo terminal
     :param capture_output: whether to store stdout and stderr
     :returns: the result of the completed process
-    :rtype subprocess.CompletedProcess
+    :rtype: subprocess.CompletedProcess
     """
     def stdout_callback(line):
         context.put_event_into_queue(StdoutLine(line))

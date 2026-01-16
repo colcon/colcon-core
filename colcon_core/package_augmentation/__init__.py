@@ -126,7 +126,7 @@ def update_descriptor(
 
     Any key-value pair not explicitly mentioned above is being used to update
     the metadata if the key is in the list of additional argument names.
-    See :function:`update_metadata` for details how the metadata is updated.
+    See :func:`update_metadata` for details how the metadata is updated.
 
     If the additional argument names is a list with the single value `*` all
     keys not explicitly mentioned above are being used to update the metadata.
