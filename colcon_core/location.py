@@ -18,7 +18,7 @@ def get_config_path():
     """
     Get the base path for configuration files.
 
-    :function:`set_default_config_path` must have been called before.
+    :func:`set_default_config_path` must have been called before.
 
     :returns: The base path for configuration files
     :rtype: Path
@@ -72,7 +72,7 @@ def get_log_path():
     """
     Get the base path for logging.
 
-    :function:`set_default_log_path` must have been called before.
+    :func:`set_default_log_path` must have been called before.
 
     :returns: The base path for logging or None if logging is disabled
     :rtype: Path or None
@@ -147,7 +147,7 @@ def create_log_path(verb_name):
     """
     Create a not yet existing logging directory.
 
-    The logging directory returned by :function:`get_log_path` must not yet
+    The logging directory returned by :func:`get_log_path` must not yet
     exist on the first call of this function.
     If it does exist the function will append a serial number to the path until
     the path doesn't exist and can be created.

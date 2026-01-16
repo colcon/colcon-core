@@ -118,8 +118,7 @@ def add_output_style_arguments(parser, *, extensions=None):
 
     :param parser: The argument parser
     :param extensions: The output style extensions to use, if `None` is passed
-      use the extensions provided by
-      :function:`get_output_style_extensions`
+      use the extensions provided by :func:`get_output_style_extensions`
     """
     if extensions is None:
         extensions = get_output_style_extensions()
@@ -160,8 +159,7 @@ def select_output_style_extension(args, *, extensions=None):
 
     :param args: The parsed command line arguments
     :param extensions: The output style extensions to use, if `None` is passed
-      use the extensions provided by
-      :function:`get_output_style_extensions`
+      use the extensions provided by :func:`get_output_style_extensions`
 
     :returns: The output style extension (or None if not available)
     """
@@ -180,8 +178,7 @@ def apply_output_style(args, *, extensions=None):
 
     :param args: The parsed command line arguments
     :param extensions: The output style extensions to use, if `None` is passed
-      use the extensions provided by
-      :function:`get_output_style_extensions`
+      use the extensions provided by :func:`get_output_style_extensions`
     """
     # TODO: This approach chooses only a single extension. Should it be
     #       possible to apply styles on top of each other, possibly ones which

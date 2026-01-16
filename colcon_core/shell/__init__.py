@@ -259,7 +259,7 @@ class ShellExtensionPoint:
 
         The method must be overridden in a subclass if and only if the shell
         extension represents a "primary" shell (as defined in
-        :attribute:`ShellExtensionPoint.PRIORITY`).
+        :attr:`ShellExtensionPoint.PRIORITY`).
 
         :param str task_name: The name of the task
         :param Path build_base: The base path of the build directory
