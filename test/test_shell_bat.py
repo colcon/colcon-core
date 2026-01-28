@@ -151,6 +151,14 @@ def _test_extension(prefix_path):
             ))
 
 
+async def _run_prefix_script(prefix_script):
+    return await get_environment_variables([
+        str(prefix_script),
+        '&&',
+        'set',
+    ])
+
+
 def _test_prefix_script(prefix_path):
     extension = BatShell()
 
@@ -193,7 +201,7 @@ def _test_prefix_script(prefix_path):
     # create_prefix_script
     extension.create_prefix_script(prefix_path, True)
     prefix_script = prefix_path / 'local_setup.bat'
-    prefix_script.exists()
+    assert prefix_script.exists()
     assert (prefix_path / '_local_setup_util_bat.py').exists()
 
     if sys.platform == 'win32':
@@ -204,7 +212,7 @@ def _test_prefix_script(prefix_path):
             'APPEND_NAME': '',
             'PREPEND_NAME': '',
         }):
-            coroutine = get_environment_variables([prefix_script, '&&', 'set'])
+            coroutine = _run_prefix_script(prefix_script)
             env = run_until_complete(coroutine)
             assert env.get('APPEND_NAME') == subdirectory_path
             assert env.get('PREPEND_NAME') == subdirectory_path
@@ -214,7 +222,7 @@ def _test_prefix_script(prefix_path):
             'APPEND_NAME': 'control',
             'PREPEND_NAME': 'control',
         }):
-            coroutine = get_environment_variables([prefix_script, '&&', 'set'])
+            coroutine = _run_prefix_script(prefix_script)
             env = run_until_complete(coroutine)
             assert env.get('APPEND_NAME') == os.pathsep.join((
                 'control',
@@ -230,7 +238,7 @@ def _test_prefix_script(prefix_path):
             'APPEND_NAME': os.pathsep.join((subdirectory_path, 'control')),
             'PREPEND_NAME': os.pathsep.join(('control', subdirectory_path)),
         }):
-            coroutine = get_environment_variables([prefix_script, '&&', 'set'])
+            coroutine = _run_prefix_script(prefix_script)
             env = run_until_complete(coroutine)
             # Expect no change, value already appears earlier in the list
             assert env.get('APPEND_NAME') == os.pathsep.join((

@@ -203,7 +203,7 @@ def _test_prefix_script(prefix_path):
     # create_prefix_script
     extension.create_prefix_script(prefix_path, True)
     prefix_script = prefix_path / 'local_setup.sh'
-    prefix_script.exists()
+    assert prefix_script.exists()
     assert (prefix_path / '_local_setup_util_sh.py').exists()
 
     if sys.platform != 'win32':
