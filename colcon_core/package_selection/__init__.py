@@ -77,16 +77,16 @@ def add_arguments(
     """
     Add the command line arguments for the package selection extensions.
 
-    The function will call :function:`add_package_discovery_arguments` to add
+    The function will call :func:`add_package_discovery_arguments` to add
     the package discovery arguments.
 
     :param parser: The argument parser
     :param discovery_extensions: The package discovery extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_discovery_extensions`
+      :func:`get_package_discovery_extensions`
     :param selection_extensions: The package selection extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_selection_extensions`
+      :func:`get_package_selection_extensions`
     """
     add_package_discovery_arguments(parser, extensions=discovery_extensions)
 
@@ -142,9 +142,9 @@ def get_packages(
     Get the selected package decorators in topological order.
 
     The overview of the process:
-    * Get the package descriptors
-    * Order them topologically
-    * Select the packages based on the command line arguments
+      * Get the package descriptors
+      * Order them topologically
+      * Select the packages based on the command line arguments
 
     :param additional_argument_names: A list of additional arguments to
       consider
@@ -154,16 +154,16 @@ def get_packages(
       immediate upstream category which included the dependency
     :param discovery_extensions: The package discovery extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_discovery_extensions`
+      :func:`get_package_discovery_extensions`
     :param identification_extensions: The package identification extensions to
       use, if `None` is passed use the extensions provided by
-      :function:`get_package_identification_extensions`
+      :func:`get_package_identification_extensions`
     :param augmentation_extensions: The package augmentation extensions, if
       `None` is passed use the extensions provided by
-      :function:`get_package_augmentation_extensions`
+      :func:`get_package_augmentation_extensions`
     :param selection_extensions: The package selection extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_selection_extensions`
+      :func:`get_package_selection_extensions`
     :rtype: list
     :raises RuntimeError: if the returned set of packages contains duplicates
       package names
@@ -207,25 +207,25 @@ def get_package_descriptors(
     Get the package descriptors.
 
     The overview of the process:
-    * Discover the package descriptors using the package discovery and
-      identification extensions
-    * Check is the passed package selection arguments have valid values
-    * Augment the package descriptors
+      * Discover the package descriptors using the package discovery and
+        identification extensions
+      * Check is the passed package selection arguments have valid values
+      * Augment the package descriptors
 
     :param additional_argument_names: A list of additional arguments to
       consider
     :param discovery_extensions: The package discovery extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_discovery_extensions`
+      :func:`get_package_discovery_extensions`
     :param identification_extensions: The package identification extensions to
       use, if `None` is passed use the extensions provided by
-      :function:`get_package_identification_extensions`
+      :func:`get_package_identification_extensions`
     :param augmentation_extensions: The package augmentation extensions, if
       `None` is passed use the extensions provided by
-      :function:`get_package_augmentation_extensions`
+      :func:`get_package_augmentation_extensions`
     :param selection_extensions: The package selection extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_selection_extensions`
+      :func:`get_package_selection_extensions`
     :returns: set of
       :py:class:`colcon_core.package_descriptor.PackageDescriptor`
     :rtype: set
@@ -276,7 +276,7 @@ def select_package_decorators(
     :param list decorators: The package decorators in topological order
     :param selection_extensions: The package selection extensions to use, if
       `None` is passed use the extensions provided by
-      :function:`get_package_selection_extensions`
+      :func:`get_package_selection_extensions`
     """
     # filtering must happen after the topological ordering since otherwise
     # packages in the middle of the dependency graph might be missing
