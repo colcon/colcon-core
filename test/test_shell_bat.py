@@ -208,10 +208,10 @@ def _test_prefix_script(prefix_path):
         subdirectory_path = str(prefix_path / 'subdirectory')
 
         # validate appending/prepending without existing values
-        with patch.dict(os.environ, {
-            'APPEND_NAME': '',
-            'PREPEND_NAME': '',
-        }):
+        with patch.dict(os.environ) as env_patch:
+            env_patch.pop('APPEND_NAME', None)
+            env_patch.pop('PREPEND_NAME', None)
+
             coroutine = _run_prefix_script(prefix_script)
             env = run_until_complete(coroutine)
             assert env.get('APPEND_NAME') == subdirectory_path
