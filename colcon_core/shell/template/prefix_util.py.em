@@ -377,7 +377,7 @@ def _remove_ending_separators():
     commands = []
     for name in env_state:
         # skip variables that already had values before this script started prepending
-        if os.environ.get(name):
+        if name in os.environ:
             continue
         commands += [
             FORMAT_STR_REMOVE_LEADING_SEPARATOR.format_map({'name': name}),
