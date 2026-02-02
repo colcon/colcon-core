@@ -42,7 +42,10 @@ def _get_install_scripts(path):
     parser.optionxform = str
     with open(setup_cfg_path, encoding='utf-8') as f:
         parser.read_file(f)
-    return parser.get('install', 'install-scripts', fallback=None)
+    install_script = parser.get('install', 'install-scripts', fallback=None)
+    if install_script is None:
+        install_script = parser.get('install', 'install_scripts', fallback=None)
+    return install_script
 
 
 class PythonBuildTask(TaskExtensionPoint):
