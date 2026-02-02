@@ -44,7 +44,8 @@ def _get_install_scripts(path):
         parser.read_file(f)
     install_script = parser.get('install', 'install-scripts', fallback=None)
     if install_script is None:
-        install_script = parser.get('install', 'install_scripts', fallback=None)
+        install_script = parser.get(
+            'install', 'install_scripts', fallback=None)
     return install_script
 
 
