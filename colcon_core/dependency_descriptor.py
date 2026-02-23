@@ -19,11 +19,14 @@ class DependencyDescriptor(str):
     """
 
     @staticmethod
-    def __new__(cls, name, *, metadata=None):  # noqa: D102
+    def __new__(cls, name, *args, **kwargs):  # noqa: D102
         return str.__new__(cls, name)
 
-    def __init__(self, name, *, metadata=None):  # noqa: D107
+    def __init__(  # noqa: D107
+        self, name, *, metadata=None, package_name=None,
+    ):
         self.metadata = metadata if metadata is not None else {}
+        self._package_name = package_name or self.name
 
     @property
     def name(self):
@@ -36,6 +39,15 @@ class DependencyDescriptor(str):
         :rtype: str
         """
         return str(self)
+
+    @property
+    def package_name(self):
+        """
+        Name of the package which provides the dependency.
+
+        :rtype: str
+        """
+        return self._package_name
 
     def __deepcopy__(self, memo=None):  # noqa: D105
         # surprisingly this is significantly faster than the default
