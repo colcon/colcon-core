@@ -23,7 +23,6 @@ from colcon_core.package_selection import get_packages
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
-from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import update_object
@@ -209,16 +208,18 @@ class TestVerb(VerbExtensionPoint):
             logger.debug(
                 f"Testing package '{pkg.name}' with the following arguments: "
                 f'{{{ordered_package_args}}}')
-            task_context = TaskContext(
+            task_contexts = extension.create_contexts(
                 pkg=pkg, args=package_args,
                 dependencies=recursive_dependencies)
 
-            job = Job(
-                identifier=pkg.name,
-                dependencies=set(
-                    () if drop_test_deps else recursive_dependencies.keys()
-                ),
-                task=extension, task_context=task_context)
+            for identifier, task_context in task_contexts.items():
+                job = Job(
+                    identifier=identifier,
+                    dependencies=set(
+                        () if drop_test_deps
+                        else task_context.dependencies.keys()
+                    ),
+                    task=extension, task_context=task_context)
 
-            jobs[pkg.name] = job
+                jobs[identifier] = job
         return jobs
