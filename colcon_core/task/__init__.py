@@ -60,7 +60,23 @@ class TaskExtensionPoint:
     """
 
     """The version of the task extension interface."""
-    EXTENSION_POINT_VERSION = '1.0'
+    EXTENSION_POINT_VERSION = '1.1'
+
+    @classmethod
+    def create_contexts(cls, *, pkg, args, dependencies):
+        """
+        Construct TaskContext instances for a package.
+
+        :param pkg: The package descriptor
+        :param args: The parsed command line arguments
+        :param dependencies: The ordered dictionary mapping dependency names to
+          their paths
+        """
+        return {
+            pkg.name: TaskContext(
+                pkg=pkg, args=args,
+                dependencies=dependencies)
+        }
 
     def add_arguments(self, *, parser):
         """

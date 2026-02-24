@@ -25,7 +25,6 @@ from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import get_shell_extensions
 from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
-from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import logger
@@ -201,16 +200,17 @@ class BuildVerb(VerbExtensionPoint):
             logger.debug(
                 f"Building package '{pkg.name}' with the following arguments: "
                 f'{{{ordered_package_args}}}')
-            task_context = TaskContext(
+            task_contexts = extension.create_contexts(
                 pkg=pkg, args=package_args,
                 dependencies=recursive_dependencies)
 
-            job = Job(
-                identifier=pkg.name,
-                dependencies=set(recursive_dependencies.keys()),
-                task=extension, task_context=task_context)
+            for identifier, task_context in task_contexts.items():
+                job = Job(
+                    identifier=identifier,
+                    dependencies=set(task_context.dependencies.keys()),
+                    task=extension, task_context=task_context)
 
-            jobs[pkg.name] = job
+                jobs[identifier] = job
         return jobs, unselected_packages
 
     def _create_prefix_scripts(self, install_base, merge_install):
