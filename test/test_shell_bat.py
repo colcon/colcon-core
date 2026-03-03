@@ -5,10 +5,14 @@ import os
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from colcon_core import shell
+from colcon_core.location import get_relative_package_index_path
 from colcon_core.plugin_system import SkipExtensionException
+from colcon_core.shell import get_environment_variables
 from colcon_core.shell.bat import BatShell
+from colcon_core.shell.dsv import DsvShell
 import pytest
 
 from .run_until_complete import run_until_complete
@@ -20,6 +24,7 @@ def test_extension():
     try:
         with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
             _test_extension(Path(prefix_path))
+            _test_prefix_script(Path(prefix_path))
     finally:
         shell.use_all_shell_extensions = use_all_shell_extensions
 
@@ -39,32 +44,35 @@ def _test_extension(prefix_path):
     extension.create_prefix_script(prefix_path, False)
     assert (prefix_path / 'local_setup.bat').exists()
 
-    # create_package_script
-    extension.create_package_script(
-        prefix_path, 'pkg_name', [
-            ('hookA.bat', '/some/path/hookA.bat'),
-            ('hookB.other', '/some/path/hookB.other')])
-    assert (prefix_path / 'share' / 'pkg_name' / 'package.bat').exists()
-    content = (prefix_path / 'share' / 'pkg_name' / 'package.bat').read_text()
-    assert 'hookA' in content
-    assert 'hookB' not in content
-
     # create_hook_append_value
-    hook_path = extension.create_hook_append_value(
+    append_hook_path = extension.create_hook_append_value(
         'append_env_hook_name', prefix_path, 'pkg_name',
-        'APPEND_NAME', 'append_subdirectory')
-    assert hook_path.exists()
-    assert hook_path.name == 'append_env_hook_name.bat'
-    content = hook_path.read_text()
+        'APPEND_NAME', 'subdirectory')
+    assert append_hook_path.exists()
+    assert append_hook_path.name == 'append_env_hook_name.bat'
+    content = append_hook_path.read_text()
     assert 'APPEND_NAME' in content
 
     # create_hook_prepend_value
-    hook_path = extension.create_hook_prepend_value(
-        'env_hook_name', prefix_path, 'pkg_name', 'NAME', 'subdirectory')
-    assert hook_path.exists()
-    assert hook_path.name == 'env_hook_name.bat'
-    content = hook_path.read_text()
-    assert 'NAME' in content
+    prepend_hook_path = extension.create_hook_prepend_value(
+        'prepend_env_hook_name', prefix_path, 'pkg_name',
+        'PREPEND_NAME', 'subdirectory')
+    assert prepend_hook_path.exists()
+    assert prepend_hook_path.name == 'prepend_env_hook_name.bat'
+    content = prepend_hook_path.read_text()
+    assert 'PREPEND_NAME' in content
+
+    # create_package_script
+    extension.create_package_script(
+        prefix_path, 'pkg_name', [
+            (append_hook_path.relative_to(prefix_path), ()),
+            (prepend_hook_path.relative_to(prefix_path), ()),
+            ('hookB.other', '/some/path/hookB.other')])
+    assert (prefix_path / 'share' / 'pkg_name' / 'package.bat').exists()
+    content = (prefix_path / 'share' / 'pkg_name' / 'package.bat').read_text()
+    assert append_hook_path.name in content
+    assert prepend_hook_path.name in content
+    assert 'hookB' not in content
 
     # generate_command_environment
     if sys.platform != 'win32':
@@ -93,3 +101,153 @@ def _test_extension(prefix_path):
             'task_name', prefix_path, {'dep': str(prefix_path)})
         env = run_until_complete(coroutine)
         assert isinstance(env, dict)
+
+        subdirectory_path = str(prefix_path / 'subdirectory')
+
+        # validate appending/prepending without existing values
+        with patch.dict(os.environ) as env_patch:
+            env_patch.pop('APPEND_NAME', None)
+            env_patch.pop('PREPEND_NAME', None)
+            coroutine = extension.generate_command_environment(
+                'task_name', prefix_path, {'pkg_name': str(prefix_path)})
+            env = run_until_complete(coroutine)
+            assert env.get('APPEND_NAME') == subdirectory_path
+            assert env.get('PREPEND_NAME') == subdirectory_path
+
+        # validate appending/prepending with existing values
+        with patch.dict(os.environ, {
+            'APPEND_NAME': 'control',
+            'PREPEND_NAME': 'control',
+        }):
+            coroutine = extension.generate_command_environment(
+                'task_name', prefix_path, {'pkg_name': str(prefix_path)})
+            env = run_until_complete(coroutine)
+            assert env.get('APPEND_NAME') == os.pathsep.join((
+                'control',
+                subdirectory_path,
+            ))
+            assert env.get('PREPEND_NAME') == os.pathsep.join((
+                subdirectory_path,
+                'control',
+            ))
+
+        # validate appending/prepending unique values
+        with patch.dict(os.environ, {
+            'APPEND_NAME': os.pathsep.join((subdirectory_path, 'control')),
+            'PREPEND_NAME': os.pathsep.join(('control', subdirectory_path)),
+        }):
+            coroutine = extension.generate_command_environment(
+                'task_name', prefix_path, {'pkg_name': str(prefix_path)})
+            env = run_until_complete(coroutine)
+            # Expect no change, value already appears earlier in the list
+            assert env.get('APPEND_NAME') == os.pathsep.join((
+                subdirectory_path,
+                'control',
+            ))
+            # Expect value to be *moved* to the front of the list
+            assert env.get('PREPEND_NAME') == os.pathsep.join((
+                subdirectory_path,
+                'control',
+            ))
+
+
+async def _run_prefix_script(prefix_script):
+    return await get_environment_variables([
+        str(prefix_script),
+        '&&',
+        'set',
+    ])
+
+
+def _test_prefix_script(prefix_path):
+    extension = BatShell()
+
+    # BatShell requires the (non-primary) DsvShell extension as well
+    dsv_extension = DsvShell()
+
+    # create_hook_append_value
+    append_hook_path = dsv_extension.create_hook_append_value(
+        'append_env_hook_name', prefix_path, 'pkg_name',
+        'APPEND_NAME', 'subdirectory')
+    assert append_hook_path.exists()
+    assert append_hook_path.name == 'append_env_hook_name.dsv'
+    content = append_hook_path.read_text()
+    assert 'APPEND_NAME' in content
+
+    # create_hook_prepend_value
+    prepend_hook_path = dsv_extension.create_hook_prepend_value(
+        'prepend_env_hook_name', prefix_path, 'pkg_name',
+        'PREPEND_NAME', 'subdirectory')
+    assert prepend_hook_path.exists()
+    assert prepend_hook_path.name == 'prepend_env_hook_name.dsv'
+    content = prepend_hook_path.read_text()
+    assert 'PREPEND_NAME' in content
+
+    # mark package as installed
+    package_index = prefix_path / get_relative_package_index_path()
+    package_index.mkdir(parents=True)
+    (package_index / 'pkg_name').write_text('')
+
+    # create_package_script
+    dsv_extension.create_package_script(
+        prefix_path, 'pkg_name', [
+            (append_hook_path.relative_to(prefix_path), ()),
+            (prepend_hook_path.relative_to(prefix_path), ())])
+    assert (prefix_path / 'share' / 'pkg_name' / 'package.dsv').exists()
+    content = (prefix_path / 'share' / 'pkg_name' / 'package.dsv').read_text()
+    assert append_hook_path.name in content
+    assert prepend_hook_path.name in content
+
+    # create_prefix_script
+    extension.create_prefix_script(prefix_path, True)
+    prefix_script = prefix_path / 'local_setup.bat'
+    assert prefix_script.exists()
+    assert (prefix_path / '_local_setup_util_bat.py').exists()
+
+    if sys.platform == 'win32':
+        subdirectory_path = str(prefix_path / 'subdirectory')
+
+        # validate appending/prepending without existing values
+        with patch.dict(os.environ) as env_patch:
+            env_patch.pop('APPEND_NAME', None)
+            env_patch.pop('PREPEND_NAME', None)
+
+            coroutine = _run_prefix_script(prefix_script)
+            env = run_until_complete(coroutine)
+            assert env.get('APPEND_NAME') == subdirectory_path
+            assert env.get('PREPEND_NAME') == subdirectory_path
+
+        # validate appending/prepending with existing values
+        with patch.dict(os.environ, {
+            'APPEND_NAME': 'control',
+            'PREPEND_NAME': 'control',
+        }):
+            coroutine = _run_prefix_script(prefix_script)
+            env = run_until_complete(coroutine)
+            assert env.get('APPEND_NAME') == os.pathsep.join((
+                'control',
+                subdirectory_path,
+            ))
+            assert env.get('PREPEND_NAME') == os.pathsep.join((
+                subdirectory_path,
+                'control',
+            ))
+
+        # validate appending/prepending unique values
+        with patch.dict(os.environ, {
+            'APPEND_NAME': os.pathsep.join((subdirectory_path, 'control')),
+            'PREPEND_NAME': os.pathsep.join(('control', subdirectory_path)),
+        }):
+            coroutine = _run_prefix_script(prefix_script)
+            env = run_until_complete(coroutine)
+            # Expect no change, value already appears earlier in the list
+            assert env.get('APPEND_NAME') == os.pathsep.join((
+                subdirectory_path,
+                'control',
+            ))
+            # TODO: The DsvShell behavior doesn't align with BatShell!
+            # ~~Expect value to be *moved* to the front of the list~~
+            assert env.get('PREPEND_NAME') == os.pathsep.join((
+                'control',
+                subdirectory_path,
+            ))
