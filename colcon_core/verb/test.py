@@ -9,6 +9,7 @@ from colcon_core.argument_default import wrap_default_value
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
 from colcon_core.argument_type import get_cwd_path_resolver
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.event.test import TestFailure
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
@@ -193,7 +194,8 @@ class TestVerb(VerbExtensionPoint):
 
             recursive_dependencies = OrderedDict()
             # for testing a package include itself in the environment
-            for dep_name in decorator.recursive_dependencies + [pkg.name]:
+            self_dep = DependencyDescriptor(pkg.name)
+            for dep_name in decorator.recursive_dependencies + [self_dep]:
                 dep_path = install_base
                 if not args.merge_install:
                     dep_path = os.path.join(dep_path, dep_name)
