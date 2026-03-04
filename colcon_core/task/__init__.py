@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import OrderedDict
 import os
 import shutil
 import sys
@@ -79,12 +80,14 @@ class TaskExtensionPoint:
         :param args: The parsed command line arguments
         :param dependencies: The ordered dictionary mapping dependency names to
           their paths
+        :returns: Mapping of job identifier to task context
+        :rtype: collections.OrderedDict
         """
-        return {
-            pkg.name: TaskContext(
+        return OrderedDict((
+            (pkg.name, TaskContext(
                 pkg=pkg, args=args,
-                dependencies=dependencies)
-        }
+                dependencies=dependencies)),
+        ))
 
     def add_arguments(self, *, parser):
         """
