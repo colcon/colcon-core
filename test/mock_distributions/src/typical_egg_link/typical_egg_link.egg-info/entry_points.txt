@@ -1,0 +1,2 @@
+[console_scripts]
+typical_egg_link = typical_egg_link:main
