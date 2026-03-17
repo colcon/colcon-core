@@ -72,6 +72,7 @@ minversion
 mkdtemp
 monkeypatch
 namedtuple
+namespaces
 nargs
 noop
 noops
@@ -84,7 +85,6 @@ pkgname
 pkgs
 platbase
 platlib
-platlibdir
 plugin
 popitem
 prepend
@@ -135,6 +135,7 @@ stdeb
 stringify
 stylizer
 stylizers
+subclassing
 subparser
 subparsers
 subprocesses

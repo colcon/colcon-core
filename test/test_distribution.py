@@ -2,10 +2,12 @@
 # Licensed under the Apache License, Version 2.0
 
 import compileall
+import io
 from pathlib import Path
+import runpy
 import shutil
-import subprocess
 import sys
+from unittest.mock import patch
 
 import colcon_core.python_project.distribution
 from colcon_core.python_project.distribution import InstalledDistribution
@@ -52,6 +54,7 @@ def dist_info_compiled(tmp_path):
         TEST_DISTS_PYTHONPATH / 'typical_dist_info_again.py',
         site_path / 'typical_dist_info_again.py')
     compileall.compile_dir(site_path, quiet=1)
+    compileall.compile_dir(site_path, quiet=1, optimize=1)
 
     yield metadata_path
 
@@ -67,19 +70,27 @@ def dist_info_compiled_and_listed(dist_info_compiled):
 
 
 def test_discover():
-    dists = list(InstalledDistribution.discover(path=[TEST_DISTS_PYTHONPATH]))
+    dists = list(InstalledDistribution.discover(
+        path=[TEST_DISTS_PYTHONPATH], prefix_path=TEST_DISTS_ROOT))
     assert all(isinstance(d, (InstalledDistribution,)) for d in dists)
     assert all(d.name for d in dists)
     assert {d.name for d in dists} == {
         'typical-dist-info',
         'typical-egg-info',
         'typical-egg-link',
+        'typical-pep660',
     }
+
+
+def test_discover_nonexistent_path(tmp_path):
+    path = tmp_path / 'does_not_exist'
+    dists = list(InstalledDistribution.discover(path=[str(path)]))
+    assert not dists
 
 
 def test_dist_info():
     meta_path = TEST_DISTS_PYTHONPATH / 'typical_dist_info-0.0.0.dist-info'
-    dist = InstalledDistribution.at(meta_path)
+    dist = InstalledDistribution.at(meta_path, prefix_path=TEST_DISTS_ROOT)
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
         'shared_namespace/typical_dist_info.py',
@@ -92,16 +103,22 @@ def test_dist_info():
 
 
 def test_dist_info_compiled(dist_info_compiled):
-    dist = InstalledDistribution.at(dist_info_compiled)
+    dist = InstalledDistribution.at(
+        dist_info_compiled, prefix_path=TEST_DISTS_ROOT)
     assert dist.name
+    tag = sys.implementation.cache_tag
     assert_path_patterns(dist.get_installed_files(), (
-        '__pycache__/typical_dist_info_again.*.pyc',
-        'shared_namespace/__pycache__/typical_dist_info.*.pyc',
+        f'__pycache__/typical_dist_info_again.{tag}.opt-1.pyc',
+        f'__pycache__/typical_dist_info_again.{tag}.pyc',
+        f'shared_namespace/__pycache__/typical_dist_info.{tag}.opt-1.pyc',
+        f'shared_namespace/__pycache__/typical_dist_info.{tag}.pyc',
         'shared_namespace/typical_dist_info.py',
         'typical_dist_info/__init__.py',
-        'typical_dist_info/__pycache__/__init__.*.pyc',
+        f'typical_dist_info/__pycache__/__init__.{tag}.opt-1.pyc',
+        f'typical_dist_info/__pycache__/__init__.{tag}.pyc',
         'typical_dist_info/submodule/__init__.py',
-        'typical_dist_info/submodule/__pycache__/__init__.*.pyc',
+        f'typical_dist_info/submodule/__pycache__/__init__.{tag}.opt-1.pyc',
+        f'typical_dist_info/submodule/__pycache__/__init__.{tag}.pyc',
         'typical_dist_info-0.0.0.dist-info/METADATA',
         'typical_dist_info-0.0.0.dist-info/RECORD',
         'typical_dist_info_again.py',
@@ -109,16 +126,22 @@ def test_dist_info_compiled(dist_info_compiled):
 
 
 def test_dist_info_compiled_and_listed(dist_info_compiled_and_listed):
-    dist = InstalledDistribution.at(dist_info_compiled_and_listed)
+    dist = InstalledDistribution.at(
+        dist_info_compiled_and_listed, prefix_path=TEST_DISTS_ROOT)
     assert dist.name
+    tag = sys.implementation.cache_tag
     assert_path_patterns(dist.get_installed_files(), (
-        '__pycache__/typical_dist_info_again.*.pyc',
-        'shared_namespace/__pycache__/typical_dist_info.*.pyc',
+        f'__pycache__/typical_dist_info_again.{tag}.opt-1.pyc',
+        f'__pycache__/typical_dist_info_again.{tag}.pyc',
+        f'shared_namespace/__pycache__/typical_dist_info.{tag}.opt-1.pyc',
+        f'shared_namespace/__pycache__/typical_dist_info.{tag}.pyc',
         'shared_namespace/typical_dist_info.py',
         'typical_dist_info/__init__.py',
-        'typical_dist_info/__pycache__/__init__.*.pyc',
+        f'typical_dist_info/__pycache__/__init__.{tag}.opt-1.pyc',
+        f'typical_dist_info/__pycache__/__init__.{tag}.pyc',
         'typical_dist_info/submodule/__init__.py',
-        'typical_dist_info/submodule/__pycache__/__init__.*.pyc',
+        f'typical_dist_info/submodule/__pycache__/__init__.{tag}.opt-1.pyc',
+        f'typical_dist_info/submodule/__pycache__/__init__.{tag}.pyc',
         'typical_dist_info-0.0.0.dist-info/METADATA',
         'typical_dist_info-0.0.0.dist-info/RECORD',
         'typical_dist_info_again.py',
@@ -127,31 +150,40 @@ def test_dist_info_compiled_and_listed(dist_info_compiled_and_listed):
 
 def test_egg_info():
     meta_path = TEST_DISTS_PYTHONPATH / 'typical_egg_info-0.0.0.egg-info'
-    dist = InstalledDistribution.at(meta_path)
+    dist = InstalledDistribution.at(meta_path, prefix_path=TEST_DISTS_ROOT)
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
         '../../../' + expected_bin_path('typical_egg_info'),
-        'shared_namespace/typical_egg_info.py',
-        # Due to limitations with top_level enumeration, this distribution
-        # will see all of the namespace packages, even those it doesn't own.
-        # Same behavior with `pip uninstall`.
-        'shared_namespace/*.py',
         'typical_egg_info/__init__.py',
         'typical_egg_info/submodule/__init__.py',
         'typical_egg_info-0.0.0.egg-info/PKG-INFO',
         'typical_egg_info-0.0.0.egg-info/entry_points.txt',
+        'typical_egg_info-0.0.0.egg-info/namespace_packages.txt',
         'typical_egg_info-0.0.0.egg-info/top_level.txt',
         'typical_egg_info_again.py',
     ))
 
 
 def test_egg_link():
-    dists = InstalledDistribution.discover(path=[TEST_DISTS_PYTHONPATH])
-    dist = next(dist for dist in dists if dist.name == 'typical-egg-link')
+    meta_path = TEST_DISTS_PYTHONPATH / 'typical-egg-link.egg-link'
+    (dist,) = InstalledDistribution.survey(
+        meta_path, prefix_path=TEST_DISTS_ROOT)
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
         '../../../' + expected_bin_path('typical_egg_link'),
         'typical-egg-link.egg-link',
+    ))
+
+
+def test_pep660():
+    meta_path = TEST_DISTS_PYTHONPATH / 'typical_pep660-0.0.0.dist-info'
+    dist = InstalledDistribution.at(meta_path, prefix_path=TEST_DISTS_ROOT)
+    assert dist.name
+    assert_path_patterns(dist.get_installed_files(), (
+        '__editable__.typical_pep660-0.0.0.pth',
+        'typical_pep660-0.0.0.dist-info/METADATA',
+        'typical_pep660-0.0.0.dist-info/RECORD',
+        'typical_pep660-0.0.0.dist-info/direct_url.json',
     ))
 
 
@@ -175,16 +207,15 @@ def test_debug_dump():
     exercises the code and doesn't actually validate the output.
     """
     meta_path = TEST_DISTS_PYTHONPATH
-    cmd = [
-        sys.executable,
-        '-B',
-        colcon_core.python_project.distribution.__file__,
-    ]
-    res = subprocess.run(
-        cmd, cwd=meta_path, check=True, stdout=subprocess.PIPE)
-    assert res.stdout
+    dist_file = colcon_core.python_project.distribution.__file__
 
-    cmd.append(str(meta_path))
-    res = subprocess.run(
-        cmd, cwd=meta_path, check=True, stdout=subprocess.PIPE)
-    assert res.stdout
+    with patch('sys.argv', [dist_file]), \
+            patch('os.getcwd', return_value=str(meta_path)), \
+            patch('sys.stdout', new_callable=io.StringIO) as stdout:
+        runpy.run_path(dist_file, run_name='__main__')
+        assert stdout.getvalue()
+
+    with patch('sys.argv', [dist_file, str(meta_path)]), \
+            patch('sys.stdout', new_callable=io.StringIO) as stdout:
+        runpy.run_path(dist_file, run_name='__main__')
+        assert stdout.getvalue()
