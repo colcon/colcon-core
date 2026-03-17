@@ -87,7 +87,7 @@ class PathLikeDistribution(Distribution):
         # called as part of __new__().
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=32)
     def _make_class(cls, distribution_class):
         """
         Create a new dynamic subclass from PathLikeDistribution.
@@ -124,7 +124,7 @@ class PathLikeDistribution(Distribution):
         Survey a path for any compatible distribution metadata.
 
         Remaining arguments to this function are passed to the ``at`` function
-        during for any created distribution instances.
+        for any created distribution instances.
 
         :param path: Candidate path to consider.
         """
@@ -136,9 +136,9 @@ class PathLikeDistribution(Distribution):
         """
         Return the 'Name' metadata for the distribution package.
 
-        This property can can be dropped when the minimum Python version is
-        bumped to at least Python 3.10, where it was added to the
-        ``Distribution`` class.
+        This property can be dropped when the minimum Python version is bumped
+        to at least Python 3.10, where it was added to the ``Distribution``
+        class.
         """
         return self.metadata['Name']
 
@@ -177,8 +177,13 @@ class InstalledDistribution(PathLikeDistribution):
     @classmethod
     def survey(cls, path, *args, **kwargs):  # noqa: D102
         if path.is_file() and path.suffix.lower() == '.egg-link':
-            egg_link = [line for line in path.read_text().splitlines() if line]
-            search_dir = (path.parent / egg_link[0]).resolve()
+            egg_link = next((
+                line for line in path.read_text().splitlines() if line), None)
+            if not egg_link:
+                return
+            search_dir = (path.parent / egg_link).resolve()
+            if not search_dir.is_dir():
+                return
             tgt = super().survey
             yield from itertools.chain.from_iterable(
                 tgt(child, *args, _link_path=path, **kwargs)
@@ -201,24 +206,24 @@ class InstalledDistribution(PathLikeDistribution):
         if not top_level:
             return
 
-        finder = PathFinder()
         path = (str(self.path.parent),)
         for module in (m.strip() for m in top_level.splitlines()):
             if not module:
                 continue
-            spec = finder.find_spec(module, path=path)
-            if not spec or not spec.origin:
+            spec = PathFinder.find_spec(module, path=path)
+            if not spec:
                 continue
-            origin = Path(spec.origin)
-            if origin.name == '__init__.py':
-                origin = origin.parent
-            # Safety check, packages should always be a child of our
-            # search directory.
-            if origin.parent == self.path.parent:
-                yield from _enumerate_files(origin)
+            if spec.origin:
+                origin = Path(spec.origin)
+                if origin.parent == self.path.parent:
+                    yield from _enumerate_files(origin)
+            for submodule in spec.submodule_search_locations or ():
+                submodule = Path(submodule)
+                if submodule.parent == self.path.parent:
+                    yield from _enumerate_files(submodule)
 
     @classmethod
-    @lru_cache
+    @lru_cache(maxsize=32)
     def _get_script_maker(cls, script_dir):
         sm = ScriptMaker(None, script_dir, dry_run=True)
         sm.clobber = True

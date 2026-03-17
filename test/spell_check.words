@@ -67,6 +67,7 @@ lineno
 linter
 linux
 lstrip
+maxsize
 minversion
 mkdtemp
 monkeypatch

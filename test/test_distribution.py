@@ -38,6 +38,10 @@ def dist_info_compiled(tmp_path):
 
     metadata_path = site_path / 'typical_dist_info-0.0.0.dist-info'
 
+    (site_path / 'shared_namespace').mkdir(parents=True)
+    shutil.copyfile(
+        TEST_DISTS_PYTHONPATH / 'shared_namespace' / 'typical_dist_info.py',
+        site_path / 'shared_namespace' / 'typical_dist_info.py')
     shutil.copytree(
         TEST_DISTS_PYTHONPATH / 'typical_dist_info-0.0.0.dist-info',
         metadata_path)
@@ -78,6 +82,7 @@ def test_dist_info():
     dist = InstalledDistribution.at(meta_path)
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
+        'shared_namespace/typical_dist_info.py',
         'typical_dist_info/__init__.py',
         'typical_dist_info/submodule/__init__.py',
         'typical_dist_info-0.0.0.dist-info/METADATA',
@@ -91,6 +96,8 @@ def test_dist_info_compiled(dist_info_compiled):
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
         '__pycache__/typical_dist_info_again.*.pyc',
+        'shared_namespace/__pycache__/typical_dist_info.*.pyc',
+        'shared_namespace/typical_dist_info.py',
         'typical_dist_info/__init__.py',
         'typical_dist_info/__pycache__/__init__.*.pyc',
         'typical_dist_info/submodule/__init__.py',
@@ -106,6 +113,8 @@ def test_dist_info_compiled_and_listed(dist_info_compiled_and_listed):
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
         '__pycache__/typical_dist_info_again.*.pyc',
+        'shared_namespace/__pycache__/typical_dist_info.*.pyc',
+        'shared_namespace/typical_dist_info.py',
         'typical_dist_info/__init__.py',
         'typical_dist_info/__pycache__/__init__.*.pyc',
         'typical_dist_info/submodule/__init__.py',
@@ -122,6 +131,11 @@ def test_egg_info():
     assert dist.name
     assert_path_patterns(dist.get_installed_files(), (
         '../../../' + expected_bin_path('typical_egg_info'),
+        'shared_namespace/typical_egg_info.py',
+        # Due to limitations with top_level enumeration, this distribution
+        # will see all of the namespace packages, even those it doesn't own.
+        # Same behavior with `pip uninstall`.
+        'shared_namespace/*.py',
         'typical_egg_info/__init__.py',
         'typical_egg_info/submodule/__init__.py',
         'typical_egg_info-0.0.0.egg-info/PKG-INFO',
@@ -141,6 +155,18 @@ def test_egg_link():
     ))
 
 
+def test_bad_egg_links(tmp_path):
+    site_path = tmp_path / 'lib' / 'python' / 'site-packages'
+    site_path.mkdir(parents=True)
+
+    (site_path / 'broken.egg-link').write_text('does_not_exist\n.')
+    (site_path / 'no_path.egg-link').write_text('\n')
+    (site_path / 'empty.egg-link').write_text('')
+
+    dists = InstalledDistribution.discover(path=[site_path])
+    assert not any(dists)
+
+
 def test_debug_dump():
     """
     Smoke test for distribution.__main__.
@@ -154,9 +180,11 @@ def test_debug_dump():
         '-B',
         colcon_core.python_project.distribution.__file__,
     ]
-    res = subprocess.run(cmd, cwd=meta_path, check=True, capture_output=True)
+    res = subprocess.run(
+        cmd, cwd=meta_path, check=True, stdout=subprocess.PIPE)
     assert res.stdout
 
     cmd.append(str(meta_path))
-    res = subprocess.run(cmd, cwd=meta_path, check=True, capture_output=True)
+    res = subprocess.run(
+        cmd, cwd=meta_path, check=True, stdout=subprocess.PIPE)
     assert res.stdout
