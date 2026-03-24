@@ -57,7 +57,7 @@ def test_job():
     job.set_event_queue(event_queue)
     assert len(events) == 1
     assert isinstance(events[-1][0], JobQueued)
-    assert events[-1][0].identifier == 'name'
+    assert events[-1][0].identifier == 'id'
     assert events[-1][0].dependencies == task_context.dependencies
     assert events[-1][1] == job
 
@@ -66,10 +66,10 @@ def test_job():
     assert rc == 0
     assert len(events) == 3
     assert isinstance(events[-2][0], JobStarted)
-    assert events[-2][0].identifier == 'name'
+    assert events[-2][0].identifier == 'id'
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
-    assert events[-1][0].identifier == 'name'
+    assert events[-1][0].identifier == 'id'
     assert events[-1][0].rc == 0
     assert events[-1][1] == job
 
@@ -80,10 +80,10 @@ def test_job():
     assert rc is SIGINT_RESULT
     assert len(events) == 5
     assert isinstance(events[-2][0], JobStarted)
-    assert events[-2][0].identifier == 'name'
+    assert events[-2][0].identifier == 'id'
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
-    assert events[-1][0].identifier == 'name'
+    assert events[-1][0].identifier == 'id'
     assert events[-1][0].rc is SIGINT_RESULT
     assert events[-1][1] == job
 
@@ -94,13 +94,13 @@ def test_job():
         run_until_complete(job())
     assert len(events) == 8
     assert isinstance(events[-3][0], JobStarted)
-    assert events[-3][0].identifier == 'name'
+    assert events[-3][0].identifier == 'id'
     assert events[-3][1] == job
     assert isinstance(events[-2][0], StderrLine)
     assert events[-2][0].line.endswith(b'\nRuntimeError: custom exception\n')
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
-    assert events[-1][0].identifier == 'name'
+    assert events[-1][0].identifier == 'id'
     assert events[-1][0].rc == 1
     assert events[-1][1] == job
 
@@ -111,10 +111,10 @@ def test_job():
     assert rc == 2
     assert len(events) == 10
     assert isinstance(events[-2][0], JobStarted)
-    assert events[-2][0].identifier == 'name'
+    assert events[-2][0].identifier == 'id'
     assert events[-2][1] == job
     assert isinstance(events[-1][0], JobEnded)
-    assert events[-1][0].identifier == 'name'
+    assert events[-1][0].identifier == 'id'
     assert events[-1][0].rc == 2
     assert events[-1][1] == job
 

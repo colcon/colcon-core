@@ -9,6 +9,7 @@ from colcon_core.argument_default import wrap_default_value
 from colcon_core.argument_parser.destination_collector \
     import DestinationCollectorDecorator
 from colcon_core.argument_type import get_cwd_path_resolver
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.event.test import TestFailure
 from colcon_core.event_handler import add_event_handler_arguments
 from colcon_core.executor import add_executor_arguments
@@ -23,7 +24,6 @@ from colcon_core.package_selection import get_packages
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.task import add_task_arguments
 from colcon_core.task import get_task_extension
-from colcon_core.task import TaskContext
 from colcon_core.verb import check_and_mark_build_tool
 from colcon_core.verb import check_and_mark_install_layout
 from colcon_core.verb import update_object
@@ -193,7 +193,8 @@ class TestVerb(VerbExtensionPoint):
 
             recursive_dependencies = OrderedDict()
             # for testing a package include itself in the environment
-            for dep_name in decorator.recursive_dependencies + [pkg.name]:
+            self_dep = DependencyDescriptor(pkg.name)
+            for dep_name in decorator.recursive_dependencies + [self_dep]:
                 dep_path = install_base
                 if not args.merge_install:
                     dep_path = os.path.join(dep_path, dep_name)
@@ -209,16 +210,18 @@ class TestVerb(VerbExtensionPoint):
             logger.debug(
                 f"Testing package '{pkg.name}' with the following arguments: "
                 f'{{{ordered_package_args}}}')
-            task_context = TaskContext(
+            task_contexts = extension.create_contexts(
                 pkg=pkg, args=package_args,
                 dependencies=recursive_dependencies)
 
-            job = Job(
-                identifier=pkg.name,
-                dependencies=set(
-                    () if drop_test_deps else recursive_dependencies.keys()
-                ),
-                task=extension, task_context=task_context)
+            for identifier, task_context in task_contexts.items():
+                job = Job(
+                    identifier=identifier,
+                    dependencies=set(
+                        () if drop_test_deps
+                        else task_context.dependencies.keys()
+                    ),
+                    task=extension, task_context=task_context)
 
-            jobs[pkg.name] = job
+                jobs[identifier] = job
         return jobs
