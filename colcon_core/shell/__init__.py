@@ -11,6 +11,7 @@ import sys
 import traceback
 import warnings
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
@@ -523,6 +524,10 @@ def get_colcon_prefix_path(*, skip=None):
     return prefix_path
 
 
+def _get_pkg_name(dep):
+    return dep.package_name if isinstance(dep, DependencyDescriptor) else dep
+
+
 def check_dependency_availability(dependencies, *, script_filename):
     """
     Check if all dependencies are available.
@@ -540,21 +545,23 @@ def check_dependency_availability(dependencies, *, script_filename):
     """
     missing = OrderedDict()
     # check if the dependency exists in the install base of this workspace
-    for pkg_name, pkg_install_base in dependencies.items():
+    for dep, pkg_install_base in dependencies.items():
+        pkg_name = _get_pkg_name(dep)
         pkg_script = Path(
             pkg_install_base) / 'share' / pkg_name / script_filename
         if not pkg_script.exists():
-            missing[pkg_name] = pkg_script
+            missing[dep] = pkg_script
 
     # check if the dependency exists in any other prefix path
     packages_in_env = find_installed_packages_in_environment()
     env_packages = OrderedDict()
-    for pkg_name, pkg_install_base in list(missing.items()):
+    for dep, pkg_install_base in list(missing.items()):
+        pkg_name = _get_pkg_name(dep)
         if pkg_name in packages_in_env:
             env_packages[pkg_name] = packages_in_env[pkg_name]
             # no need to source any script for this package
-            del dependencies[pkg_name]
-            del missing[pkg_name]
+            del dependencies[dep]
+            del missing[dep]
 
     # warn about using packages from the environment
     if env_packages:
@@ -573,7 +580,7 @@ def check_dependency_availability(dependencies, *, script_filename):
             'Failed to find the following files:' +
             ''.join('\n- %s' % path for path in missing.values()) +
             '\nCheck that the following packages have been built:' +
-            ''.join('\n- %s' % name for name in missing.keys()))
+            ''.join('\n- %s' % _get_pkg_name(dep) for dep in missing.keys()))
 
 
 def find_installed_packages_in_environment():
