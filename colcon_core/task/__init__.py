@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from collections import OrderedDict
 import os
 import shutil
 import sys
@@ -60,7 +61,33 @@ class TaskExtensionPoint:
     """
 
     """The version of the task extension interface."""
-    EXTENSION_POINT_VERSION = '1.0'
+    EXTENSION_POINT_VERSION = '1.1'
+
+    @classmethod
+    def create_contexts(cls, *, pkg, args, dependencies):
+        """
+        Construct TaskContext instances for a package.
+
+        A :py:class:`~colcon_core.executor.Job` will be created for each
+        :py:class:`~colcon_core.task.TaskContext` that is returned from this
+        method, with :py:attr:`~colcon_core.executor.Job.identifier`
+        corresponding to the key. Implementations may return any number of
+        jobs, but care should be taken to ensure that only one of the jobs is
+        executed at any given time, presumably by ensuring that dependencies
+        exist between them.
+
+        :param pkg: The package descriptor
+        :param args: The parsed command line arguments
+        :param dependencies: The ordered dictionary mapping dependency names to
+          their paths
+        :returns: Mapping of job identifier to task context
+        :rtype: collections.OrderedDict
+        """
+        return OrderedDict((
+            (pkg.name, TaskContext(
+                pkg=pkg, args=args,
+                dependencies=dependencies)),
+        ))
 
     def add_arguments(self, *, parser):
         """
