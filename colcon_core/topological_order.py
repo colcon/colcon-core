@@ -41,14 +41,7 @@ def topological_order_decorators(decorators):
     for decorator in decorators:
         queued[decorator] = {
             d.name for d in decorator.recursive_dependencies
-        }
-
-    # map the set of out-of-band dependencies for each decorator
-    out_of_band = {}
-    for decorator in decorators:
-        out_of_band[decorator] = {
-            d.name for d in decorator.recursive_dependencies
-            if d.metadata.get('out_of_band')
+            if not d.metadata.get('out_of_band')
         }
 
     ordered = []
@@ -57,23 +50,9 @@ def topological_order_decorators(decorators):
         ordered_names = {d.descriptor.name for d in ordered}
         for q in queued.values():
             q.difference_update(ordered_names)
-        for oob in out_of_band.values():
-            oob.difference_update(ordered_names)
 
         # find all queued packages without remaining dependencies
         ready = [decorator for decorator, r in queued.items() if not r]
-        if not ready:
-            # if nothing is ready, try removing out-of-band dependencies
-            ready = [
-                decorator for decorator, r in queued.items()
-                if not r.difference(out_of_band[decorator])
-            ]
-            # prefer those with less out-of-band dependencies first
-            ready.sort(key=lambda d: (
-                len(out_of_band[d]), d.descriptor.name
-            ))
-            # take only one at a time
-            ready = ready[:1]
         if not ready:
             lines = [
                 '%s: %s' % (
