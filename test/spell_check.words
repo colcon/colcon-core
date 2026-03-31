@@ -6,7 +6,6 @@ asyncio
 autouse
 backend
 backported
-basepath
 bazqux
 blocklist
 callables

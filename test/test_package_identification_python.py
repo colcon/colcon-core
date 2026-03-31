@@ -1,9 +1,6 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
 from colcon_core.package_augmentation.python \
     import create_dependency_descriptor
 from colcon_core.package_augmentation.python \
@@ -14,102 +11,99 @@ from colcon_core.package_identification.python \
 import pytest
 
 
-def test_identify():
+def test_identify(tmp_path):
     extension = PythonPackageIdentification()
     augmentation_extension = PythonPackageAugmentation()
 
-    with TemporaryDirectory(prefix='test_colcon_') as basepath:
-        desc = PackageDescriptor(basepath)
-        desc.type = 'other'
-        assert extension.identify(desc) is None
-        assert desc.name is None
+    desc = PackageDescriptor(str(tmp_path))
+    desc.type = 'other'
+    assert extension.identify(desc) is None
+    assert desc.name is None
 
-        desc.type = None
-        assert extension.identify(desc) is None
-        assert desc.name is None
-        assert desc.type is None
+    desc.type = None
+    assert extension.identify(desc) is None
+    assert desc.name is None
+    assert desc.type is None
 
-        basepath = Path(basepath)
-        (basepath / 'setup.py').write_text('setup()')
-        assert extension.identify(desc) is None
-        assert desc.name is None
-        assert desc.type is None
+    (tmp_path / 'setup.py').write_text('setup()')
+    assert extension.identify(desc) is None
+    assert desc.name is None
+    assert desc.type is None
 
-        (basepath / 'setup.cfg').write_text('')
-        assert extension.identify(desc) is None
-        assert desc.name is None
-        assert desc.type is None
+    (tmp_path / 'setup.cfg').write_text('')
+    assert extension.identify(desc) is None
+    assert desc.name is None
+    assert desc.type is None
 
-        (basepath / 'setup.cfg').write_text(
-            '[metadata]\n'
-            'name = pkg-name\n')
-        assert extension.identify(desc) is None
-        assert desc.name == 'pkg-name'
-        assert desc.type == 'python'
-        assert not desc.dependencies
-        assert not desc.metadata
+    (tmp_path / 'setup.cfg').write_text(
+        '[metadata]\n'
+        'name = pkg-name\n')
+    assert extension.identify(desc) is None
+    assert desc.name == 'pkg-name'
+    assert desc.type == 'python'
+    assert not desc.dependencies
+    assert not desc.metadata
 
-        augmentation_extension.augment_package(desc)
-        assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
-        assert not desc.dependencies['build']
-        assert not desc.dependencies['run']
-        assert not desc.dependencies['test']
+    augmentation_extension.augment_package(desc)
+    assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
+    assert not desc.dependencies['build']
+    assert not desc.dependencies['run']
+    assert not desc.dependencies['test']
 
-        desc = PackageDescriptor(basepath)
-        desc.name = 'other-name'
-        with pytest.raises(RuntimeError) as e:
-            extension.identify(desc)
-        assert str(e.value).endswith(
-            'Package name already set to different value')
-
-        (basepath / 'setup.cfg').write_text(
-            '[metadata]\n'
-            'name = other-name\n'
-            'maintainer = Foo Bar\n'
-            'maintainer_email = foobar@example.com\n'
-            '[options]\n'
-            'setup_requires =\n'
-            "  build; sys_platform != 'win32'\n"
-            "  build-windows; sys_platform == 'win32'\n"
-            'install_requires =\n'
-            '  runA > 1.2.3\n'
-            '  runB\n'
-            'zip_safe = false\n'
-            '[options.extras_require]\n'
-            'test = test2 == 3.0.0\n'
-            'tests = test3\n'
-            'testing = test4\n'
-            'other = not-test\n')
-        assert extension.identify(desc) is None
-        assert desc.name == 'other-name'
-        assert desc.type == 'python'
-        assert not desc.dependencies
-        assert not desc.metadata
-
-        augmentation_extension.augment_package(desc)
-        assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
-        assert desc.dependencies['build'] == {'build', 'build-windows'}
-        assert desc.dependencies['run'] == {'runA', 'runB'}
-        dep = next(x for x in desc.dependencies['run'] if x == 'runA')
-        assert dep.metadata['version_gt'] == '1.2.3'
-        assert desc.dependencies['test'] == {'test2', 'test3', 'test4'}
-
-        assert callable(desc.metadata['get_python_setup_options'])
-        options = desc.metadata['get_python_setup_options'](None)
-        assert 'zip_safe' in options
-
-        assert desc.metadata['maintainers'] == ['Foo Bar <foobar@example.com>']
-
-        desc = PackageDescriptor(basepath)
-        desc.name = 'other-name'
-        (basepath / 'setup.cfg').write_text(
-            '[metadata]\n'
-            'name = other-name\n'
-            'author = Baz Qux\n'
-            'author_email = bazqux@example.com\n')
+    desc = PackageDescriptor(tmp_path)
+    desc.name = 'other-name'
+    with pytest.raises(RuntimeError) as e:
         extension.identify(desc)
-        augmentation_extension.augment_package(desc)
-        assert desc.metadata['maintainers'] == ['Baz Qux <bazqux@example.com>']
+    assert str(e.value).endswith('Package name already set to different value')
+
+    (tmp_path / 'setup.cfg').write_text(
+        '[metadata]\n'
+        'name = other-name\n'
+        'maintainer = Foo Bar\n'
+        'maintainer_email = foobar@example.com\n'
+        '[options]\n'
+        'setup_requires =\n'
+        "  build; sys_platform != 'win32'\n"
+        "  build-windows; sys_platform == 'win32'\n"
+        'install_requires =\n'
+        '  runA > 1.2.3\n'
+        '  runB\n'
+        'zip_safe = false\n'
+        '[options.extras_require]\n'
+        'test = test2 == 3.0.0\n'
+        'tests = test3\n'
+        'testing = test4\n'
+        'other = not-test\n')
+    assert extension.identify(desc) is None
+    assert desc.name == 'other-name'
+    assert desc.type == 'python'
+    assert not desc.dependencies
+    assert not desc.metadata
+
+    augmentation_extension.augment_package(desc)
+    assert set(desc.dependencies.keys()) == {'build', 'run', 'test'}
+    assert desc.dependencies['build'] == {'build', 'build-windows'}
+    assert desc.dependencies['run'] == {'runA', 'runB'}
+    dep = next(x for x in desc.dependencies['run'] if x == 'runA')
+    assert dep.metadata['version_gt'] == '1.2.3'
+    assert desc.dependencies['test'] == {'test2', 'test3', 'test4'}
+
+    assert callable(desc.metadata['get_python_setup_options'])
+    options = desc.metadata['get_python_setup_options'](None)
+    assert 'zip_safe' in options
+
+    assert desc.metadata['maintainers'] == ['Foo Bar <foobar@example.com>']
+
+    desc = PackageDescriptor(tmp_path)
+    desc.name = 'other-name'
+    (tmp_path / 'setup.cfg').write_text(
+        '[metadata]\n'
+        'name = other-name\n'
+        'author = Baz Qux\n'
+        'author_email = bazqux@example.com\n')
+    extension.identify(desc)
+    augmentation_extension.augment_package(desc)
+    assert desc.metadata['maintainers'] == ['Baz Qux <bazqux@example.com>']
 
 
 def test_create_dependency_descriptor():

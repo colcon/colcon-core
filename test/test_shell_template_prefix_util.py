@@ -2,8 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from colcon_core.location import get_relative_package_index_path
@@ -25,51 +23,47 @@ def test_main(capsys):
     assert not err
 
 
-def test_get_packages():
-    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
-        prefix_path = Path(prefix_path)
+def test_get_packages(tmp_path):
+    # check no packages in not merged install layout
+    packages = get_packages(tmp_path, False)
+    assert packages == {}
 
-        # check no packages in not merged install layout
-        packages = get_packages(prefix_path, False)
-        assert packages == {}
+    # mock packages in not merged install layout
+    subdirectory = get_relative_package_index_path()
+    for pkg_name in ('pkgA', 'pkgB'):
+        (tmp_path / pkg_name / subdirectory).mkdir(parents=True)
+        (tmp_path / pkg_name / subdirectory / pkg_name).write_text('depX')
+    (tmp_path / 'dummy_dir').mkdir()
+    (tmp_path / '.hidden_dir').mkdir()
+    (tmp_path / 'dummy_file').write_text('')
 
-        # mock packages in not merged install layout
-        subdirectory = get_relative_package_index_path()
-        for pkg_name in ('pkgA', 'pkgB'):
-            (prefix_path / pkg_name / subdirectory).mkdir(parents=True)
-            (prefix_path / pkg_name / subdirectory / pkg_name).write_text(
-                'depX')
-        (prefix_path / 'dummy_dir').mkdir()
-        (prefix_path / '.hidden_dir').mkdir()
-        (prefix_path / 'dummy_file').write_text('')
+    # check no packages in merged install layout
+    packages = get_packages(tmp_path, True)
+    assert packages == {}
 
-        # check no packages in merged install layout
-        packages = get_packages(prefix_path, True)
-        assert packages == {}
+    # mock packages in merged install layout
+    (tmp_path / subdirectory).mkdir(parents=True)
+    (tmp_path / subdirectory / 'pkgB').write_text('')
+    (tmp_path / subdirectory / 'pkgC').write_text(
+        os.pathsep.join(('pkgB', 'depC')))
+    (tmp_path / subdirectory / 'dummy_dir').mkdir()
+    (tmp_path / subdirectory / '.hidden_file').write_text('')
 
-        # mock packages in merged install layout
-        (prefix_path / subdirectory).mkdir(parents=True)
-        (prefix_path / subdirectory / 'pkgB').write_text('')
-        (prefix_path / subdirectory / 'pkgC').write_text(
-            os.pathsep.join(('pkgB', 'depC')))
-        (prefix_path / subdirectory / 'dummy_dir').mkdir()
-        (prefix_path / subdirectory / '.hidden_file').write_text('')
+    # check packages and dependencies in not merged install layout
+    packages = get_packages(tmp_path, False)
+    assert len(packages) == 2
+    assert 'pkgA' in packages
+    assert packages['pkgA'] == set()
+    assert 'pkgB' in packages
+    assert packages['pkgB'] == set()
 
-        # check packages and dependencies in not merged install layout
-        packages = get_packages(prefix_path, False)
-        assert len(packages) == 2
-        assert 'pkgA' in packages
-        assert packages['pkgA'] == set()
-        assert 'pkgB' in packages
-        assert packages['pkgB'] == set()
-
-        # check packages and dependencies in not merged install layout
-        packages = get_packages(prefix_path, True)
-        assert len(packages) == 2
-        assert 'pkgB' in packages
-        assert packages['pkgB'] == set()
-        assert 'pkgC' in packages
-        assert packages['pkgC'] == {'pkgB'}
+    # check packages and dependencies in not merged install layout
+    packages = get_packages(tmp_path, True)
+    assert len(packages) == 2
+    assert 'pkgB' in packages
+    assert packages['pkgB'] == set()
+    assert 'pkgC' in packages
+    assert packages['pkgC'] == {'pkgB'}
 
 
 def test_order_packages():
