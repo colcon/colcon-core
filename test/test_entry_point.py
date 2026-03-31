@@ -26,7 +26,7 @@ with warnings.catch_warnings():
                 allow_module_level=True)
         raise
 
-from .environment_context import EnvironmentContext
+from .environment_context import EnvironmentContext  # noqa: E402
 
 
 class Group1:
