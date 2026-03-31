@@ -102,9 +102,9 @@ def _test_extension(prefix_path):
         subdirectory_path = str(prefix_path / 'subdirectory')
 
         # validate appending/prepending without existing values
-        with patch.dict(os.environ) as env_patch:
-            env_patch.pop('APPEND_NAME', None)
-            env_patch.pop('PREPEND_NAME', None)
+        with patch.dict(os.environ):
+            os.environ.pop('APPEND_NAME', None)
+            os.environ.pop('PREPEND_NAME', None)
             coroutine = extension.generate_command_environment(
                 'task_name', prefix_path, {'pkg_name': str(prefix_path)})
             env = run_until_complete(coroutine)
@@ -210,9 +210,9 @@ def _test_prefix_script(prefix_path):
         subdirectory_path = str(prefix_path / 'subdirectory')
 
         # validate appending/prepending without existing values
-        with patch.dict(os.environ) as env_patch:
-            env_patch.pop('APPEND_NAME', None)
-            env_patch.pop('PREPEND_NAME', None)
+        with patch.dict(os.environ):
+            os.environ.pop('APPEND_NAME', None)
+            os.environ.pop('PREPEND_NAME', None)
 
             coroutine = _run_prefix_script(prefix_script)
             env = run_until_complete(coroutine)
