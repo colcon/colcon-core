@@ -2,9 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
 import sys
-from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from colcon_core import shell
@@ -18,13 +16,12 @@ import pytest
 from .run_until_complete import run_until_complete
 
 
-def test_extension():
+def test_extension(tmp_path):
     use_all_shell_extensions = shell.use_all_shell_extensions
     shell.use_all_shell_extensions = True
     try:
-        with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
-            _test_extension(Path(prefix_path))
-            _test_prefix_script(Path(prefix_path))
+        _test_extension(tmp_path)
+        _test_prefix_script(tmp_path)
     finally:
         shell.use_all_shell_extensions = use_all_shell_extensions
 

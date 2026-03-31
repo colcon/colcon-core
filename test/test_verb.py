@@ -3,8 +3,6 @@
 
 import argparse
 import logging
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 from colcon_core.verb import check_and_mark_build_tool
@@ -39,69 +37,63 @@ def test_get_verb_extensions():
     assert list(extensions.keys()) == ['extension1', 'extension2']
 
 
-def test_check_and_mark_build_tool():
-    with TemporaryDirectory(prefix='test_colcon_') as base_path:
-        base_path = Path(base_path)
+def test_check_and_mark_build_tool(tmp_path):
+    # create marker if it doesn't exist
+    check_and_mark_build_tool(str(tmp_path))
+    marker_path = tmp_path / '.built_by'
+    assert marker_path.exists()
+    assert marker_path.read_text().rstrip() == 'colcon'
 
-        # create marker if it doesn't exist
-        check_and_mark_build_tool(str(base_path))
-        marker_path = base_path / '.built_by'
-        assert marker_path.exists()
-        assert marker_path.read_text().rstrip() == 'colcon'
+    # create path and marker if it doesn't exist
+    path = tmp_path / 'no_base'
+    check_and_mark_build_tool(str(path))
+    assert path.exists()
+    marker_path = path / '.built_by'
+    assert marker_path.exists()
+    assert marker_path.read_text().rstrip() == 'colcon'
 
-        # create path and marker if it doesn't exist
-        path = base_path / 'no_base'
+    # existing marker with same content
+    path = tmp_path / 'existing_marker'
+    path.mkdir()
+    marker_path = path / '.built_by'
+    marker_path.write_text('colcon')
+    check_and_mark_build_tool(str(path))
+    assert marker_path.exists()
+    assert marker_path.read_text().rstrip() == 'colcon'
+
+    # existing marker with different content
+    marker_path.write_text('other')
+    with pytest.raises(RuntimeError):
         check_and_mark_build_tool(str(path))
-        assert path.exists()
-        marker_path = path / '.built_by'
-        assert marker_path.exists()
-        assert marker_path.read_text().rstrip() == 'colcon'
-
-        # existing marker with same content
-        path = base_path / 'existing_marker'
-        path.mkdir()
-        marker_path = path / '.built_by'
-        marker_path.write_text('colcon')
-        check_and_mark_build_tool(str(path))
-        assert marker_path.exists()
-        assert marker_path.read_text().rstrip() == 'colcon'
-
-        # existing marker with different content
-        marker_path.write_text('other')
-        with pytest.raises(RuntimeError):
-            check_and_mark_build_tool(str(path))
 
 
-def test_check_and_mark_install_layout():
-    with TemporaryDirectory(prefix='test_colcon_') as base_path:
-        base_path = Path(base_path)
+def test_check_and_mark_install_layout(tmp_path):
+    # create marker if it doesn't exist
+    check_and_mark_install_layout(str(tmp_path), merge_install=False)
+    marker_path = tmp_path / '.colcon_install_layout'
+    assert marker_path.exists()
+    assert marker_path.read_text().rstrip() == 'isolated'
 
-        # create marker if it doesn't exist
-        check_and_mark_install_layout(str(base_path), merge_install=False)
-        marker_path = base_path / '.colcon_install_layout'
-        assert marker_path.exists()
-        assert marker_path.read_text().rstrip() == 'isolated'
+    # create path and marker if it doesn't exist
+    path = tmp_path / 'no_base'
+    check_and_mark_install_layout(str(path), merge_install=True)
+    assert path.exists()
+    marker_path = path / '.colcon_install_layout'
+    assert marker_path.exists()
+    assert marker_path.read_text().rstrip() == 'merged'
 
-        # create path and marker if it doesn't exist
-        path = base_path / 'no_base'
-        check_and_mark_install_layout(str(path), merge_install=True)
-        assert path.exists()
-        marker_path = path / '.colcon_install_layout'
-        assert marker_path.exists()
-        assert marker_path.read_text().rstrip() == 'merged'
+    # existing marker with same content
+    check_and_mark_install_layout(str(path), merge_install=True)
+    assert marker_path.exists()
+    assert marker_path.read_text().rstrip() == 'merged'
 
-        # existing marker with same content
-        check_and_mark_install_layout(str(path), merge_install=True)
-        assert marker_path.exists()
-        assert marker_path.read_text().rstrip() == 'merged'
+    # existing marker with different content
+    with pytest.raises(RuntimeError):
+        check_and_mark_install_layout(str(path), merge_install=False)
 
-        # existing marker with different content
-        with pytest.raises(RuntimeError):
-            check_and_mark_install_layout(str(path), merge_install=False)
-
-        # install base which is a file
-        with pytest.raises(RuntimeError):
-            check_and_mark_install_layout(str(marker_path), merge_install=True)
+    # install base which is a file
+    with pytest.raises(RuntimeError):
+        check_and_mark_install_layout(str(marker_path), merge_install=True)
 
 
 def test_update_object():

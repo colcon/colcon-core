@@ -2,8 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -39,7 +37,7 @@ def test_get_prefix_path_extensions():
     assert list(extensions[90].keys()) == ['extension1']
 
 
-def test_get_chained_prefix_path():
+def test_get_chained_prefix_path(tmp_path):
     ColconPrefixPath.PREFIX_PATH_NAME = 'colcon'
     with patch(
         'colcon_core.prefix_path.get_prefix_path_extensions',
@@ -57,40 +55,38 @@ def test_get_chained_prefix_path():
             prefix_path = get_chained_prefix_path(skip='/path/to/skip')
             assert prefix_path == []
 
-        with TemporaryDirectory(prefix='test_colcon_') as basepath:
-            basepath = Path(basepath)
-            with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
-                [str(basepath), str(basepath)]
-            )):
-                # multiple results, duplicates being skipped
-                prefix_path = get_chained_prefix_path(skip='/path/to/skip')
-                assert prefix_path == [str(basepath)]
+        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
+            [str(tmp_path), str(tmp_path)]
+        )):
+            # multiple results, duplicates being skipped
+            prefix_path = get_chained_prefix_path(skip='/path/to/skip')
+            assert prefix_path == [str(tmp_path)]
 
-                # skipping results
-                prefix_path = get_chained_prefix_path(skip=str(basepath))
-                assert prefix_path == []
+            # skipping results
+            prefix_path = get_chained_prefix_path(skip=str(tmp_path))
+            assert prefix_path == []
 
-            # skipping non-existing results
-            with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
-                [str(basepath), str(basepath / 'non-existing-sub')]
-            )):
-                with patch(
-                    'colcon_core.prefix_path.colcon.logger.warning'
-                ) as warn:
-                    prefix_path = get_chained_prefix_path()
-                assert prefix_path == [str(basepath)]
-                assert warn.call_count == 1
-                assert len(warn.call_args[0]) == 1
-                assert warn.call_args[0][0].endswith(
-                    "non-existing-sub' in the environment variable "
-                    "COLCON_PREFIX_PATH doesn't exist")
-                # suppress duplicate warning
-                with patch(
-                    'colcon_core.prefix_path.colcon.logger.warning'
-                ) as warn:
-                    prefix_path = get_chained_prefix_path()
-                assert prefix_path == [str(basepath)]
-                assert warn.call_count == 0
+        # skipping non-existing results
+        with EnvironmentContext(COLCON_PREFIX_PATH=os.pathsep.join(
+            [str(tmp_path), str(tmp_path / 'non-existing-sub')]
+        )):
+            with patch(
+                'colcon_core.prefix_path.colcon.logger.warning'
+            ) as warn:
+                prefix_path = get_chained_prefix_path()
+            assert prefix_path == [str(tmp_path)]
+            assert warn.call_count == 1
+            assert len(warn.call_args[0]) == 1
+            assert warn.call_args[0][0].endswith(
+                "non-existing-sub' in the environment variable "
+                "COLCON_PREFIX_PATH doesn't exist")
+            # suppress duplicate warning
+            with patch(
+                'colcon_core.prefix_path.colcon.logger.warning'
+            ) as warn:
+                prefix_path = get_chained_prefix_path()
+            assert prefix_path == [str(tmp_path)]
+            assert warn.call_count == 0
 
     with ExtensionPointContext(extension1=Extension1, extension2=Extension2):
         extensions = get_prefix_path_extensions()

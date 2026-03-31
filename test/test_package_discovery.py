@@ -2,8 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -136,22 +134,20 @@ def test_discover_packages():
         assert expected_path in (str(d.path) for d in descs)
 
 
-def test_expand_dir_wildcards():
-    with TemporaryDirectory(prefix='test_colcon_') as prefix_path:
-        prefix_path = Path(prefix_path)
-        (prefix_path / 'one').mkdir()
-        (prefix_path / 'two').mkdir()
-        (prefix_path / 'three').touch()
+def test_expand_dir_wildcards(tmp_path):
+    (tmp_path / 'one').mkdir()
+    (tmp_path / 'two').mkdir()
+    (tmp_path / 'three').touch()
 
-        paths = [
-            '/some/path',
-            str(prefix_path / '*')
-        ]
-        expand_dir_wildcards(paths)
-        assert len(paths) == 3
-        assert paths[0] == '/some/path'
-        assert paths[1] == str((prefix_path / 'one'))
-        assert paths[2] == str((prefix_path / 'two'))
+    paths = [
+        '/some/path',
+        str(tmp_path / '*')
+    ]
+    expand_dir_wildcards(paths)
+    assert len(paths) == 3
+    assert paths[0] == '/some/path'
+    assert paths[1] == str((tmp_path / 'one'))
+    assert paths[2] == str((tmp_path / 'two'))
 
 
 def test__get_extensions_with_parameters():

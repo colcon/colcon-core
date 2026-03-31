@@ -1,7 +1,6 @@
 # Copyright 2024 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
-import os
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -91,7 +90,7 @@ def test_add_arguments():
     assert parser.add_argument.call_count > 4
 
 
-def test_verb_test(tmpdir):
+def test_verb_test(tmp_path):
     extension = TestVerb()
     extension.add_arguments(parser=Mock())
 
@@ -99,8 +98,8 @@ def test_verb_test(tmpdir):
         command_name='colcon',
         args=Mock())
 
-    context.args.build_base = os.path.join(tmpdir, 'build')
-    context.args.install_base = os.path.join(tmpdir, 'install')
-    context.args.test_result_base = os.path.join(tmpdir, 'test_results')
+    context.args.build_base = str(tmp_path / 'build')
+    context.args.install_base = str(tmp_path / 'install')
+    context.args.test_result_base = str(tmp_path / 'test_results')
 
     assert 0 == extension.main(context=context)

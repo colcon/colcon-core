@@ -2,9 +2,7 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
-from pathlib import Path
 import sys
-from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -163,96 +161,94 @@ def test_get_task_extension():
         assert isinstance(extension, Extension2)
 
 
-def test_create_file():
-    with TemporaryDirectory(prefix='test_colcon_') as base_path:
-        args = Mock()
-        args.install_base = base_path
+def test_create_file(tmp_path):
+    args = Mock()
+    args.install_base = str(tmp_path)
 
-        create_file(args, 'file.txt')
-        path = Path(base_path) / 'file.txt'
-        assert path.is_file()
-        assert path.read_text() == ''
+    create_file(args, 'file.txt')
+    path = tmp_path / 'file.txt'
+    assert path.is_file()
+    assert path.read_text() == ''
 
-        create_file(args, 'path/file.txt', content='content')
-        path = Path(base_path) / 'path' / 'file.txt'
-        assert path.is_file()
-        assert path.read_text() == 'content'
+    create_file(args, 'path/file.txt', content='content')
+    path = tmp_path / 'path' / 'file.txt'
+    assert path.is_file()
+    assert path.read_text() == 'content'
 
 
-def test_install():
-    with TemporaryDirectory(prefix='test_colcon_') as base_path:
-        args = Mock()
-        args.path = os.path.join(base_path, 'path')
-        args.install_base = os.path.join(base_path, 'install')
-        args.symlink_install = False
+def test_install(tmp_path):
+    args = Mock()
+    args.path = str(tmp_path / 'path')
+    args.install_base = str(tmp_path / 'install')
+    args.symlink_install = False
 
-        # create source files
-        os.makedirs(args.path)
-        with open(os.path.join(args.path, 'source.txt'), 'w') as h:
-            h.write('content')
-        with open(os.path.join(args.path, 'source2.txt'), 'w') as h:
-            h.write('content2')
+    # create source files
+    os.makedirs(args.path)
+    with open(os.path.join(args.path, 'source.txt'), 'w') as h:
+        h.write('content')
+    with open(os.path.join(args.path, 'source2.txt'), 'w') as h:
+        h.write('content2')
 
-        # copy file
-        install(args, 'source.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert not path.is_symlink()
-        assert path.read_text() == 'content'
+    # copy file
+    install(args, 'source.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert not path.is_symlink()
+    assert path.read_text() == 'content'
 
-        # skip all symlink tests on Windows for now
-        if sys.platform == 'win32':  # pragma: no cover
-            return
+    # skip all symlink tests on Windows for now
+    if sys.platform == 'win32':  # pragma: no cover
+        return
 
-        # symlink file, removing existing file
-        args.symlink_install = True
-        install(args, 'source.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert path.is_symlink()
-        assert path.samefile(os.path.join(args.path, 'source.txt'))
-        assert path.read_text() == 'content'
+    # symlink file, removing existing file
+    args.symlink_install = True
+    install(args, 'source.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert path.is_symlink()
+    assert path.samefile(os.path.join(args.path, 'source.txt'))
+    assert path.read_text() == 'content'
 
-        # symlink other file, removing existing directory
-        os.remove(os.path.join(args.install_base, 'destination.txt'))
-        os.makedirs(os.path.join(args.install_base, 'destination.txt'))
-        install(args, 'source2.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert path.is_symlink()
-        assert path.samefile(os.path.join(args.path, 'source2.txt'))
-        assert path.read_text() == 'content2'
+    # symlink other file, removing existing directory
+    os.remove(os.path.join(args.install_base, 'destination.txt'))
+    os.makedirs(os.path.join(args.install_base, 'destination.txt'))
+    install(args, 'source2.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert path.is_symlink()
+    assert path.samefile(os.path.join(args.path, 'source2.txt'))
+    assert path.read_text() == 'content2'
 
-        # copy file, removing existing symlink
-        args.symlink_install = False
-        install(args, 'source.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert not path.is_symlink()
-        assert path.read_text() == 'content'
+    # copy file, removing existing symlink
+    args.symlink_install = False
+    install(args, 'source.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert not path.is_symlink()
+    assert path.read_text() == 'content'
 
-        # symlink file
-        os.remove(os.path.join(args.install_base, 'destination.txt'))
-        args.symlink_install = True
-        install(args, 'source.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert path.is_symlink()
-        assert path.samefile(os.path.join(args.path, 'source.txt'))
-        assert path.read_text() == 'content'
+    # symlink file
+    os.remove(os.path.join(args.install_base, 'destination.txt'))
+    args.symlink_install = True
+    install(args, 'source.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert path.is_symlink()
+    assert path.samefile(os.path.join(args.path, 'source.txt'))
+    assert path.read_text() == 'content'
 
-        # symlink file, same already existing
-        install(args, 'source.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert path.is_symlink()
-        assert path.samefile(os.path.join(args.path, 'source.txt'))
-        assert path.read_text() == 'content'
+    # symlink file, same already existing
+    install(args, 'source.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert path.is_symlink()
+    assert path.samefile(os.path.join(args.path, 'source.txt'))
+    assert path.read_text() == 'content'
 
-        # symlink exists, but to a not existing location
-        os.remove(os.path.join(args.path, 'source.txt'))
-        install(args, 'source2.txt', 'destination.txt')
-        path = Path(base_path) / 'install' / 'destination.txt'
-        assert path.is_file()
-        assert path.is_symlink()
-        assert path.samefile(os.path.join(args.path, 'source2.txt'))
+    # symlink exists, but to a not existing location
+    os.remove(os.path.join(args.path, 'source.txt'))
+    install(args, 'source2.txt', 'destination.txt')
+    path = tmp_path / 'install' / 'destination.txt'
+    assert path.is_file()
+    assert path.is_symlink()
+    assert path.samefile(os.path.join(args.path, 'source2.txt'))

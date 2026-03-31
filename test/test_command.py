@@ -6,7 +6,6 @@ import shutil
 import signal
 import sys
 from tempfile import mkdtemp
-from tempfile import TemporaryDirectory
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -234,20 +233,19 @@ def test_prog_name_not_a_file():
 
 
 @pytest.mark.skipif(sys.platform == 'win32', reason='Symlinks not supported.')
-def test_prog_name_symlink():
+def test_prog_name_symlink(tmp_path):
     # use __file__ since we know it exists
-    with TemporaryDirectory(prefix='test_colcon_') as temp_dir:
-        linked_file = os.path.join(temp_dir, 'test_command.py')
-        os.symlink(__file__, linked_file)
+    linked_file = tmp_path / 'test_command.py'
+    linked_file.symlink_to(__file__)
 
-        argv = [linked_file]
-        with patch('colcon_core.command.sys.argv', argv):
-            with patch(
-                'colcon_core.command.shutil.which',
-                return_value=__file__
-            ):
-                # prog should be shortened to the basename
-                assert get_prog_name() == 'test_command.py'
+    argv = [str(linked_file)]
+    with patch('colcon_core.command.sys.argv', argv):
+        with patch(
+            'colcon_core.command.shutil.which',
+            return_value=__file__
+        ):
+            # prog should be shortened to the basename
+            assert get_prog_name() == 'test_command.py'
 
 
 @pytest.mark.skipif(sys.platform != 'win32', reason='Only valid on Windows.')

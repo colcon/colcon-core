@@ -4,7 +4,6 @@
 import asyncio
 from contextlib import suppress
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 
 from colcon_core.package_descriptor import PackageDescriptor
@@ -179,15 +178,16 @@ def _test_build_package(
 @pytest.mark.parametrize(
     'symlink_first',
     [False, True])
-def test_build_package(symlink_first, setup_cfg, libexec_pattern, data_files):
-    with TemporaryDirectory(prefix='test_colcon_') as tmp_path_str:
-        _test_build_package(
-            tmp_path_str, symlink_install=symlink_first,
-            setup_cfg=setup_cfg, libexec_pattern=libexec_pattern,
-            data_files=data_files)
+def test_build_package(
+    symlink_first, setup_cfg, libexec_pattern, data_files, tmp_path,
+):
+    tmp_path_str = str(tmp_path)
 
-        # Test again with the symlink flag inverted to validate cleanup
-        _test_build_package(
-            tmp_path_str, symlink_install=not symlink_first,
-            setup_cfg=setup_cfg, libexec_pattern=libexec_pattern,
-            data_files=data_files)
+    _test_build_package(
+        tmp_path_str, symlink_install=symlink_first, setup_cfg=setup_cfg,
+        libexec_pattern=libexec_pattern, data_files=data_files)
+
+    # Test again with the symlink flag inverted to validate cleanup
+    _test_build_package(
+        tmp_path_str, symlink_install=not symlink_first, setup_cfg=setup_cfg,
+        libexec_pattern=libexec_pattern, data_files=data_files)

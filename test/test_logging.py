@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0
 
 import logging
-from pathlib import Path
 from unittest.mock import Mock
 
 from colcon_core.logging import add_file_handler
@@ -61,8 +60,8 @@ def test_get_numeric_log_level():
     assert str(e.value).endswith('numeric log levels must be positive')
 
 
-def test_add_file_handler(tmpdir):
-    log_path = Path(tmpdir) / 'test_add_file_handler.log'
+def test_add_file_handler(tmp_path):
+    log_path = tmp_path / 'test_add_file_handler.log'
     log_path.touch()
     logger = logging.getLogger('test_add_file_handler')
     try:
@@ -79,7 +78,7 @@ def test_add_file_handler(tmpdir):
     assert log_path.stat().st_size > 10
 
 
-def test_get_effective_console_level(tmpdir):
+def test_get_effective_console_level(tmp_path):
     logger = logging.getLogger('test_sync_console_log_level')
 
     # no level set
@@ -92,7 +91,7 @@ def test_get_effective_console_level(tmpdir):
     assert level == logger.getEffectiveLevel() == logging.ERROR
 
     # after add_file_handler
-    log_path = Path(tmpdir) / 'test_add_file_handler.log'
+    log_path = tmp_path / 'test_add_file_handler.log'
     log_path.touch()
     try:
         add_file_handler(logger, log_path)
