@@ -54,6 +54,7 @@ https
 importlib
 importorskip
 isatty
+isdigit
 iterdir
 itertools
 junit
@@ -134,6 +135,7 @@ subprocesses
 symlink
 symlinks
 sysconfig
+takewhile
 tempfile
 terminalreporter
 testcase

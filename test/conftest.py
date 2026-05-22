@@ -1,12 +1,16 @@
 # Copyright 2026 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+from itertools import takewhile
 from pathlib import Path
 
 import pytest
 
+pytest_version = tuple(
+    int(x) for x in takewhile(str.isdigit, pytest.__version__.split('.'))
+)
 
-if getattr(pytest, 'version_tuple', ()) < (3, 9):
+if pytest_version < (3, 9):
     @pytest.fixture
     def tmp_path(tmpdir):
         """
