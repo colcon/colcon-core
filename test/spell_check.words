@@ -1,7 +1,5 @@
 addfinalizer
 addopts
-aenter
-aexit
 apache
 argparse
 asyncio
