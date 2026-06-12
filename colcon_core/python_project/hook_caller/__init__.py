@@ -1,6 +1,8 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
+from contextlib import AbstractAsyncContextManager
 from contextlib import AbstractContextManager
 import json
 import os
@@ -38,6 +40,44 @@ class _SubprocessTransport(AbstractContextManager):
         os.close(self.parent_in)
         os.close(self.child_out)
         os.close(self.child_in)
+
+
+class _AsyncSubprocessTransport(AbstractAsyncContextManager):
+
+    def __init__(self):
+        self._transport = _SubprocessTransport()
+
+    async def __aenter__(self):
+        self._transport.__enter__()
+
+        loop = asyncio.get_event_loop()
+
+        # Setup StreamReader
+        self.reader = asyncio.StreamReader()
+        protocol_read = asyncio.StreamReaderProtocol(self.reader)
+        self._read_file = os.fdopen(
+            os.dup(self._transport.parent_in), 'rb', buffering=0)
+        self._transport_read, _ = await loop.connect_read_pipe(
+            lambda: protocol_read, self._read_file)
+
+        # Setup StreamWriter
+        self._write_file = os.fdopen(
+            os.dup(self._transport.parent_out), 'wb', buffering=0)
+        w_transport, w_protocol = await loop.connect_write_pipe(
+            lambda: asyncio.streams.FlowControlMixin(), self._write_file)
+        self.writer = asyncio.StreamWriter(
+            w_transport, w_protocol, self.reader, loop)
+
+        # Expose FDs and handles
+        self.pass_in = self._transport.pass_in
+        self.pass_out = self._transport.pass_out
+
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.writer.close()
+        self._transport_read.close()
+        self._transport.__exit__(exc_type, exc_val, exc_tb)
 
 
 class AsyncHookCaller:
@@ -100,28 +140,24 @@ class AsyncHookCaller:
 
         :param hook_name: Name of the hook to call.
         """
-        with _SubprocessTransport() as transport:
+        async with _AsyncSubprocessTransport() as transport:
             args = [
                 sys.executable, _call_hook.__file__,
                 self._backend_name, hook_name,
                 str(transport.pass_in), str(transport.pass_out)]
-            with os.fdopen(
-                os.dup(transport.parent_out), 'w',
-                encoding='utf-8',
-            ) as f:
-                f.write(json.dumps(kwargs) + '\n')
+
+            transport.writer.write(json.dumps(kwargs).encode('utf-8') + b'\n')
+            await transport.writer.drain()
+
             have_callbacks = self._stdout_callback or self._stderr_callback
             process = await run(
                 args, self._stdout_callback, self._stderr_callback,
                 cwd=self._project_path, env=self.env, close_fds=False,
                 capture_output=not have_callbacks)
             process.check_returncode()
-            with os.fdopen(
-                os.dup(transport.parent_in), 'r',
-                encoding='utf-8',
-            ) as f:
-                res = json.loads(f.readline())
-            return res
+
+            response_bytes = await transport.reader.readline()
+            return json.loads(response_bytes.decode('utf-8'))
 
 
 def get_hook_caller(desc, **kwargs):
