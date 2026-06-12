@@ -2,8 +2,8 @@
 # Licensed under the Apache License, Version 2.0
 
 from importlib import import_module
+import json
 import os
-import pickle
 import sys
 
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
         backend = getattr(backend_module, backend_object_name)
     else:
         backend = import_module(backend_name)
-    with os.fdopen(int(child_in), 'rb') as f:
-        kwargs = pickle.load(f) or {}
+    with os.fdopen(int(child_in), 'r', encoding='utf-8') as f:
+        kwargs = json.loads(f.readline()) or {}
     res = getattr(backend, hook_name)(**kwargs)
-    with os.fdopen(int(child_out), 'wb') as f:
-        pickle.dump(res, f)
+    with os.fdopen(int(child_out), 'w', encoding='utf-8') as f:
+        f.write(json.dumps(res) + '\n')
