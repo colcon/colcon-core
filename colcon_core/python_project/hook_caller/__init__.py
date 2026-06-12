@@ -1,6 +1,7 @@
 # Copyright 2022 Open Source Robotics Foundation, Inc.
 # Licensed under the Apache License, Version 2.0
 
+import asyncio
 from contextlib import AbstractContextManager
 import json
 import os
@@ -105,17 +106,29 @@ class AsyncHookCaller:
                 sys.executable, _call_hook.__file__,
                 self._backend_name, hook_name,
                 str(transport.pass_in), str(transport.pass_out)]
-            with os.fdopen(
-                os.dup(transport.parent_out), 'w',
-                encoding='utf-8',
-            ) as f:
-                f.write(json.dumps(kwargs) + '\n')
+
+            def write_args():
+                with os.fdopen(
+                    os.dup(transport.parent_out), 'w',
+                    encoding='utf-8',
+                ) as f:
+                    f.write(json.dumps(kwargs) + '\n')
+
+            # Start writing in a background thread to prevent deadlocks
+            # when the argument payload is larger than the pipe buffer size.
+            loop = asyncio.get_event_loop()
+            write_task = loop.run_in_executor(None, write_args)
+
             have_callbacks = self._stdout_callback or self._stderr_callback
             process = await run(
                 args, self._stdout_callback, self._stderr_callback,
                 cwd=self._project_path, env=self.env, close_fds=False,
                 capture_output=not have_callbacks)
             process.check_returncode()
+
+            # Ensure the write has completed and propagate any write exceptions
+            await write_task
+
             with os.fdopen(
                 os.dup(transport.parent_in), 'r',
                 encoding='utf-8',
