@@ -3,14 +3,9 @@
 # Licensed under the Apache License, Version 2.0
 
 import os
+import sys
 from unittest.mock import DEFAULT
 from unittest.mock import patch
-
-try:
-    from importlib.metadata import Distribution
-except ImportError:
-    # TODO: Drop this with Python 3.7 support
-    from importlib_metadata import Distribution
 
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.extension_point import clear_entry_point_cache
@@ -26,81 +21,47 @@ import pytest
 from .environment_context import EnvironmentContext
 
 
-class _FakeDistribution(Distribution):
-
-    def __init__(self, entry_points):
-        entry_points_spec = []
-        for group_name, group_members in entry_points.items():
-            entry_points_spec.append(f'[{group_name}]')
-            for member_name, member_value in group_members:
-                entry_points_spec.append(f'{member_name} = {member_value}')
-            entry_points_spec.append('')
-
-        self._files = {
-            'PKG-INFO': f'Name: dist-{id(self)}\nVersion: 0.0.0\n',
-            'entry_points.txt': '\n'.join(entry_points_spec) + '\n',
-        }
-
-    def read_text(self, filename):
-        return self._files.get(filename)
-
-    def locate_file(self, path):
-        return path
+@pytest.fixture(autouse=True)
+def clear_cache():
+    clear_entry_point_cache()
+    try:
+        yield
+    finally:
+        clear_entry_point_cache()
 
 
-def _distributions():
-    yield _FakeDistribution({
-        EXTENSION_POINT_GROUP_NAME: [('group1', 'g1')],
-        'group1': [('extA', 'eA'), ('extB', 'eB')],
-    })
-    yield _FakeDistribution({
-        EXTENSION_POINT_GROUP_NAME: [('group2', 'g2')],
-        'group2': [('extC', 'eC')],
-    })
-    yield _FakeDistribution({
-        'groupX': [('extD', 'eD')],
-    })
+@pytest.fixture(scope='module', autouse=True)
+def mock_dist_path():
+    dist1_path = os.path.join(os.path.dirname(__file__), 'mock_dist', 'dist1')
+    with patch('sys.path', [*sys.path, dist1_path]):
+        yield dist1_path
 
 
-def _entry_points():
-    for dist in _distributions():
-        yield from dist.entry_points
+@pytest.fixture
+def redefined_extension_point_path(mock_dist_path):
+    dist2_path = os.path.join(os.path.dirname(__file__), 'mock_dist', 'dist2')
+    with patch('sys.path', [*sys.path, dist2_path]):
+        # Sanity check - we need both of the mock distributions on sys.path
+        assert mock_dist_path in sys.path
+        yield dist2_path
 
 
 def test_all_extension_points():
-    with patch(
-        'colcon_core.extension_point.entry_points',
-        side_effect=_entry_points
-    ):
-        with patch(
-            'colcon_core.extension_point.distributions',
-            side_effect=_distributions
-        ):
-            clear_entry_point_cache()
-
-            # successfully load a known entry point
-            extension_points = get_all_extension_points()
-            assert set(extension_points.keys()) == {
-                EXTENSION_POINT_GROUP_NAME,
-                'group1',
-                'group2',
-            }
-            assert set(extension_points['group1'].keys()) == {'extA', 'extB'}
-            assert extension_points['group1']['extA'][0] == 'eA'
+    # successfully load a known entry point
+    extension_points = get_all_extension_points()
+    assert {
+        EXTENSION_POINT_GROUP_NAME,
+        'group1',
+        'group2',
+    } <= set(extension_points.keys())
+    assert set(extension_points['group1'].keys()) == {'extA', 'extB'}
+    assert extension_points['group1']['extA'] == (
+        'eA', 'colcon-mock-dist1', '1.0')
 
 
 def test_extension_point_blocklist():
     # successful loading of extension point without a blocklist
-    with patch(
-        'colcon_core.extension_point.entry_points',
-        side_effect=_entry_points
-    ):
-        with patch(
-            'colcon_core.extension_point.distributions',
-            side_effect=_distributions
-        ):
-            clear_entry_point_cache()
-            extension_points = get_extension_points('group1')
+    extension_points = get_extension_points('group1')
     assert 'extA' in extension_points.keys()
     extension_point = extension_points['extA']
     assert extension_point == 'eA'
@@ -180,36 +141,18 @@ def test_extension_point_blocklist_override():
         assert load.call_count == 0
 
 
-def test_redefined_extension_point():
-    def _duped_distributions():
-        yield from _distributions()
-        yield _FakeDistribution({
-            'group2': [('extC', 'eC-prime')],
-        })
-
-    def _duped_entry_points():
-        for dist in _duped_distributions():
-            yield from dist.entry_points
-
+def test_redefined_extension_point(redefined_extension_point_path):
     with patch('colcon_core.extension_point.logger.error') as error:
-        with patch(
-            'colcon_core.extension_point.entry_points',
-            side_effect=_duped_entry_points
-        ):
-            with patch(
-                'colcon_core.extension_point.distributions',
-                side_effect=_duped_distributions
-            ):
-                clear_entry_point_cache()
-                extension_points = get_all_extension_points()
-                assert 'eC-prime' == extension_points['group2']['extC'][0]
-                assert error.call_count == 1
+        extension_points = get_all_extension_points()
+        assert 'eC-prime' == extension_points['group2']['extC'][0]
+        assert error.call_count == 1
 
-                error.reset_mock()
-                clear_entry_point_cache()
-                extension_points = get_extension_points('group2')
-                assert 'eC-prime' == extension_points.get('extC')
-                assert error.call_count == 1
+        error.reset_mock()
+        clear_entry_point_cache()
+
+        extension_points = get_extension_points('group2')
+        assert 'eC-prime' == extension_points.get('extC')
+        assert error.call_count == 1
 
 
 def entry_point_load(self, *args, **kwargs):

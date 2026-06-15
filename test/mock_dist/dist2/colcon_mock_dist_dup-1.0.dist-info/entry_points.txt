@@ -1,0 +1,2 @@
+[group2]
+extC = eC-prime

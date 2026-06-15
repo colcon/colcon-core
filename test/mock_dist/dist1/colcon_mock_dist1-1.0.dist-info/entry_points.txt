@@ -1,0 +1,6 @@
+[colcon_core.extension_point]
+group1 = g1
+
+[group1]
+extA = eA
+extB = eB
