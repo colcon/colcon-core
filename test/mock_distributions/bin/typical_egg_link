@@ -1,0 +1,7 @@
+#!/usr/bin/python3
+
+import sys
+from typical_egg_link import main
+
+
+sys.exit(main())
