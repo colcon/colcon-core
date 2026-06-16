@@ -5,6 +5,7 @@ argparse
 asyncio
 autouse
 backend
+backends
 backported
 bazqux
 blocklist
@@ -80,6 +81,7 @@ noqa
 notestscollected
 openpty
 optionxform
+osfhandle
 pathlib
 pkgname
 pkgs

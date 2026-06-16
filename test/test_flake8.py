@@ -25,7 +25,9 @@ def test_flake8():
         show_source=True,
     )
     style_guide_tests = get_style_guide(
-        extend_ignore=['D100', 'D101', 'D102', 'D103', 'D104', 'D105', 'D107'],
+        extend_ignore=[
+            'D100', 'D101', 'D102', 'D103', 'D104', 'D105', 'D106', 'D107',
+        ],
         show_source=True,
     )
 

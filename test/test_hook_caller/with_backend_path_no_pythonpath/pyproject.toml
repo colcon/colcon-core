@@ -1,0 +1,4 @@
+[build-system]
+requires = []
+build-backend = 'mock_backend'
+backend-path = ['mock_backend_dir']
