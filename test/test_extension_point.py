@@ -184,7 +184,7 @@ def test_redefined_extension_point():
     def _duped_distributions():
         yield from _distributions()
         yield _FakeDistribution({
-            'group2': [('extC', 'eC-prime')],
+            'group2': [('extC', 'eC_prime')],
         })
 
     def _duped_entry_points():
@@ -202,13 +202,13 @@ def test_redefined_extension_point():
             ):
                 clear_entry_point_cache()
                 extension_points = get_all_extension_points()
-                assert 'eC-prime' == extension_points['group2']['extC'][0]
+                assert 'eC_prime' == extension_points['group2']['extC'][0]
                 assert error.call_count == 1
 
                 error.reset_mock()
                 clear_entry_point_cache()
                 extension_points = get_extension_points('group2')
-                assert 'eC-prime' == extension_points.get('extC')
+                assert 'eC_prime' == extension_points.get('extC')
                 assert error.call_count == 1
 
 
