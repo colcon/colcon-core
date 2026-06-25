@@ -61,8 +61,11 @@ isatty
 isdigit
 iterdir
 itertools
+joinpath
 junit
 levelname
+libdir
+libdirs
 libexec
 lineno
 linter
@@ -160,6 +163,7 @@ traceback
 tryfirst
 tuples
 uninstall
+uninstallation
 unittest
 unittests
 unlinking
