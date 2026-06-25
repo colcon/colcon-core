@@ -3,6 +3,7 @@
 
 """Tests for package uninstallation utilities."""
 
+import os
 from pathlib import Path
 import shutil
 
@@ -40,6 +41,16 @@ def temp_workspace(tmp_path):
             shutil.copytree(item, dest, dirs_exist_ok=True)
         else:
             shutil.copy(item, dest)
+
+    # Dynamically update the relative path inside egg-link files
+    # to match the layout depth of the current platform/Python version
+    src_dir = tmp_path / 'src' / 'typical_egg_link'
+    for egg_link in real_purelib.glob('*.egg-link'):
+        try:
+            rel_path = os.path.relpath(str(src_dir), start=str(real_purelib))
+        except ValueError:
+            rel_path = str(src_dir)
+        egg_link.write_text(f'{rel_path}\n.\n', encoding='utf-8')
 
     yield tmp_path
 
