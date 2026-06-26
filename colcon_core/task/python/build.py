@@ -1,19 +1,27 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+"""Task to build Python packages."""
+
 from configparser import ConfigParser
 from contextlib import suppress
 import locale
 import os
 from pathlib import Path
 import shutil
+from subprocess import CalledProcessError
 import sys
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
+from colcon_core.event.output import StderrLine
+from colcon_core.event.output import StdoutLine
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.python_install_path import get_python_install_path
+from colcon_core.python_project.hook_caller_decorator import (
+    get_decorated_hook_caller)
+from colcon_core.python_project.wheel import install_wheel
 from colcon_core.shell import create_environment_hook
 from colcon_core.shell import get_command_environment
 from colcon_core.subprocess import check_output
@@ -61,6 +69,11 @@ class PythonBuildTask(TaskExtensionPoint):
         args = self.context.args
 
         logger.info(f"Building Python package in '{args.path}'")
+
+        pyproject_toml = Path(args.path) / 'pyproject.toml'
+        setup_py = Path(args.path) / 'setup.py'
+        if pyproject_toml.is_file() and not setup_py.is_file():
+            return await self._build_pep517(pkg, args, additional_hooks)
 
         try:
             env = await get_command_environment(
@@ -412,3 +425,124 @@ class PythonBuildTask(TaskExtensionPoint):
         # get_python_install_path avoids the deb_system scheme.
         if 'dist-packages' in self._get_python_lib(args):
             cmd += ['--install-layout', 'deb']
+
+    async def _build_pep517(self, pkg, args, additional_hooks):
+        """
+        Build a Python package using PEP 517 build backend hooks.
+
+        :param pkg: The package descriptor
+        :param args: The parsed arguments
+        :param list additional_hooks: Optional list of additional hooks to run
+        :returns: Return code of the build process (0 for success,
+          non-zero for failure)
+        :rtype: int
+        """
+        script_dir_override = None
+        setup_cfg_path = Path(args.path) / 'setup.cfg'
+        if setup_cfg_path.is_file():
+            parser = ConfigParser()
+            parser.optionxform = str
+            with setup_cfg_path.open(encoding='utf-8') as f:
+                parser.read_file(f)
+            if args.symlink_install:
+                script_dir_override = parser.get(
+                    'develop', 'script-dir', fallback=None)
+                if not script_dir_override:
+                    script_dir_override = parser.get(
+                        'develop', 'script_dir', fallback=None)
+            else:
+                script_dir_override = parser.get(
+                    'install', 'install-scripts', fallback=None)
+                if not script_dir_override:
+                    script_dir_override = parser.get(
+                        'install', 'install_scripts', fallback=None)
+
+            if script_dir_override:
+                _override = Path(args.install_base)
+                for part in Path(script_dir_override).parts:
+                    if part == '$base':
+                        part = args.install_base
+                    _override /= part
+                script_dir_override = _override
+
+        try:
+            env = await get_command_environment(
+                'python_project', args.build_base, self.context.dependencies)
+        except RuntimeError as e:
+            logger.error(str(e))
+            return 1
+
+        hook_caller = get_decorated_hook_caller(
+            pkg, env=env, stdout_callback=self._stdout_callback,
+            stderr_callback=self._stderr_callback)
+
+        wheel_directory = Path(args.build_base) / 'wheel'
+        wheel_directory.mkdir(parents=True, exist_ok=True)
+        try:
+            build_hook_name = 'build_wheel'
+            if args.symlink_install:
+                hook_names = await hook_caller.list_hooks()
+                if 'build_editable' in hook_names:
+                    build_hook_name = 'build_editable'
+                else:
+                    logger.info(
+                        f"Backend '{hook_caller.backend_name}' does not "
+                        'support --symlink-install - falling back to regular '
+                        "build for package '{pkg.name}'")
+            wheel_name = await hook_caller.call_hook(
+                build_hook_name, wheel_directory=str(wheel_directory))
+        except CalledProcessError as e:
+            return e.returncode
+
+        wheel_path = wheel_directory / wheel_name
+        dist_info_dir = install_wheel(
+            wheel_path, args.install_base,
+            script_dir_override=script_dir_override)
+
+        libdir = dist_info_dir.parent
+        records = []
+
+        hooks = create_environment_hooks(args.install_base, pkg.name)
+        records += [
+            (Path(os.path.relpath(hook, libdir)).as_posix(), '', '')
+            for hook in hooks
+        ]
+
+        scripts = create_environment_scripts(
+            pkg, args, default_hooks=hooks, additional_hooks=additional_hooks)
+        records += [
+            (Path(os.path.relpath(script, libdir)).as_posix(), '', '')
+            for script in scripts
+        ]
+
+        if build_hook_name == 'build_editable':
+            # PEP 610
+            direct_url_json = dist_info_dir / 'direct_url.json'
+            with direct_url_json.open('w', encoding='utf-8') as f:
+                f.write(
+                    f'{{"url":"{pkg.path.absolute().as_uri()}",'
+                    '"dir_info":{"editable":true}}\n')
+            records.append((
+                Path(os.path.relpath(direct_url_json, libdir)).as_posix(),
+                '', ''))
+
+        with (dist_info_dir / 'RECORD').open('a', encoding='utf-8') as f:
+            f.writelines(','.join(rec) + '\n' for rec in records)
+
+        return 0
+
+    def _stdout_callback(self, line):
+        """
+        Queue a line of stdout output.
+
+        :param bytes/str line: The line to queue
+        """
+        self.context.put_event_into_queue(StdoutLine(line))
+
+    def _stderr_callback(self, line):
+        """
+        Queue a line of stderr output.
+
+        :param bytes/str line: The line to queue
+        """
+        self.context.put_event_into_queue(StderrLine(line))
