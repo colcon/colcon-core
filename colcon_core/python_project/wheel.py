@@ -5,8 +5,8 @@
 
 from base64 import urlsafe_b64encode
 from configparser import ConfigParser
-from functools import lru_cache
 from email import message_from_binary_file
+from functools import lru_cache
 from hashlib import sha256
 from io import TextIOWrapper
 import os
@@ -66,8 +66,6 @@ def remove_distributions(name, install_base):
                     deleted_files.append(path)
                 except OSError as e:
                     logger.warning(f"Could not remove file '{path}': {e}")
-
-
 
     # Clean up empty parent directories recursively
     parent_dirs = set()
