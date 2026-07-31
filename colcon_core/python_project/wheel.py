@@ -5,6 +5,7 @@
 
 from base64 import urlsafe_b64encode
 from configparser import ConfigParser
+from functools import lru_cache
 from email import message_from_binary_file
 from hashlib import sha256
 from io import TextIOWrapper
@@ -66,20 +67,7 @@ def remove_distributions(name, install_base):
                 except OSError as e:
                     logger.warning(f"Could not remove file '{path}': {e}")
 
-    # Explicitly track and clean up residual egg-links in case the
-    # distribution files list did not fully cover them.
-    for libdir in libdirs:
-        for n in (name, name.replace('_', '-')):
-            egg_link = libdir / f'{n}.egg-link'
-            if egg_link.is_file():
-                logger.debug(f'Removing egg-link {egg_link}')
-                try:
-                    egg_link.unlink()
-                    deleted_files.append(egg_link)
-                except OSError as e:
-                    logger.warning(
-                        f"Could not remove egg-link '{egg_link}': {e}"
-                    )
+
 
     # Clean up empty parent directories recursively
     parent_dirs = set()
@@ -115,6 +103,7 @@ def enumerate_parent_dirs(file, base):
         yield base.joinpath(*rel.parts[:i])
 
 
+@lru_cache(maxsize=32)
 def _get_script_maker(script_dir, dry_run=False):
     """
     Get a ScriptMaker instance.
