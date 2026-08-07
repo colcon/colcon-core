@@ -1,6 +1,7 @@
 # Copyright 2016-2018 Dirk Thomas
 # Licensed under the Apache License, Version 2.0
 
+from colcon_core.dependency_descriptor import DependencyDescriptor
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.topological_order import topological_order_packages
 import pytest
@@ -74,3 +75,23 @@ def test_topological_order_packages_with_circular_dependency():
     assert lines[1] == "one: ['three', 'two']"
     assert lines[2] == "three: ['one', 'two']"
     assert lines[3] == "two: ['one', 'three']"
+
+
+def test_topological_order_packages_with_out_of_band_dependency():
+    d1 = PackageDescriptor('/some/path')
+    d1.name = 'a'
+    d1.dependencies['run'].add(
+        DependencyDescriptor('b', metadata={'out_of_band': True}))
+    d1.dependencies['run'].add('c')
+
+    d2 = PackageDescriptor('/other/path')
+    d2.name = 'b'
+    d2.dependencies['run'].add('a')
+    d2.dependencies['run'].add(DependencyDescriptor('c'))
+
+    d3 = PackageDescriptor('/another/path')
+    d3.name = 'c'
+
+    decos = topological_order_packages({d1, d2, d3})
+    names = [d.descriptor.name for d in decos]
+    assert names == ['c', 'a', 'b']

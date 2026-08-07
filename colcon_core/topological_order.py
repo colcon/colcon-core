@@ -41,6 +41,7 @@ def topological_order_decorators(decorators):
     for decorator in decorators:
         queued[decorator] = {
             d.name for d in decorator.recursive_dependencies
+            if not d.metadata.get('out_of_band')
         }
 
     ordered = []
