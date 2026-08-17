@@ -103,7 +103,8 @@ class TestVerb(VerbExtensionPoint):
         parser.add_argument(
             '--test-result-base',
             type=get_cwd_path_resolver(),
-            help='The base path for all test results (default: --build-base)')
+            help='The base path for all test results '
+                 '(default: same as `--build-base`)')
         group = parser.add_mutually_exclusive_group()
         group.add_argument(
             '--retest-until-fail',

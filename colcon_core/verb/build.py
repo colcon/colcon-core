@@ -86,12 +86,14 @@ class BuildVerb(VerbExtensionPoint):
             '--build-base',
             default=wrap_default_value('build'),
             type=get_cwd_path_resolver(),
-            help='The base path for all build directories (default: build)')
+            help='The base path for all build directories '
+                 '(default: %(default)s)')
         parser.add_argument(
             '--install-base',
             default=wrap_default_value('install'),
             type=get_cwd_path_resolver(),
-            help='The base path for all install prefixes (default: install)')
+            help='The base path for all install prefixes '
+                 '(default: %(default)s)')
         parser.add_argument(
             '--merge-install',
             action='store_true',
@@ -103,7 +105,8 @@ class BuildVerb(VerbExtensionPoint):
         parser.add_argument(
             '--test-result-base',
             type=get_cwd_path_resolver(),
-            help='The base path for all test results (default: --build-base)')
+            help='The base path for all test results '
+                 '(default: same as `--build-base`)')
         parser.add_argument(
             '--continue-on-error',
             action='store_true',

@@ -19,8 +19,8 @@ from colcon_core.environment_variable import EnvironmentVariable
 """Environment variable to set the warnings filter for colcon modules"""
 WARNINGS_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_WARNINGS',
-    'Set the warnings filter similar to PYTHONWARNINGS except that the module '
-    "entry is implicitly set to 'colcon.*'")
+    'Set the warnings filter similar to `PYTHONWARNINGS` except that the '
+    'module entry is implicitly set to `colcon.*`')
 
 warnings_filters = os.environ.get(WARNINGS_ENVIRONMENT_VARIABLE.name)
 if warnings_filters:
@@ -75,7 +75,7 @@ LOG_LEVEL_ENVIRONMENT_VARIABLE = EnvironmentVariable(
 """Environment variable to set the configuration directory"""
 HOME_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_HOME',
-    'Set the configuration directory (default: ~/.colcon)')
+    'Set the configuration directory (default: `~/.colcon`)')
 
 
 _command_exit_handlers = []
@@ -379,12 +379,12 @@ def add_log_level_argument(parser):
     """
     parser.add_argument(
         '--log-base',
-        help='The base path for all log directories (default: ./log, to '
-             f'disable: {os.devnull})')
+        help='The base path for all log directories (default: `./log`, to '
+             f'disable: `{os.devnull}`)')
     parser.add_argument(
         '--log-level', action=LogLevelAction,
         help='Set log level for the console output, either by numeric or '
-             'string value (default: warning)')
+             'string value (default: `warning`)')
 
 
 class LogLevelAction(argparse.Action):

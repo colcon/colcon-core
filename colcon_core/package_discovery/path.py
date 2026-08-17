@@ -36,7 +36,7 @@ class PathPackageDiscovery(PackageDiscoveryExtensionPoint):
             type=get_cwd_path_resolver(),
             help='The paths to check for a package. Use shell wildcards '
                  '(e.g. `src/*`) to select all direct subdirectories' +
-                 (' (default: .)' if with_default else ''))
+                 (' (default: `.`)' if with_default else ''))
 
     def has_parameters(self, *, args):  # noqa: D102
         return not is_default_value(args.paths) and \

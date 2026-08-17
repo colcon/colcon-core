@@ -254,7 +254,7 @@ def add_executor_arguments(parser):
 
     group.add_argument(
         '--executor', type=str, choices=keys, default=default,
-        help=f'The executor to process all packages (default: {default})'
+        help=f'The executor to process all packages (default: %(default)s)'
              f'{descriptions}')  # noqa: E131
 
     for priority in extensions.keys():
