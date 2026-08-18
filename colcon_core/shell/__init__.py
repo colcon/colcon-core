@@ -12,6 +12,7 @@ import traceback
 import warnings
 
 from colcon_core.dependency_descriptor import DependencyDescriptor
+from colcon_core.environment_variable import EnvironDict
 from colcon_core.environment_variable import EnvironmentVariable
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import instantiate_extensions
@@ -346,7 +347,7 @@ async def get_null_separated_environment_variables(
     """
     encoding = locale.getpreferredencoding()
     output = await check_output(cmd, cwd=cwd, shell=shell)
-    env = OrderedDict()
+    env = EnvironDict()
     for kvp in output.split(b'\0'):
         kvp = kvp.rstrip()
         if not kvp:
@@ -377,7 +378,7 @@ async def get_environment_variables(cmd, *, cwd=None, shell=True):
     :rtype: dict
     """
     output = await check_output(cmd, cwd=cwd, shell=shell)
-    env = OrderedDict()
+    env = EnvironDict()
     for line in output.splitlines():
         line = line.rstrip()
         if not line:
