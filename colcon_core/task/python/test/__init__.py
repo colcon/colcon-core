@@ -4,6 +4,7 @@
 import re
 import traceback
 
+from colcon_core.environment_variable import EnvironDict
 from colcon_core.extension_point import load_extension_points
 from colcon_core.logging import colcon_logger
 from colcon_core.package_augmentation.python import extract_dependencies
@@ -74,7 +75,7 @@ class PythonTestTask(TaskExtensionPoint):
         logger.log(1, f"test.step() by extension '{key}'")
         try:
             if 'PYTHONDONTWRITEBYTECODE' not in env:
-                env = dict(env)
+                env = EnvironDict(env)
                 env['PYTHONDONTWRITEBYTECODE'] = '1'
             return await extension.step(self.context, env, setup_py_data)
         except Exception as e:  # noqa: F841

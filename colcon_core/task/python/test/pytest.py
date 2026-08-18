@@ -6,6 +6,7 @@ from pathlib import Path
 from pathlib import PurePosixPath
 import sys
 
+from colcon_core.environment_variable import EnvironDict
 from colcon_core.event.test import TestFailure
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.plugin_system import SkipExtensionException
@@ -69,7 +70,7 @@ class PytestPythonTestingStep(PythonTestingStepExtensionPoint):
                 '-o', 'cache_dir=' + str(PurePosixPath(
                     *(Path(context.args.build_base).parts)) / '.pytest_cache'),
             ]
-        env = dict(env)
+        env = EnvironDict(env)
 
         if (
             context.args.pytest_with_coverage or
