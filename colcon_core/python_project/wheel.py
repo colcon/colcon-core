@@ -59,7 +59,7 @@ def remove_distributions(name, install_base):
         files = dist.get_installed_files()
         for file in files:
             path = libdir / file
-            if path.is_file():
+            if path.is_file() or path.is_symlink():
                 logger.debug(f'Removing {path}')
                 try:
                     path.unlink()
@@ -190,17 +190,31 @@ def install_wheel(wheel_path, install_base, script_dir_override=None):
             if record[0] == record_file:
                 continue
             elif not record[0].startswith(data_dir):
-                wf.extract(record[0], libdir)
+                info = wf.getinfo(record[0])
+                wf.extract(info, libdir)
+                mode = info.external_attr >> 16
+                if mode:
+                    try:
+                        (libdir / record[0]).chmod(mode)
+                    except OSError:
+                        pass
                 continue
 
             _, key, subpath = record[0].split('/', 2)
             target = Path(_get_install_path(key, install_base))
             target /= subpath
             target.parent.mkdir(parents=True, exist_ok=True)
-            with wf.open(record[0]) as fsrc:
+            info = wf.getinfo(record[0])
+            with wf.open(info) as fsrc:
                 with target.open('wb') as fdst:
                     shutil.copyfileobj(fsrc, fdst)
-            record[0] = os.path.relpath(target, start=libdir)
+            mode = info.external_attr >> 16
+            if mode:
+                try:
+                    target.chmod(mode)
+                except OSError:
+                    pass
+            record[0] = Path(os.path.relpath(target, start=libdir)).as_posix()
 
         records.append(write_and_record(
             libdir,

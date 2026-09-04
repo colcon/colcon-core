@@ -13,6 +13,7 @@ callables
 capsys
 catched
 changelog
+chmod
 classname
 colcon
 coloredlogs
@@ -50,6 +51,7 @@ fromhex
 fsrc
 functools
 getcategory
+getinfo
 getpid
 getpreferredencoding
 getsignal
