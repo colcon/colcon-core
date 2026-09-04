@@ -53,6 +53,16 @@ def _test_build_package(
     if setup_cfg and data_files:
         pytest.importorskip('setuptools', minversion='40.5.0')
 
+    if symlink_install:
+        try:
+            pytest.importorskip('setuptools', minversion='80')
+        except pytest.skip.Exception:  # noqa: B902
+            pass
+        else:
+            # We expect setuptools >= 80 to fall back to standard
+            # install behavior.
+            symlink_install = False
+
     event_loop = new_event_loop()
     asyncio.set_event_loop(event_loop)
     try:
