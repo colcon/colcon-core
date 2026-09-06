@@ -23,7 +23,7 @@ class SetuppyPythonTestingStep(PythonTestingStepExtensionPoint):
             nargs='*', metavar='*', type=str.lstrip,
             help='Pass arguments to Python unittests. '
             'Arguments matching other options must be prefixed by a space,\n'
-            'e.g. --unittest-args " --help" (stdout might not be shown by '
+            'e.g. `--unittest-args " --help"` (stdout might not be shown by '
             'default, e.g. add `--event-handlers console_cohesion+`)')
 
     def match(self, context, env, setup_py_data):  # noqa: D102
