@@ -11,6 +11,7 @@ import sys
 
 from colcon_core.environment import create_environment_hooks
 from colcon_core.environment import create_environment_scripts
+from colcon_core.environment_variable import EnvironDict
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.python_install_path import get_python_install_path
@@ -87,7 +88,7 @@ class PythonBuildTask(TaskExtensionPoint):
         distutils_commands = os.path.join(
             os.path.dirname(__file__), 'colcon_distutils_commands')
         # and being in the PYTHONPATH
-        env = dict(env)
+        env = EnvironDict(env)
         env['PYTHONPATH'] = str(prefix_override) + os.pathsep + \
             distutils_commands + os.pathsep + \
             python_lib + os.pathsep + env.get('PYTHONPATH', '')

@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+from colcon_core.environment_variable import EnvironDict
 from colcon_core.python_project.hook_caller import _call_hook
 from colcon_core.python_project.hook_caller import _list_hooks
 from colcon_core.python_project.spec import load_and_cache_spec
@@ -59,7 +60,7 @@ class AsyncHookCaller:
         """
         self._backend_name = backend_name
         self._project_path = str(project_path) if project_path else None
-        self._env = dict(env if env is not None else os.environ)
+        self._env = EnvironDict(env if env is not None else os.environ)
         self._stdout_callback = stdout_callback
         self._stderr_callback = stderr_callback
 

@@ -4,6 +4,7 @@
 import os
 from unittest.mock import patch
 
+from colcon_core.environment_variable import EnvironDict
 from colcon_core.feature_flags import check_implemented_flags
 from colcon_core.feature_flags import FEATURE_FLAGS_ENVIRONMENT_VARIABLE
 from colcon_core.feature_flags import get_feature_flags
@@ -25,7 +26,7 @@ _FLAGS_TO_TEST = (
 
 @pytest.fixture
 def feature_flags_value(request):
-    env = dict(os.environ)
+    env = EnvironDict(os.environ)
     if request.param is not None:
         env[FEATURE_FLAGS_ENVIRONMENT_VARIABLE.name] = os.pathsep.join(
             request.param)
