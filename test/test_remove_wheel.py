@@ -26,11 +26,10 @@ def temp_workspace(tmp_path):
     :returns: Path to the temporary workspace root
     """
     real_purelib = Path(_get_install_path('purelib', tmp_path))
-    real_purelib.mkdir(parents=True, exist_ok=True)
 
     # Copy site-packages contents into the real library path
     mock_site_packages = TEST_DISTS_ROOT / 'lib' / 'python' / 'site-packages'
-    shutil.copytree(mock_site_packages, real_purelib, dirs_exist_ok=True)
+    shutil.copytree(str(mock_site_packages), str(real_purelib))
 
     # Copy non-lib files (e.g. bin, Scripts, src) to workspace root
     for item in TEST_DISTS_ROOT.iterdir():
@@ -38,7 +37,7 @@ def temp_workspace(tmp_path):
             continue
         dest = tmp_path / item.name
         if item.is_dir():
-            shutil.copytree(item, dest, dirs_exist_ok=True)
+            shutil.copytree(str(item), str(dest))
         else:
             shutil.copy(item, dest)
 
