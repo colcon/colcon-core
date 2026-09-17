@@ -3,6 +3,7 @@
 
 import argparse
 from io import StringIO
+import os
 import runpy
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -36,6 +37,13 @@ class SoftWarnings(OutputStyleExtensionPoint):
 
     def apply_style(self, style):
         style.Warning = MarkdownItalic
+
+
+@pytest.fixture(autouse=True, scope='module')
+def _clean_env():
+    with patch.dict(os.environ):
+        os.environ.pop(DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE.name, None)
+        yield
 
 
 def test_add_output_style_arguments():
