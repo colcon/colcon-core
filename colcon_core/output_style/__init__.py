@@ -3,6 +3,7 @@
 
 from collections import namedtuple
 import os
+import re
 from types import SimpleNamespace
 
 from colcon_core.environment_variable import EnvironmentVariable
@@ -13,6 +14,22 @@ from colcon_core.plugin_system import order_extensions_grouped_by_priority
 """Environment variable to override the default output style"""
 DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE = EnvironmentVariable(
     'COLCON_DEFAULT_OUTPUT_STYLE', 'Select the default output style extension')
+
+# Match CSI (Control Sequence Introducer) and basic G0/G1 sequences.
+_ANSI_ESCAPE_RE = re.compile(r'\x1b(?:\[[0-9;]*[a-zA-Z]|[()][a-zA-Z])')
+
+
+def printed_strlen(s):
+    """
+    Get the printed length of a string by skipping over ANSI escape sequences.
+
+    :param s: The string to measure
+    :returns: The number of printable characters in the string
+    :rtype: int
+    """
+    if '\x1b' not in s:
+        return len(s)
+    return len(_ANSI_ESCAPE_RE.sub('', s))
 
 
 class Stylizer(namedtuple('Stylizer', ('start', 'end'))):

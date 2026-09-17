@@ -12,6 +12,7 @@ from colcon_core.output_style import add_output_style_arguments
 from colcon_core.output_style import apply_output_style
 from colcon_core.output_style import DEFAULT_OUTPUT_STYLE_ENVIRONMENT_VARIABLE
 from colcon_core.output_style import OutputStyleExtensionPoint
+from colcon_core.output_style import printed_strlen
 from colcon_core.output_style import StyleCollection
 from colcon_core.output_style import Stylizer
 import pytest
@@ -127,3 +128,20 @@ def test_style_dump(mock_stdout):
     stdout = mock_stdout.getvalue()
     assert 'loud_errors' in stdout
     assert 'soft_warnings' in stdout
+
+
+@pytest.mark.parametrize(
+    'test_string, expected_length',
+    [
+        ('hello', 5),
+        ('\x1b[31m' + 'hello' + '\x1b[0m', 5),
+        ('\x1b[1m' + 'bold' + '\x1b[0m', 4),
+        ('\x1b[1;31m' + 'red bold' + '\x1b[0m', 8),
+        ('\x1b[31m' + 'omelet' + '\x1b[0m', 6),
+        ('\x1b[2K' + 'hello', 5),
+        ('\x1b[2K' + 'omelet', 6),
+        ('\x1b(B' + 'hello', 5),
+    ]
+)
+def test_printed_strlen(test_string, expected_length):
+    assert printed_strlen(test_string) == expected_length
