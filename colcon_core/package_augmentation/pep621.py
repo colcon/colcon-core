@@ -7,8 +7,8 @@ import logging
 
 from colcon_core.package_augmentation \
     import PackageAugmentationExtensionPoint
-from colcon_core.package_augmentation.python import \
-    create_dependency_descriptor
+from colcon_core.package_augmentation.python \
+    import create_dependency_descriptor
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.python_project.spec import load_and_cache_spec
 from colcon_core.python_project.spec import SPEC_NAME

@@ -14,7 +14,8 @@ from colcon_core.event.output import StdoutLine
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.task import TaskContext
 from colcon_core.task.python_project.build import PythonProjectBuildTask
-import pytest
+
+from .run_until_complete import run_until_complete
 
 
 def test_task_init():
@@ -23,8 +24,7 @@ def test_task_init():
     assert task is not None
 
 
-@pytest.mark.asyncio
-async def test_build_task(tmp_path):
+def test_build_task(tmp_path):
     """Test execution of PythonProjectBuildTask."""
     task = PythonProjectBuildTask()
 
@@ -95,15 +95,14 @@ async def test_build_task(tmp_path):
         target_wheel,
         return_value=dist_info_dir
     ):
-        result = await task.build()
+        result = run_until_complete(task.build())
         assert result is None
         assert mock_hook_caller.call_hook.called
         assert any(isinstance(e, StdoutLine) for e in events)
         assert any(isinstance(e, StderrLine) for e in events)
 
 
-@pytest.mark.asyncio
-async def test_build_task_symlink_install(tmp_path):
+def test_build_task_symlink_install(tmp_path):
     """Test execution of PythonProjectBuildTask with --symlink-install."""
     task = PythonProjectBuildTask()
 
@@ -165,13 +164,12 @@ async def test_build_task_symlink_install(tmp_path):
         target_wheel,
         return_value=dist_info_dir
     ):
-        result = await task.build()
+        result = run_until_complete(task.build())
         assert result is None
         assert (dist_info_dir / 'direct_url.json').is_file()
 
 
-@pytest.mark.asyncio
-async def test_build_task_error(tmp_path):
+def test_build_task_error(tmp_path):
     """Test PythonProjectBuildTask failure handling."""
     task = PythonProjectBuildTask()
 
@@ -217,5 +215,5 @@ async def test_build_task_error(tmp_path):
         target_hook,
         return_value=mock_hook_caller
     ):
-        result = await task.build()
+        result = run_until_complete(task.build())
         assert result == 2
