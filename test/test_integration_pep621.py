@@ -345,3 +345,83 @@ dependencies = []
     finally:
         if str(lib_dir) in sys.path:
             sys.path.remove(str(lib_dir))
+
+
+def test_integration_symlink_install_data_files(tmp_path):
+    """Test --symlink-install with data files from setup.cfg and toml."""
+    pytest.importorskip('flit_core')
+
+    pkg_dir = tmp_path / 'src' / 'data_pkg'
+    pkg_dir.mkdir(parents=True)
+
+    (pkg_dir / 'pyproject.toml').write_text("""
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "data_pkg"
+version = "0.1.0"
+description = "Data files test package"
+dependencies = []
+""")
+    (pkg_dir / 'setup.cfg').write_text("""
+[options.data_files]
+share/data_pkg/launch =
+    launch/my_launch.py
+share/data_pkg/config =
+    config/settings.yaml
+""")
+    mod_dir = pkg_dir / 'data_pkg'
+    mod_dir.mkdir()
+    (mod_dir / '__init__.py').write_text('__version__ = "0.1.0"\n')
+
+    launch_dir = pkg_dir / 'launch'
+    launch_dir.mkdir()
+    launch_file = launch_dir / 'my_launch.py'
+    launch_file.write_text('LAUNCH_ORIGINAL = True\n')
+
+    cfg_dir = pkg_dir / 'config'
+    cfg_dir.mkdir()
+    cfg_file = cfg_dir / 'settings.yaml'
+    cfg_file.write_text('key: original\n')
+
+    desc = PackageDescriptor(pkg_dir)
+    PEP621PackageIdentification().identify(desc)
+
+    build_base = tmp_path / 'build'
+    install_base = tmp_path / 'install'
+    build_base.mkdir(parents=True)
+    install_base.mkdir(parents=True)
+
+    task = PythonProjectBuildTask()
+    context = TaskContext(
+        pkg=desc,
+        args=SimpleNamespace(
+            path=str(pkg_dir),
+            build_base=str(build_base),
+            install_base=str(install_base),
+            symlink_install=True,
+        ),
+        dependencies={},
+    )
+    task.set_context(context=context)
+    res = run_until_complete(task.build())
+    assert res is None
+
+    # Check that installed data files are real symbolic links to source
+    installed_launch = (
+        install_base / 'share' / 'data_pkg' / 'launch' / 'my_launch.py'
+    )
+    assert installed_launch.is_symlink()
+    assert installed_launch.resolve() == launch_file.resolve()
+
+    installed_cfg = (
+        install_base / 'share' / 'data_pkg' / 'config' / 'settings.yaml'
+    )
+    assert installed_cfg.is_symlink()
+    assert installed_cfg.resolve() == cfg_file.resolve()
+
+    # Edit launch file in source without rebuilding
+    launch_file.write_text('LAUNCH_EDITED_LIVE = True\n')
+    assert 'LAUNCH_EDITED_LIVE = True' in installed_launch.read_text()

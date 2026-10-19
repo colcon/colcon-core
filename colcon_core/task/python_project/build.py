@@ -17,8 +17,10 @@ from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.python_project.hook_caller_decorator \
     import get_decorated_hook_caller
+from colcon_core.python_project.spec import load_and_cache_spec
 from colcon_core.python_project.wheel import install_wheel
 from colcon_core.shell import get_command_environment
+from colcon_core.task import install
 from colcon_core.task import TaskExtensionPoint
 
 logger = colcon_logger.getChild(__name__)
@@ -129,8 +131,68 @@ class PythonProjectBuildTask(TaskExtensionPoint):
                 Path(os.path.relpath(direct_url_json, libdir)).as_posix(),
                 '', ''))
 
+        if args.symlink_install:
+            data_files_mapping = self._get_data_files_mapping(pkg)
+            for src_rel, dst_rel in data_files_mapping.items():
+                if (pkg.path / src_rel).is_file():
+                    install(args, src_rel, dst_rel)
+                    dst_path = Path(args.install_base) / dst_rel
+                    records.append((
+                        Path(os.path.relpath(dst_path, libdir)).as_posix(),
+                        '', ''))
+
         with (dist_info_dir / 'RECORD').open('a') as f:
             f.writelines(','.join(rec) + '\n' for rec in records)
+
+    def _get_data_files_mapping(self, pkg):
+        mapping = {}
+        # 1. From setup.cfg [options.data_files]
+        setup_cfg_path = pkg.path / 'setup.cfg'
+        if setup_cfg_path.is_file():
+            parser = ConfigParser()
+            with setup_cfg_path.open() as f:
+                parser.read_file(f)
+            if parser.has_section('options.data_files'):
+                for dest, sources in parser.items('options.data_files'):
+                    for src in sources.strip().splitlines():
+                        s = src.strip()
+                        if s:
+                            mapping[s] = f"{dest.strip('/')}/{Path(s).name}"
+
+        # 2. From pyproject.toml [tool.setuptools.data-files] or [tool.hatch]
+        try:
+            spec = load_and_cache_spec(pkg)
+            if spec:
+                st_data = spec.get('tool', {}).get(
+                    'setuptools', {}).get('data-files', {})
+                if isinstance(st_data, dict):
+                    for dest, sources in st_data.items():
+                        if isinstance(sources, list):
+                            for s in sources:
+                                dst = f"{dest.strip('/')}/{Path(s).name}"
+                                mapping[s] = dst
+
+                hatch_data = spec.get('tool', {}).get(
+                    'hatch', {}).get('build', {}).get(
+                    'targets', {}).get('wheel', {}).get('shared-data', {})
+                if isinstance(hatch_data, dict):
+                    for src, dest in hatch_data.items():
+                        src_p = pkg.path / src
+                        if src_p.is_file():
+                            mapping[src] = f"{dest.strip('/')}/{src_p.name}"
+                        elif src_p.is_dir():
+                            for f in src_p.rglob('*'):
+                                if f.is_file():
+                                    rel = f.relative_to(src_p).as_posix()
+                                    full_rel = f.relative_to(
+                                        pkg.path).as_posix()
+                                    dst = f"{dest.strip('/')}/{rel}"
+                                    mapping[full_rel] = dst
+        except (KeyError, TypeError, OSError) as e:
+            logger.debug(
+                f'Could not extract data-files from pyproject.toml: {e}')
+
+        return mapping
 
     def _stdout_callback(self, line):
         self.context.put_event_into_queue(StdoutLine(line))
