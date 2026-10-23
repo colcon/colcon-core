@@ -21,7 +21,7 @@ _colcon_append_unique_value() {
   _value="$2"
 
   # get values from variable
-  eval _values=\"\$$_listname\"
+  eval _values=\"\${$_listname:-}\"
   _duplicate=
   # backup the field separator
   _colcon_append_unique_value_IFS=$IFS

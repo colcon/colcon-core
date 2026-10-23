@@ -7,7 +7,7 @@
 # either use the provided COLCON_CURRENT_PREFIX
 # or fall back to the build time prefix (if it exists)
 _colcon_prefix_sh_COLCON_CURRENT_PREFIX="@(prefix_path)"
-if [ -z "$COLCON_CURRENT_PREFIX" ]; then
+if [ -z "${COLCON_CURRENT_PREFIX:-}" ]; then
   if [ ! -d "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX" ]; then
     echo "The build time path \"$_colcon_prefix_sh_COLCON_CURRENT_PREFIX\" doesn't exist. Either source a script for a different shell or set the environment variable \"COLCON_CURRENT_PREFIX\" explicitly." 1>&2
     unset _colcon_prefix_sh_COLCON_CURRENT_PREFIX
@@ -28,7 +28,7 @@ _colcon_prefix_sh_prepend_unique_value() {
   _value="$2"
 
   # get values from variable
-  eval _values=\"\$$_listname\"
+  eval _values=\"\${$_listname:-}\"
   # backup the field separator
   _colcon_prefix_sh_prepend_unique_value_IFS="$IFS"
   IFS=":"
@@ -51,7 +51,7 @@ _colcon_prefix_sh_prepend_unique_value() {
   done
   unset _item
   if [ -z "$_contained_value" ]; then
-    if [ -n "$COLCON_TRACE" ]; then
+    if [ -n "${COLCON_TRACE:-}" ]; then
       if [ "$_all_values" = "$_value" ]; then
         echo "export $_listname=$_value"
       else
@@ -77,7 +77,7 @@ _colcon_prefix_sh_prepend_unique_value COLCON_PREFIX_PATH "$_colcon_prefix_sh_CO
 unset _colcon_prefix_sh_prepend_unique_value
 
 # check environment variable for custom Python executable
-if [ -n "$COLCON_PYTHON_EXECUTABLE" ]; then
+if [ -n "${COLCON_PYTHON_EXECUTABLE:-}" ]; then
   if [ ! -f "$COLCON_PYTHON_EXECUTABLE" ]; then
     echo "error: COLCON_PYTHON_EXECUTABLE '$COLCON_PYTHON_EXECUTABLE' doesn't exist"
     return 1
@@ -100,7 +100,7 @@ fi
 # first argument: the path of the script
 _colcon_prefix_sh_source_script() {
   if [ -f "$1" ]; then
-    if [ -n "$COLCON_TRACE" ]; then
+    if [ -n "${COLCON_TRACE:-}" ]; then
       echo "# . \"$1\""
     fi
     . "$1"
@@ -117,7 +117,7 @@ $_colcon_python_executable "$_colcon_prefix_sh_COLCON_CURRENT_PREFIX/_local_setu
 @[end if]@
 )"
 unset _colcon_python_executable
-if [ -n "$COLCON_TRACE" ]; then
+if [ -n "${COLCON_TRACE:-}" ]; then
   echo "_colcon_prefix_sh_source_script() {
     if [ -f \"\$1\" ]; then
       if [ -n \"\$COLCON_TRACE\" ]; then
