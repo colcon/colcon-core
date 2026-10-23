@@ -25,7 +25,7 @@ class ShShell(ShellExtensionPoint):
 
     FORMAT_STR_COMMENT_LINE = '# {comment}'
     FORMAT_STR_SET_ENV_VAR = 'export {name}="{value}"'
-    FORMAT_STR_USE_ENV_VAR = '${name}'
+    FORMAT_STR_USE_ENV_VAR = '${{{name}:-}}'
     FORMAT_STR_INVOKE_SCRIPT = 'COLCON_CURRENT_PREFIX="{prefix}" ' \
         '_colcon_prefix_sh_source_script "{script_path}"'
     FORMAT_STR_REMOVE_LEADING_SEPARATOR = 'export {name}=${{{name}#:}}'

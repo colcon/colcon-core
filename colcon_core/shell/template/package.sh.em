@@ -13,7 +13,7 @@ _colcon_prepend_unique_value() {
   _value="$2"
 
   # get values from variable
-  eval _values=\"\$$_listname\"
+  eval _values=\"\${$_listname:-}\"
   # backup the field separator
   _colcon_prepend_unique_value_IFS=$IFS
   IFS=":"
@@ -54,7 +54,7 @@ _colcon_prepend_unique_value() {
 # either use the provided COLCON_CURRENT_PREFIX
 # or fall back to the build time prefix (if it exists)
 _colcon_package_sh_COLCON_CURRENT_PREFIX="@(prefix_path)"
-if [ -z "$COLCON_CURRENT_PREFIX" ]; then
+if [ -z "${COLCON_CURRENT_PREFIX:-}" ]; then
   if [ ! -d "$_colcon_package_sh_COLCON_CURRENT_PREFIX" ]; then
     echo "The build time path \"$_colcon_package_sh_COLCON_CURRENT_PREFIX\" doesn't exist. Either source a script for a different shell or set the environment variable \"COLCON_CURRENT_PREFIX\" explicitly." 1>&2
     unset _colcon_package_sh_COLCON_CURRENT_PREFIX
@@ -69,7 +69,7 @@ unset _colcon_package_sh_COLCON_CURRENT_PREFIX
 # additional arguments: arguments to the script
 _colcon_package_sh_source_script() {
   if [ -f "$1" ]; then
-    if [ -n "$COLCON_TRACE" ]; then
+    if [ -n "${COLCON_TRACE:-}" ]; then
       echo "# . \"$1\""
     fi
     . "$@@"

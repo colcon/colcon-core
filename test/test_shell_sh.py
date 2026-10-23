@@ -147,10 +147,13 @@ def _test_extension(prefix_path):
             ))
 
 
-async def _run_prefix_script(prefix_script):
+async def _run_prefix_script(prefix_script, strict=False):
     # Attempt to use null-separated env output, but fall back to the
     # best-effort implementation if not supported (i.e. older macOS)
     cmd = ['.', str(prefix_script), '&&', 'env', '-0']
+    if strict:
+        # Scripts running with 'set -u' must be able to source the prefix
+        cmd = ['set', '-u', '&&'] + cmd
     try:
         return await get_null_separated_environment_variables(cmd)
     except AssertionError:
@@ -212,6 +215,11 @@ def _test_prefix_script(prefix_path):
             os.environ.pop('PREPEND_NAME', None)
 
             coroutine = _run_prefix_script(prefix_script)
+            env = run_until_complete(coroutine)
+            assert env.get('APPEND_NAME') == subdirectory_path
+            assert env.get('PREPEND_NAME') == subdirectory_path
+
+            coroutine = _run_prefix_script(prefix_script, strict=True)
             env = run_until_complete(coroutine)
             assert env.get('APPEND_NAME') == subdirectory_path
             assert env.get('PREPEND_NAME') == subdirectory_path
