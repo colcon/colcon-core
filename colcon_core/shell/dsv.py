@@ -172,7 +172,8 @@ def _parse_dsv_file(dsv_path):
         with open(dsv_path, 'r') as h:
             lines = h.read().splitlines()
     except OSError as e:  # noqa: F841
-        raise _MissingDescriptorError(f"could not read '{dsv_path}': {e}")
+        raise _MissingDescriptorError(
+            f"could not read '{dsv_path}': {e}") from e
     for i, line in enumerate(lines):
         # skip over empty or whitespace-only lines as well as comments
         if not line.strip() or line.startswith('#'):
@@ -245,9 +246,10 @@ def _evaluate_dsv_file(env, dsv_path, prefix):
 def _join_with_prefix(prefix, value):
     # the hook scripts are generated with native separators, so a descriptor
     # using the alternative separator must not result in a different value
+    joined = os.path.join(prefix, value)
     if os.altsep:
-        value = value.replace(os.altsep, os.sep)
-    return os.path.join(prefix, value)
+        joined = joined.replace(os.altsep, os.sep)
+    return joined
 
 
 def _apply_change(env, type_, remainder, prefix):
