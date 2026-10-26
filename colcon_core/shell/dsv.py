@@ -107,11 +107,11 @@ class DsvShell(ShellExtensionPoint):
             # parameter
             check_dependency_availability(
                 dependencies, script_filename='package.dsv')
-        except RuntimeError as e:  # noqa: F841
+        except RuntimeError as e:
             # a prefix without descriptors can still be sourced by a shell,
             # which also reports the packages which need to be built
             raise SkipExtensionException(
-                'Not all dependencies provide a descriptor')
+                'Not all dependencies provide a descriptor') from e
 
         env = EnvironDict(os.environ)
         try:
@@ -122,9 +122,10 @@ class DsvShell(ShellExtensionPoint):
                     os.path.join(
                         prefix, 'share', _get_pkg_name(dep), 'package.dsv'),
                     prefix)
-        except _MissingDescriptorError as e:  # noqa: F841
+        except _MissingDescriptorError as e:
             raise SkipExtensionException(
-                f'Unable to determine the environment from descriptors: {e}')
+                f'Unable to determine the environment from descriptors: {e}'
+            ) from e
 
         # the package scripts unset this variable after being sourced
         env.pop('COLCON_CURRENT_PREFIX', None)
@@ -171,7 +172,7 @@ def _parse_dsv_file(dsv_path):
     try:
         with open(dsv_path, 'r') as h:
             lines = h.read().splitlines()
-    except OSError as e:  # noqa: F841
+    except OSError as e:
         raise _MissingDescriptorError(
             f"could not read '{dsv_path}': {e}") from e
     for i, line in enumerate(lines):
@@ -180,10 +181,10 @@ def _parse_dsv_file(dsv_path):
             continue
         try:
             type_, remainder = line.split(';', 1)
-        except ValueError:
+        except ValueError as e:
             raise RuntimeError(
                 "Line %d in '%s' doesn't contain a semicolon separating the "
-                'type from the arguments' % (i + 1, dsv_path))
+                'type from the arguments' % (i + 1, dsv_path)) from e
         entries.append((type_, remainder))
 
     return entries
@@ -246,7 +247,7 @@ def _evaluate_dsv_file(env, dsv_path, prefix):
 def _join_with_prefix(prefix, value):
     # the hook scripts are generated with native separators, so a descriptor
     # using the alternative separator must not result in a different value
-    joined = os.path.join(prefix, value)
+    joined = os.path.join(prefix, value) if value else prefix
     if os.altsep:
         joined = joined.replace(os.altsep, os.sep)
     return joined
@@ -256,12 +257,11 @@ def _apply_change(env, type_, remainder, prefix):
     if type_ in (DSV_TYPE_SET, DSV_TYPE_SET_IF_UNSET):
         try:
             env_name, value = remainder.split(';', 1)
-        except ValueError:
+        except ValueError as e:
             raise RuntimeError(
                 "doesn't contain a semicolon separating the environment name "
-                'from the value')
-        try_prefixed_value = \
-            _join_with_prefix(prefix, value) if value else prefix
+                'from the value') from e
+        try_prefixed_value = _join_with_prefix(prefix, value)
         if os.path.exists(try_prefixed_value):
             value = try_prefixed_value
         if type_ == DSV_TYPE_SET or not env.get(env_name):
@@ -274,9 +274,7 @@ def _apply_change(env, type_, remainder, prefix):
         env_name_and_values = remainder.split(';')
         env_name = env_name_and_values[0]
         for value in env_name_and_values[1:]:
-            if not value:
-                value = prefix
-            elif not os.path.isabs(value):
+            if not os.path.isabs(value):
                 value = _join_with_prefix(prefix, value)
             if (
                 type_ == DSV_TYPE_PREPEND_NON_DUPLICATE_IF_EXISTS and
