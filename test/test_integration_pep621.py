@@ -7,7 +7,6 @@ import importlib
 import json
 import os
 import site
-import stat
 import subprocess
 import sys
 from types import SimpleNamespace
@@ -20,14 +19,13 @@ from colcon_core.package_identification.pep621 \
 from colcon_core.python_project.wheel import remove_distributions
 from colcon_core.task import TaskContext
 from colcon_core.task.python_project.build import PythonProjectBuildTask
-
 import pytest
 
 from .run_until_complete import run_until_complete
 
 
 def test_integration_flit_core_minimal(tmp_path):
-    """Test full build lifecycle of a pure PEP 621 package with flit_core."""
+    """Test full build life cycle of a pure PEP 621 package with flit_core."""
     pytest.importorskip('flit_core')
 
     pkg_dir = tmp_path / 'src' / 'flit_pkg'
@@ -104,7 +102,7 @@ dependencies = []
     assert (dist_dir / 'INSTALLER').is_file()
     assert 'colcon-core' in (dist_dir / 'INSTALLER').read_text()
 
-    # 5. Verify importability
+    # 5. Verify module import
     sys.path.insert(0, str(lib_dir))
     try:
         import flit_pkg
@@ -184,8 +182,7 @@ hatch-tool = "hatch_cli_pkg.cli:main"
     assert script_path.is_file()
 
     # Ensure executable bit
-    mode = os.stat(script_path).st_mode
-    assert bool(mode & stat.S_IXUSR)
+    assert os.access(script_path, os.X_OK)
 
     # Execute the generated script wrapper
     dist_info = list(install_base.glob('**/hatch_cli_pkg-1.2.3.dist-info'))[0]
@@ -206,7 +203,7 @@ hatch-tool = "hatch_cli_pkg.cli:main"
 
 
 def test_integration_clean_rebuild(tmp_path):
-    """Test idempotent clean rebuilds with remove_distributions."""
+    """Test repeated clean rebuilds with remove_distributions."""
     pytest.importorskip('flit_core')
 
     pkg_dir = tmp_path / 'src' / 'rebuild_pkg'
