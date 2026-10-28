@@ -69,10 +69,10 @@ class PythonProjectBuildTask(TaskExtensionPoint):
 
             # Resolve setuptools-specific syntax
             if cfg_script_dir:
-                _override = Path(args.install_base)
+                _override = Path()
                 for part in Path(cfg_script_dir).parts:
                     if part == '$base':
-                        _override = Path(args.install_base)
+                        _override = Path()
                     else:
                         _override /= part
                 script_dir_override = _override

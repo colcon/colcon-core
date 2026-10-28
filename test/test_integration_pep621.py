@@ -11,6 +11,8 @@ import subprocess
 import sys
 from types import SimpleNamespace
 
+from colcon_core import plugin_system
+from colcon_core.extension_point import clear_entry_point_cache
 from colcon_core.package_augmentation.pep621 \
     import PEP621PackageAugmentation
 from colcon_core.package_descriptor import PackageDescriptor
@@ -22,6 +24,16 @@ from colcon_core.task.python_project.build import PythonProjectBuildTask
 import pytest
 
 from .run_until_complete import run_until_complete
+
+
+@pytest.fixture(autouse=True)
+def isolate_extension_cache_and_event_queue(monkeypatch):
+    """Clear cached entry points and ignore direct task output events."""
+    clear_entry_point_cache()
+    plugin_system._extension_instances.clear()
+    monkeypatch.setattr(
+        TaskContext, 'put_event_into_queue', lambda *args: None
+    )
 
 
 def test_integration_flit_core_minimal(tmp_path):
@@ -452,7 +464,7 @@ dependencies = []
 
 def test_integration_setuptools_data_files_and_script_override(tmp_path):
     """Test setuptools data-files globs and explicit script_dir_override."""
-    pytest.importorskip('setuptools')
+    pytest.importorskip('setuptools', minversion='64.0.0')
 
     pkg_dir = tmp_path / 'src' / 'st_data_pkg'
     pkg_dir.mkdir(parents=True)
@@ -512,14 +524,15 @@ packages = ["st_data_pkg"]
     )
     assert res is None
 
-    # Script installed under overridden lib/<pkg> rather than bin/
+    # Script installed under overridden lib/<pkg> rather than bin/ or Scripts/
     script_dir = install_base / 'lib' / 'st_data_pkg'
     assert any(script_dir.glob('st-node*'))
     assert not (install_base / 'bin' / 'st-node').exists()
+    assert not (install_base / 'Scripts' / 'st-node.exe').exists()
 
     # Data file linked even though setuptools build_editable omits .data/
     installed_launch = (
         install_base / 'share' / 'st_data_pkg' / 'launch' / 'app.py'
     )
     assert installed_launch.is_symlink()
-    assert installed_launch.resolve() == launch_file.resolve()
+    assert os.path.samefile(installed_launch, launch_file)
