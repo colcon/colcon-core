@@ -348,29 +348,27 @@ dependencies = []
 
 
 def test_integration_symlink_install_data_files(tmp_path):
-    """Test --symlink-install with data files from setup.cfg and toml."""
-    pytest.importorskip('flit_core')
+    """Test --symlink-install data files parity and unique RECORD entries."""
+    pytest.importorskip('hatchling')
+    pytest.importorskip('editables')
 
     pkg_dir = tmp_path / 'src' / 'data_pkg'
     pkg_dir.mkdir(parents=True)
 
     (pkg_dir / 'pyproject.toml').write_text("""
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "data_pkg"
 version = "0.1.0"
 description = "Data files test package"
 dependencies = []
-""")
-    (pkg_dir / 'setup.cfg').write_text("""
-[options.data_files]
-share/data_pkg/launch =
-    launch/my_launch.py
-share/data_pkg/config =
-    config/settings.yaml
+
+[tool.hatch.build.targets.wheel.shared-data]
+"launch" = "share/data_pkg/launch"
+"config/settings.yaml" = "share/data_pkg/config/settings.yaml"
 """)
     mod_dir = pkg_dir / 'data_pkg'
     mod_dir.mkdir()
@@ -394,6 +392,109 @@ share/data_pkg/config =
     build_base.mkdir(parents=True)
     install_base.mkdir(parents=True)
 
+    # 1. Standard build installs data files as regular files
+    task = PythonProjectBuildTask()
+    context_regular = TaskContext(
+        pkg=desc,
+        args=SimpleNamespace(
+            path=str(pkg_dir),
+            build_base=str(build_base),
+            install_base=str(install_base),
+            symlink_install=False,
+        ),
+        dependencies={},
+    )
+    task.set_context(context=context_regular)
+    assert run_until_complete(task.build()) is None
+
+    installed_launch = (
+        install_base / 'share' / 'data_pkg' / 'launch' / 'my_launch.py'
+    )
+    installed_cfg = (
+        install_base / 'share' / 'data_pkg' / 'config' / 'settings.yaml'
+    )
+    assert installed_launch.is_file() and not installed_launch.is_symlink()
+    assert installed_cfg.is_file() and not installed_cfg.is_symlink()
+
+    # 2. Editable build replaces data files with symlinks without RECORD dupes
+    task_editable = PythonProjectBuildTask()
+    context_editable = TaskContext(
+        pkg=desc,
+        args=SimpleNamespace(
+            path=str(pkg_dir),
+            build_base=str(build_base),
+            install_base=str(install_base),
+            symlink_install=True,
+        ),
+        dependencies={},
+    )
+    task_editable.set_context(context=context_editable)
+    assert run_until_complete(task_editable.build()) is None
+
+    assert installed_launch.is_symlink()
+    assert installed_launch.resolve() == launch_file.resolve()
+    assert installed_cfg.is_symlink()
+    assert installed_cfg.resolve() == cfg_file.resolve()
+
+    # Verify RECORD contains no duplicate path entries
+    dist_info = list(install_base.glob('**/data_pkg-0.1.0.dist-info'))[0]
+    record_lines = [
+        line.split(',', 1)[0]
+        for line in (dist_info / 'RECORD').read_text().splitlines()
+        if ',' in line
+    ]
+    assert len(record_lines) == len(set(record_lines))
+
+    # Edit launch file in source without rebuilding
+    launch_file.write_text('LAUNCH_EDITED_LIVE = True\n')
+    assert 'LAUNCH_EDITED_LIVE = True' in installed_launch.read_text()
+
+
+def test_integration_setuptools_data_files_and_script_override(tmp_path):
+    """Test setuptools data-files globs and explicit script_dir_override."""
+    pytest.importorskip('setuptools')
+
+    pkg_dir = tmp_path / 'src' / 'st_data_pkg'
+    pkg_dir.mkdir(parents=True)
+
+    (pkg_dir / 'pyproject.toml').write_text("""
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "st_data_pkg"
+version = "0.1.0"
+description = "Setuptools data files and script override test"
+dependencies = []
+
+[project.scripts]
+st-node = "st_data_pkg.cli:main"
+
+[tool.setuptools]
+packages = ["st_data_pkg"]
+
+[tool.setuptools.data-files]
+"share/st_data_pkg/launch" = ["launch/*.py"]
+""")
+    mod_dir = pkg_dir / 'st_data_pkg'
+    mod_dir.mkdir()
+    (mod_dir / '__init__.py').write_text('__version__ = "0.1.0"\n')
+    (mod_dir / 'cli.py').write_text('def main():\n    print("ST_NODE_OK")\n')
+
+    launch_dir = pkg_dir / 'launch'
+    launch_dir.mkdir()
+    launch_file = launch_dir / 'app.py'
+    launch_file.write_text('APP = 1\n')
+
+    desc = PackageDescriptor(pkg_dir)
+    PEP621PackageIdentification().identify(desc)
+
+    build_base = tmp_path / 'build'
+    install_base = tmp_path / 'install'
+    build_base.mkdir(parents=True)
+    install_base.mkdir(parents=True)
+
     task = PythonProjectBuildTask()
     context = TaskContext(
         pkg=desc,
@@ -406,22 +507,19 @@ share/data_pkg/config =
         dependencies={},
     )
     task.set_context(context=context)
-    res = run_until_complete(task.build())
+    res = run_until_complete(
+        task.build(script_dir_override='lib/st_data_pkg')
+    )
     assert res is None
 
-    # Check that installed data files are real symbolic links to source
+    # Script installed under overridden lib/<pkg> rather than bin/
+    script_dir = install_base / 'lib' / 'st_data_pkg'
+    assert any(script_dir.glob('st-node*'))
+    assert not (install_base / 'bin' / 'st-node').exists()
+
+    # Data file linked even though setuptools build_editable omits .data/
     installed_launch = (
-        install_base / 'share' / 'data_pkg' / 'launch' / 'my_launch.py'
+        install_base / 'share' / 'st_data_pkg' / 'launch' / 'app.py'
     )
     assert installed_launch.is_symlink()
     assert installed_launch.resolve() == launch_file.resolve()
-
-    installed_cfg = (
-        install_base / 'share' / 'data_pkg' / 'config' / 'settings.yaml'
-    )
-    assert installed_cfg.is_symlink()
-    assert installed_cfg.resolve() == cfg_file.resolve()
-
-    # Edit launch file in source without rebuilding
-    launch_file.write_text('LAUNCH_EDITED_LIVE = True\n')
-    assert 'LAUNCH_EDITED_LIVE = True' in installed_launch.read_text()
