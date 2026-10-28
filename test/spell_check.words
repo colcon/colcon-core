@@ -187,4 +187,5 @@ usefixtures
 wildcards
 workaround
 writestr
+yaml
 zipfile
