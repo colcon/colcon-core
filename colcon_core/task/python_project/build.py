@@ -17,8 +17,10 @@ from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.python_project.hook_caller_decorator \
     import get_decorated_hook_caller
+from colcon_core.python_project.spec import load_and_cache_spec
 from colcon_core.python_project.wheel import install_wheel
 from colcon_core.shell import get_command_environment
+from colcon_core.task import install
 from colcon_core.task import TaskExtensionPoint
 
 logger = colcon_logger.getChild(__name__)
@@ -38,38 +40,41 @@ class PythonProjectBuildTask(TaskExtensionPoint):
         distutils_logger = logging.getLogger('distlib.util')
         distutils_logger.setLevel(logging.WARN)
 
-    async def build(self, *, additional_hooks=None):  # noqa: D102
+    async def build(  # noqa: D102
+        self, *, additional_hooks=None, script_dir_override=None
+    ):
         pkg = self.context.pkg
         args = self.context.args
 
         logger.info(f"Building Python project in '{args.path}'")
 
-        script_dir_override = None
+        cfg_script_dir = None
         setup_cfg_path = pkg.path / 'setup.cfg'
         if setup_cfg_path.is_file():
             parser = ConfigParser()
             with setup_cfg_path.open() as f:
                 parser.read_file(f)
             if args.symlink_install:
-                script_dir_override = parser.get(
+                cfg_script_dir = parser.get(
                     'develop', 'script-dir', fallback=None)
-                if not script_dir_override:
-                    script_dir_override = parser.get(
+                if not cfg_script_dir:
+                    cfg_script_dir = parser.get(
                         'develop', 'script_dir', fallback=None)
             else:
-                script_dir_override = parser.get(
+                cfg_script_dir = parser.get(
                     'install', 'install-scripts', fallback=None)
-                if not script_dir_override:
-                    script_dir_override = parser.get(
+                if not cfg_script_dir:
+                    cfg_script_dir = parser.get(
                         'install', 'install_scripts', fallback=None)
 
             # Resolve setuptools-specific syntax
-            if script_dir_override:
-                _override = Path(args.install_base)
-                for part in Path(script_dir_override).parts:
+            if cfg_script_dir:
+                _override = Path()
+                for part in Path(cfg_script_dir).parts:
                     if part == '$base':
-                        part = args.install_base
-                    _override /= part
+                        _override = Path()
+                    else:
+                        _override /= part
                 script_dir_override = _override
 
         env = await get_command_environment(
@@ -129,8 +134,126 @@ class PythonProjectBuildTask(TaskExtensionPoint):
                 Path(os.path.relpath(direct_url_json, libdir)).as_posix(),
                 '', ''))
 
-        with (dist_info_dir / 'RECORD').open('a') as f:
-            f.writelines(','.join(rec) + '\n' for rec in records)
+        if args.symlink_install:
+            data_files_mapping = self._get_data_files_mapping(
+                pkg, hook_caller.backend_name)
+            for src_rel, dst_rel in data_files_mapping.items():
+                if (pkg.path / src_rel).is_file():
+                    install(args, src_rel, dst_rel)
+                    dst_path = Path(args.install_base) / dst_rel
+                    records.append((
+                        Path(os.path.relpath(dst_path, libdir)).as_posix(),
+                        '', ''))
+
+        record_path = dist_info_dir / 'RECORD'
+        record_map = {}
+        if record_path.is_file():
+            with record_path.open('r') as f:
+                for line in f:
+                    stripped = line.rstrip('\r\n')
+                    if ',' in stripped:
+                        parts = stripped.split(',', 2)
+                        record_map[parts[0]] = tuple(parts)
+        for rec in records:
+            record_map[rec[0]] = rec
+        with record_path.open('w') as f:
+            f.writelines(','.join(rec) + '\n' for rec in record_map.values())
+
+    @staticmethod
+    def _expand_setuptools_sources(pkg_path, dest, sources):
+        entries = {}
+        dest_clean = dest.strip('/')
+        for raw_src in sources:
+            s = raw_src.strip()
+            if not s:
+                continue
+            if any(ch in s for ch in ('*', '?', '[')):
+                for match in sorted(pkg_path.glob(s)):
+                    if match.is_file():
+                        rel = match.relative_to(pkg_path).as_posix()
+                        dst = (
+                            f'{dest_clean}/{match.name}'
+                            if dest_clean else match.name
+                        )
+                        entries[rel] = dst
+            else:
+                dst = (
+                    f'{dest_clean}/{Path(s).name}'
+                    if dest_clean else Path(s).name
+                )
+                entries[s] = dst
+        return entries
+
+    def _get_data_files_mapping(self, pkg, backend_name=None):
+        mapping = {}
+        if not isinstance(backend_name, str):
+            return mapping
+
+        is_setuptools = (
+            backend_name == 'setuptools.build_meta' or
+            backend_name.startswith('setuptools.build_meta:')
+        )
+        is_hatchling = (
+            backend_name == 'hatchling.build' or
+            backend_name.startswith('hatchling.')
+        )
+
+        if is_setuptools:
+            setup_cfg_path = pkg.path / 'setup.cfg'
+            if setup_cfg_path.is_file():
+                parser = ConfigParser()
+                with setup_cfg_path.open() as f:
+                    parser.read_file(f)
+                if parser.has_section('options.data_files'):
+                    for dest, sources in parser.items('options.data_files'):
+                        items = [
+                            item
+                            for line in sources.strip().splitlines()
+                            for item in line.split(',')
+                        ]
+                        mapping.update(
+                            self._expand_setuptools_sources(
+                                pkg.path, dest, items))
+
+        try:
+            spec = load_and_cache_spec(pkg)
+            if spec:
+                if is_setuptools:
+                    st_data = spec.get('tool', {}).get(
+                        'setuptools', {}).get('data-files', {})
+                    if isinstance(st_data, dict):
+                        for dest, sources in st_data.items():
+                            if isinstance(sources, list):
+                                mapping.update(
+                                    self._expand_setuptools_sources(
+                                        pkg.path, dest, sources))
+
+                elif is_hatchling:
+                    hatch_data = spec.get('tool', {}).get(
+                        'hatch', {}).get('build', {}).get(
+                        'targets', {}).get('wheel', {}).get('shared-data', {})
+                    if isinstance(hatch_data, dict):
+                        for src, dest in hatch_data.items():
+                            src_p = pkg.path / src
+                            dest_clean = dest.strip('/')
+                            if src_p.is_file():
+                                mapping[src] = dest_clean
+                            elif src_p.is_dir():
+                                for f in sorted(src_p.rglob('*')):
+                                    if f.is_file():
+                                        rel = f.relative_to(src_p).as_posix()
+                                        full_rel = f.relative_to(
+                                            pkg.path).as_posix()
+                                        dst = (
+                                            f'{dest_clean}/{rel}'
+                                            if dest_clean else rel
+                                        )
+                                        mapping[full_rel] = dst
+        except (KeyError, TypeError, OSError) as e:
+            logger.debug(
+                f'Could not extract data-files from pyproject.toml: {e}')
+
+        return mapping
 
     def _stdout_callback(self, line):
         self.context.put_event_into_queue(StdoutLine(line))
