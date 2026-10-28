@@ -21,6 +21,7 @@ from colcon_core.package_identification.pep621 \
 from colcon_core.python_project.wheel import remove_distributions
 from colcon_core.task import TaskContext
 from colcon_core.task.python_project.build import PythonProjectBuildTask
+from packaging.version import Version
 import pytest
 
 from .run_until_complete import run_until_complete
@@ -464,7 +465,9 @@ dependencies = []
 
 def test_integration_setuptools_data_files_and_script_override(tmp_path):
     """Test setuptools data-files globs and explicit script_dir_override."""
-    pytest.importorskip('setuptools', minversion='64.0.0')
+    st = pytest.importorskip('setuptools', minversion='64.0.0')
+    if Version(st.__version__) < Version('70.1.0'):
+        pytest.importorskip('wheel')
 
     pkg_dir = tmp_path / 'src' / 'st_data_pkg'
     pkg_dir.mkdir(parents=True)
