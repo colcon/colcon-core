@@ -131,7 +131,7 @@ def test_get_recursive_dependencies_map(recursive_dependencies):
     }
 
 
-def test_magic_methods():
+def test_magic_methods(tmp_path):
     d1 = PackageDescriptor('/some/path')
     d1.type = 'custom-type'
     d1.name = 'custom-name'
@@ -139,7 +139,7 @@ def test_magic_methods():
     d2.type = 'custom-type'
     d2.name = 'other-name'
     assert d1 != d2
-    assert hash(d1) != hash(d2)
+    assert hash(d1) == hash(d2)
 
     d2.name = 'custom-name'
     assert d1 == d2
@@ -153,7 +153,7 @@ def test_magic_methods():
 
     d2.type = 'other-type'
     assert d1 != d2
-    assert hash(d1) != hash(d2)
+    assert hash(d1) == hash(d2)
 
     d2.type = 'custom-type'
     assert d1 == d2
@@ -161,9 +161,43 @@ def test_magic_methods():
 
     d2.path = Path('/other/path')
     assert d1 != d2
+    assert hash(d1) != hash(d2)
+
+    # mutating name or type must not change the hash or break set membership
+    desc = PackageDescriptor('/some/path')
+    descs = {desc}
+    original_hash = hash(desc)
+    desc.name = 'foo'
+    assert hash(desc) == original_hash
+    assert desc in descs
+    desc.type = 'bar'
+    assert hash(desc) == original_hash
+    assert desc in descs
 
     # comparing with other types always returns False
     assert d1 != []
+
+    # descriptors with different paths but same realpath compare equal
+    # and have the same hash
+    real_dir = tmp_path / 'real'
+    real_dir.mkdir()
+    link_dir = tmp_path / 'link'
+    try:
+        link_dir.symlink_to(real_dir)
+    except OSError:
+        pass
+    else:
+        d_real = PackageDescriptor(real_dir)
+        d_real.type = 'custom-type'
+        d_real.name = 'custom-name'
+
+        d_link = PackageDescriptor(link_dir)
+        d_link.type = 'custom-type'
+        d_link.name = 'custom-name'
+
+        assert d_real == d_link
+        assert hash(d_real) == hash(d_link)
+        assert len({d_real, d_link}) == 1
 
 
 def test_str():

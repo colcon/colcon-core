@@ -159,9 +159,10 @@ class PackageDescriptor:
         return dependencies
 
     def __hash__(self):  # noqa: D105
-        # the hash doesn't include the path since different paths are
-        # considered equal if their realpath is the same
-        return hash((self.type, self.name))
+        # the hash only includes the realpath since 'type' and 'name' are
+        # mutable and different paths are considered equal if their realpath
+        # is the same
+        return hash(os.path.realpath(str(self.path)))
 
     def __eq__(self, other):  # noqa: D105
         if type(self) is not type(other):
