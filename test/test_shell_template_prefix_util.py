@@ -66,6 +66,13 @@ def test_get_packages(tmp_path):
     assert packages['pkgC'] == {'pkgB'}
 
 
+def test_get_packages_missing_prefix(tmp_path):
+    # a missing prefix path has no packages in either layout
+    missing = tmp_path / 'does-not-exist'
+    assert get_packages(missing, False) == {}
+    assert get_packages(missing, True) == {}
+
+
 def test_order_packages():
     packages = {
         'pkgA': {'pkgC'},
